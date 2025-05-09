@@ -1,0 +1,75 @@
+.section-card {
+  background-color: #1e40af; 
+  color: white;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 180px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.section-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+}
+
+.section-card-image-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.section-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.section-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+.section-title {
+  font-size: 1.2rem; 
+  font-weight: 600;
+  text-align: center;
+  position: relative;
+  z-index: 2; 
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); 
+  padding: 0.5rem;
+  margin: 0;
+  width: auto; 
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+  background-color: transparent;
+  backdrop-filter: none;
+}
+
+.card-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  text-align: center;
+  position: relative;
+  z-index: 2; 
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  padding: 0.5rem;
+  margin: 0;
+  width: auto;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+  color: white;
+}

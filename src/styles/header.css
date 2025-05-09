@@ -1,0 +1,244 @@
+.main-header {
+  width: 100%;
+  background-color: transparent; /* Header completamente transparente */
+  background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%); /* Degradado sutil para legibilidad */
+  color: white;
+  height: 80px; 
+  display: flex;
+  align-items: center;
+  position: fixed; 
+  top: 0;           
+  left: 0;         
+  z-index: 1010;
+  transition: all 0.3s ease;
+}
+
+/* .main-header.scrolled {
+  background-color: rgba(10, 38, 71, 0.98); /* Cuando se hace scroll, se vuelve más sólido
+  background-image: none; /* Eliminamos el degradado al hacer scroll 
+  height: 70px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+} */
+
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.right-content {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 30px;
+}
+
+.logo {
+  background-color: transparent;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; 
+  padding: 0;
+  box-sizing: border-box;
+  transition: transform 0.3s ease;
+  z-index: 1001;
+  text-decoration: none; 
+  position: relative; 
+}
+
+.logo:hover {
+  transform: scale(1.05);
+}
+  
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.logo-main {
+  font-size: 28px;
+  font-weight: bold;
+  margin: 0;
+  letter-spacing: 2px;
+  background: linear-gradient(45deg, #fff, #FADADD);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.logo-subtitle {
+  font-size: 14px;
+  margin: 0;
+  color: #FADADD;
+  letter-spacing: 1px;
+}
+
+.navigation {
+  margin-right: 20px;
+}
+
+.navigation ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.nav-item {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.scrolled .nav-item {
+  height: 70px;
+}
+
+.nav-item a {
+  color: white;
+  text-decoration: none;
+  padding: 0 20px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+.nav-item a::after {
+  content: '';
+  position: absolute;
+  bottom: 25px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background-color: #FADADD;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.scrolled .nav-item a::after {
+  bottom: 20px;
+}
+
+.nav-item a:hover {
+  color: #FADADD;
+}
+
+.nav-item a:hover::after {
+  width: 40%;
+}
+
+.login-container {
+  margin-left: 10px;
+}
+
+.mobile-menu-button {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 30px;
+  height: 22px;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.mobile-menu-button span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: white;
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 992px) {
+  .mobile-menu-button {
+    display: flex;
+  }
+  
+  .navigation {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    height: 100vh;
+    width: 250px;
+    background-color: rgba(10, 38, 71, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+  }
+  
+  .navigation.open {
+    right: 0;
+  }
+  
+  .navigation ul {
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+  }
+  
+  .nav-item {
+    height: auto;
+    width: 100%;
+    margin: 10px 0;
+  }
+  
+  .nav-item a {
+    width: 100%;
+    text-align: center;
+    padding: 15px 0;
+    justify-content: center;
+  }
+  
+  .nav-item a::after {
+    bottom: 10px;
+  }
+  
+  .right-content {
+    gap: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 15px;
+  }
+  
+  .logo-main {
+    font-size: 24px;
+  }
+  
+  .logo-subtitle {
+    font-size: 12px;
+  }
+  
+  .main-header {
+    height: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-main {
+    font-size: 20px;
+  }
+  
+  .logo-subtitle {
+    font-size: 10px;
+  }
+}

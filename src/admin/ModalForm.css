@@ -1,0 +1,137 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+/* Estilos para el modal utilizando un portal React */
+.modalf-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(75, 44, 32, 0.7) !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999; /* Valor extra alto para asegurar que esté por encima de todo */
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modalf-content {
+  background: rgba(244, 235, 208, 0.97) !important;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 520px;
+  color: #4B2C20 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+  font-family: 'Montserrat', sans-serif;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.modalf-content h3 {
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  border-bottom: 2px solid #D4A574 !important;
+  padding-bottom: 0.5rem;
+  text-align: center;
+}
+
+.modalf-form-content {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1.5rem;
+  padding-right: 8px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  font-size: 0.95rem;
+  color: #4B2C20 !important;
+}
+
+.modalf-content input,
+.modalf-content textarea,
+.modalf-content select {
+  padding: 0.7rem;
+  border-radius: 6px;
+  border: 1px solid #A16549 !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.95rem;
+  font-family: 'Montserrat', sans-serif;
+  color: #4B2C20 !important;
+}
+
+.modalf-content input:focus,
+.modalf-content textarea:focus,
+.modalf-content select:focus {
+  outline: none;
+  border-color: #D4A574 !important;
+  box-shadow: 0 0 0 2px rgba(212, 165, 116, 0.3) !important;
+}
+
+.modalf-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  border-top: 1px solid rgba(212, 165, 116, 0.3) !important;
+  padding-top: 1rem;
+  position: sticky;
+  bottom: 0;
+  background-color: rgba(244, 235, 208, 0.97) !important;
+}
+
+.btn-cancelar,
+.btn-guardar {
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+  box-shadow: 0 2px 4px rgba(75, 56, 50, 0.1) !important;
+}
+
+.btn-cancelar {
+  background-color: #eee !important;
+  border: 1px solid #ccc !important;
+  color: #4B2C20 !important;
+}
+
+.btn-cancelar:hover {
+  background-color: #ddd !important;
+}
+
+.btn-guardar {
+  background-color: #D4A574 !important;
+  color: #4B2C20 !important;
+  border: 1px solid #D4A574 !important;
+}
+
+.btn-guardar:hover {
+  background-color: #c69764 !important;
+  box-shadow: 0 4px 8px rgba(75, 56, 50, 0.15) !important;
+  transform: translateY(-1px);
+}
+
+.btn-cancelar:disabled,
+.btn-guardar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

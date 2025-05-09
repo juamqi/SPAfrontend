@@ -1,0 +1,142 @@
+.cliente-filter-component {
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 1rem;
+    font-family: inherit;
+    position: relative;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(75, 56, 50, 0.1);
+    background: linear-gradient(to right, #E1F0FF, #EAF6FF);
+    color: #2B3A42;
+}
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.filter-header:hover {
+    background-color: rgba(43, 58, 66, 0.05);
+}
+
+.filter-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.filter-icon {
+    font-size: 0.7rem;
+    opacity: 0.7;
+}
+
+.filter-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #FFF;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 4px 8px rgba(43, 58, 66, 0.15);
+    z-index: 10;
+    padding: 0.75rem;
+    border: 1px solid rgba(43, 58, 66, 0.1);
+    border-top: none;
+}
+
+.search-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid rgba(43, 58, 66, 0.2);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #2B3A42;
+    outline: none;
+    background-color: #F9FCFF;
+    transition: border-color 0.2s;
+    margin-bottom: 0.5rem;
+}
+
+.search-input:focus {
+    border-color: #2B3A42;
+    box-shadow: 0 0 0 2px rgba(43, 58, 66, 0.1);
+}
+
+.search-input::placeholder {
+    color: rgba(43, 58, 66, 0.5);
+}
+
+.filter-actions {
+    margin-top: 0.75rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.clear-all-button {
+    background-color: #E1F0FF;
+    border: 1px solid rgba(43, 58, 66, 0.3);
+    border-radius: 4px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+    color: #2B3A42;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.clear-all-button:hover:not(:disabled) {
+    background-color: #2B3A42;
+    color: #E1F0FF;
+}
+
+.clear-all-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.filter-info {
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    color: rgba(43, 58, 66, 0.7);
+    display: flex;
+    justify-content: space-between;
+    padding: 0 0.25rem;
+    border-top: 1px solid rgba(43, 58, 66, 0.1);
+    padding-top: 0.5rem;
+}
+
+.active-filters {
+    font-style: italic;
+    font-size: 0.75rem;
+    line-height: 1.3;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cliente-filter-component {
+        max-width: 100%;
+    }
+
+    .filter-dropdown {
+        position: absolute;
+        width: 100%;
+    }
+}
+
+/* Estilos distintivos para inputs */
+.search-input[placeholder="Buscar por nombre"] {
+    border-left: 3px solid #9BC9FF;
+}
+
+.search-input[placeholder="Buscar por apellido"] {
+    border-left: 3px solid #73A5C6;
+}

@@ -1,0 +1,228 @@
+:root {
+  --font-body: 'Montserrat', sans-serif;
+}
+
+.popup-reprogramacion {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  backdrop-filter: blur(5px);
+  padding-top: 60px; 
+  box-sizing: border-box;
+}
+
+.popup-reprogramacion .popup-contenido {
+  background: rgba(75, 44, 32, 0.95); 
+  padding: 20px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 650px;
+  max-height: calc(100vh - 100px); 
+  overflow-y: auto; 
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(212, 165, 116, 0.3);
+  color: #F4EBD0; 
+}
+
+.popup-reprogramacion h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  color: #D4A574; 
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(212, 165, 116, 0.3);
+}
+
+.popup-reprogramacion p {
+  margin-bottom: 12px;
+  line-height: 1.5;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.turno-actual {
+  background-color: rgba(161, 101, 73, 0.3);
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border-left: 3px solid #D4A574;
+}
+
+.turno-actual p {
+  margin: 0;
+}
+
+.reprogramar-seleccion {
+  display: flex;
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.reprogramar-calendario {
+  flex: 1;
+}
+
+.reprogramar-hora {
+  flex: 1;
+}
+
+.reprogramar-seleccion h4 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  color: #D4A574;
+  margin-bottom: 10px;
+}
+
+.mini-calendario {
+  width: 100%;
+  background-color: rgba(75, 44, 32, 0.7) !important;
+  border: 1px solid rgba(212, 165, 116, 0.5) !important;
+  border-radius: 8px !important;
+  font-family: 'Montserrat', sans-serif !important;
+}
+
+.mini-calendario .react-calendar__navigation {
+  background-color: rgba(161, 101, 73, 0.9) !important;
+  border-radius: 8px 8px 0 0 !important;
+  padding: 5px !important;
+}
+
+.mini-calendario .react-calendar__navigation button {
+  color: #F4EBD0 !important;
+  padding: 4px !important;
+}
+
+.mini-calendario .react-calendar__month-view__weekdays {
+  background-color: rgba(107, 66, 38, 0.5) !important;
+}
+
+.mini-calendario .react-calendar__tile {
+  color: #F4EBD0 !important;
+  padding: 6px 4px !important; 
+}
+
+.horas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 8px;
+  max-height: 220px; 
+  overflow-y: auto;
+  padding: 5px;
+  border-radius: 8px;
+  background-color: rgba(75, 44, 32, 0.5);
+  border: 1px solid rgba(212, 165, 116, 0.3);
+}
+
+.hora-item {
+  background-color: rgba(107, 66, 38, 0.5);
+  padding: 8px 4px;
+  border-radius: 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #F4EBD0;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  border: 1px solid transparent;
+}
+
+.hora-item:hover {
+  background-color: rgba(161, 101, 73, 0.7);
+  transform: translateY(-2px);
+}
+
+.hora-seleccionada {
+  background-color: #A16549 !important;
+  border: 1px solid #D4A574;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.popup-botones {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+  gap: 10px;
+}
+
+@media screen and (max-width: 768px) {
+  .popup-reprogramacion .popup-contenido {
+    max-width: 90%; 
+    padding: 16px;
+  }
+  
+  .popup-reprogramacion h3 {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+  }
+  
+  .popup-reprogramacion p {
+    font-size: 0.95rem;
+  }
+  
+  .reprogramar-seleccion {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .horas-grid {
+    grid-template-columns: repeat(auto-fill, minmax(55px, 1fr));
+    max-height: 180px;
+  }
+  
+  .hora-item {
+    padding: 6px 3px;
+    font-size: 12px;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .popup-reprogramacion {
+    padding-top: 40px;
+  }
+  
+  .popup-reprogramacion .popup-contenido {
+    padding: 14px;
+  }
+  
+  .popup-reprogramacion h3 {
+    font-size: 1.2rem;
+  }
+  
+  .turno-actual {
+    padding: 8px;
+    margin-bottom: 12px;
+  }
+  
+  .popup-reprogramacion p {
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .reprogramar-seleccion h4 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+  
+  .horas-grid {
+    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+    gap: 6px;
+  }
+  
+  .popup-botones {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .popup-botones button {
+    width: 100%;
+    padding: 8px;
+    font-size: 0.9rem;
+  }
+}

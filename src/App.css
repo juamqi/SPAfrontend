@@ -1,0 +1,92 @@
+#root {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  text-align: center;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto; 
+  grid-template-areas: 
+    "header"
+    "main"
+    "footer";
+}
+
+.hero-section {
+  background-image: url("/images/fondohero.jpg");
+  background-size: cover;
+  background-position: center;
+  width: 100%;
+  height: 100vh;
+}
+
+.main-content {
+  grid-area: main;
+  display: grid;
+  grid-template-rows: repeat(auto-fit, minmax(100vh, auto));
+  width: 100%;
+}
+
+.section {
+  width: 100%;
+  min-height: 100vh; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  scroll-snap-align: start;
+}
+
+.section-masajes {
+  background-color: #f8f8f8;
+}
+
+.section-servicios {
+  background-color: #ffffff;
+}
+
+.section-contacto {
+  background-color: #f0f0f0;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+.div-masaje {
+  height: 200px;
+  width: 200px;
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+}

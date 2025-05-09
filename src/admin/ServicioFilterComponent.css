@@ -1,0 +1,194 @@
+/* ServicioFilterComponent.css */
+.servicio-filter-component {
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 1rem;
+    font-family: inherit;
+    position: relative;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(75, 56, 50, 0.1);
+    background: linear-gradient(to right, #FADADD, #F9E6E8);
+    color: #4B3832;
+}
+  
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+  
+.filter-header:hover {
+    background-color: rgba(75, 56, 50, 0.05);
+}
+  
+.filter-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+  
+.filter-icon {
+    font-size: 0.7rem;
+    opacity: 0.7;
+}
+  
+.filter-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #FFF;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 4px 8px rgba(75, 56, 50, 0.15);
+    z-index: 10;
+    padding: 0.75rem;
+    border: 1px solid rgba(75, 56, 50, 0.1);
+    border-top: none;
+}
+  
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+  
+.search-input {
+    width: 100%;
+    padding: 0.6rem 2rem 0.6rem 0.75rem;
+    border: 1px solid rgba(75, 56, 50, 0.2);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #4B3832;
+    outline: none;
+    background-color: #FFF8F9;
+    transition: border-color 0.2s;
+}
+  
+.search-input:focus {
+    border-color: #4B3832;
+    box-shadow: 0 0 0 2px rgba(75, 56, 50, 0.1);
+}
+  
+.search-input::placeholder {
+    color: rgba(75, 56, 50, 0.5);
+}
+  
+.clear-button {
+    position: absolute;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: rgba(75, 56, 50, 0.5);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 50%;
+}
+  
+.clear-button:hover {
+    color: #4B3832;
+    background-color: rgba(75, 56, 50, 0.1);
+}
+  
+.categoria-filter,
+.tipo-filter {
+    margin-top: 0.75rem;
+    width: 100%;
+}
+  
+.categoria-select,
+.tipo-select {
+    width: 100%;
+    padding: 0.6rem 0.5rem;
+    border: 1px solid rgba(75, 56, 50, 0.2);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #4B3832;
+    outline: none;
+    background-color: #FFF8F9;
+    transition: border-color 0.2s;
+    cursor: pointer;
+}
+  
+.categoria-select:focus,
+.tipo-select:focus {
+    border-color: #4B3832;
+    box-shadow: 0 0 0 2px rgba(75, 56, 50, 0.1);
+}
+  
+.filter-actions {
+    margin-top: 0.75rem;
+    display: flex;
+    justify-content: flex-end;
+}
+  
+.clear-all-button {
+    background-color: #FADADD;
+    border: 1px solid rgba(75, 56, 50, 0.3);
+    border-radius: 4px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+    color: #4B3832;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+  
+.clear-all-button:hover:not(:disabled) {
+    background-color: #4B3832;
+    color: #FADADD;
+}
+  
+.clear-all-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+  
+.filter-info {
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    color: rgba(75, 56, 50, 0.7);
+    display: flex;
+    justify-content: space-between;
+    padding: 0 0.25rem;
+    border-top: 1px solid rgba(75, 56, 50, 0.1);
+    padding-top: 0.5rem;
+}
+  
+.active-filters {
+    font-style: italic;
+}
+  
+/* Estilos para tipo de servicio */
+.tipo-tag {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 2rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-align: center;
+}
+  
+.tipo-tag.individual {
+    background-color: rgba(157, 102, 92, 0.2);
+    color: #4B3832;
+}
+  
+.tipo-tag.grupal {
+    background-color: rgba(250, 218, 221, 0.4);
+    color: #4B3832;
+}
+  
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .servicio-filter-component {
+        max-width: 100%;
+    }
+}

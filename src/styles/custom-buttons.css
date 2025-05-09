@@ -1,0 +1,95 @@
+.custom-button {
+  display: inline-block;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  border-radius: 50px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  outline: none;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  letter-spacing: 0.5px;
+}
+
+.custom-button:hover {
+  background-color: var(--hover-bg-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.custom-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.custom-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.custom-button.small {
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
+.custom-button.medium {
+  font-size: 16px;
+  padding: 12px 24px;
+}
+
+.custom-button.large {
+  font-size: 18px;
+  padding: 16px 32px;
+}
+
+.custom-button.primary {
+  background-color: #6B4226;
+  color: white;
+  --hover-bg-color: #8C5D35;
+}
+
+.custom-button.secondary {
+  background-color: #6C757D;
+  color: white;
+  --hover-bg-color: #5A6268;
+}
+
+.custom-button.success {
+  background-color: #28A745;
+  color: white;
+  --hover-bg-color: #218838;
+}
+
+.custom-button.danger {
+  background-color: #DC3545;
+  color: white;
+  --hover-bg-color: #C82333;
+}
+
+.custom-button.outline {
+  background-color: transparent;
+  border: 2px solid #6B4226;
+  color: #6B4226;
+  --hover-bg-color: rgba(107, 66, 38, 0.1);
+}
+
+.custom-button.outline.white {
+  border-color: white;
+  color: white;
+  --hover-bg-color: rgba(255, 255, 255, 0.1);
+}
+
+.custom-button.rounded {
+  border-radius: 50px;
+}
+
+.custom-button.square {
+  border-radius: 8px;
+}
