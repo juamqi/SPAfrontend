@@ -32,14 +32,14 @@ const Servicios = () => {
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
-        const response = await fetch('http://spabackend-production.up.railway.app/api/servicios/categorias');
+        const response = await fetch('https://spabackend-production.up.railway.app/api/servicios/categorias');
         if (!response.ok) throw new Error('Error al obtener categorías');
         const data = await response.json();
         setCategorias(data);
 
         const serviciosData = {};
         await Promise.all(data.map(async (categoria) => {
-          const servResponse = await fetch(`http://spabackend-production.up.railway.app/api/servicios/por-categoria/${categoria.id_categoria}`);
+          const servResponse = await fetch(`https://spabackend-production.up.railway.app/api/servicios/por-categoria/${categoria.id_categoria}`);
           if (!servResponse.ok) throw new Error(`Error al obtener servicios para ${categoria.nombre}`);
           const servicios = await servResponse.json();
           serviciosData[categoria.id_categoria] = servicios;
