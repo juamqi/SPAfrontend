@@ -108,7 +108,7 @@ const ServicioFilterComponent = ({
             )}
           </div>
           
-          <div className="categoria-filter">
+          {/* <div className="categoria-filter">
             <select 
               value={selectedCategoria} 
               onChange={handleCategoriaChange}
@@ -121,7 +121,7 @@ const ServicioFilterComponent = ({
                 </option>
               ))}
             </select>
-          </div>
+          </div> */}
           
           <div className="tipo-filter">
             <select 

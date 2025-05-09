@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "serve dist -s -n -L --$PORT"
   },
   "dependencies": {
     "axios": "^1.8.4",
@@ -18,6 +19,7 @@
     "react-image-gallery": "^1.4.0",
     "react-router-dom": "^7.5.1",
     "react-slick": "^0.30.3",
+    "serve": "^14.2.4",
     "slick-carousel": "^1.8.1"
   },
   "devDependencies": {
