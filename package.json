@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "serve dist -s -n -L --$PORT"
+    "start": "serve dist -s -n -L $PORT"
   },
   "dependencies": {
     "axios": "^1.8.4",
