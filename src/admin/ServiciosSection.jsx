@@ -27,8 +27,8 @@ const ServiciosSection = () => {
             
             // Usamos una marca de tiempo para evitar caché
             const timestamp = new Date().getTime();
-            const response = await fetch(`http://localhost:3001/api/serviciosAdm?_=${timestamp}`);
-            
+            const response = await fetch(`https://spabackend-production.up.railway.app/api/serviciosAdm?_=${timestamp}`);
+
             if (!response.ok) {
                 throw new Error("Error al obtener los servicios");
             }
@@ -48,7 +48,7 @@ const ServiciosSection = () => {
     // Función para obtener las categorías
     const fetchCategorias = async () => {
         try {
-            const response = await fetch('http://localhost:3001/api/categoriasAdm');
+            const response = await fetch('https://spabackend-production.up.railway.app/api/categoriasAdm');
             if (!response.ok) {
                 throw new Error('Error al cargar las categorías');
             }
@@ -129,7 +129,7 @@ const ServiciosSection = () => {
         if (servicioSeleccionado && window.confirm("¿Eliminar este servicio?")) {
             try {
                 setCargando(true);
-                const response = await fetch(`http://localhost:3001/api/serviciosAdm/${servicioSeleccionado.id}`, {
+                const response = await fetch(`https://spabackend-production.up.railway.app/api/serviciosAdm/${servicioSeleccionado.id}`, {
                     method: 'DELETE',
                 });
                 
@@ -175,7 +175,7 @@ const ServiciosSection = () => {
                 }
                 
                 // Llamada a la API para crear
-                const response = await fetch("http://localhost:3001/api/serviciosAdm", {
+                const response = await fetch("https://spabackend-production.up.railway.app/api/serviciosAdm", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -210,7 +210,7 @@ const ServiciosSection = () => {
                 }
                 
                 // Actualizar el servicio en la base de datos
-                const response = await fetch(`http://localhost:3001/api/serviciosAdm/${formulario.id}`, {
+                const response = await fetch(`https://spabackend-production.up.railway.app/api/serviciosAdm/${formulario.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',

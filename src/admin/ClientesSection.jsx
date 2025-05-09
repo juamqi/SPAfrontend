@@ -34,7 +34,7 @@ const ClientesSection = () => {
     const fetchClientes = async () => {
         try {
             setLoading(true);
-            const response = await fetch("http://localhost:3001/api/clientesAdm");
+            const response = await fetch("https://spabackend-production.up.railway.app/api/clientesAdm");
             if (!response.ok) throw new Error("Error al obtener los clientes");
             
             const data = await response.json();

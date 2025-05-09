@@ -51,7 +51,7 @@ const ModalReserva = ({
     try {
       setLoading(true);
       console.log("Buscando servicio por nombre:", servicio.title);
-      const response = await axios.get("http://localhost:3001/api/servicios");
+      const response = await axios.get("https://spabackend-production.up.railway.app/api/servicios");
       const serviciosData = response.data;
       console.log("Servicios obtenidos:", serviciosData);
       const servicioEncontrado = serviciosData.find(
@@ -90,7 +90,7 @@ const ModalReserva = ({
       try {
         console.log(`Llamando a la API con servicioId: ${servicioIdState}`);
         const response = await axios.get(
-          `http://localhost:3001/api/profesionales/servicio/${servicioIdState}`
+          `https://spabackend-production.up.railway.app/api/profesionales/servicio/${servicioIdState}`
         );
 
         console.log("Datos de profesionales:", JSON.stringify(response.data));
@@ -128,7 +128,7 @@ const ModalReserva = ({
       }
 
       const response = await axios.get(
-        "http://localhost:3001/api/turnos/disponibilidad",
+        "https://spabackend-production.up.railway.app/api/turnos/disponibilidad",
         { params }
       );
 
@@ -183,7 +183,7 @@ const ModalReserva = ({
       try {
         setLoading(true);
         const response = await axios.post(
-          "http://localhost:3001/api/turnos",
+          "https://spabackend-production.up.railway.app/api/turnos",
           datosTurno,
           {
             headers: {

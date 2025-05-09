@@ -64,7 +64,7 @@ const PerfilUsuario = () => {
     setLoadingTurnos(true);
     setErrorTurnos(null);
   
-    const endpoint = `http://localhost:3001/api/turnos/${user.id_cliente}`;
+    const endpoint = `https://spabackend-production.up.railway.app/api/turnos/${user.id_cliente}`;
     console.log("Consultando turnos en:", endpoint);
   
     axios.get(endpoint)
@@ -122,7 +122,7 @@ const PerfilUsuario = () => {
     setLoadingUserData(true);
     setErrorUserData(null);
   
-    const endpoint = `http://localhost:3001/api/clientes/${user.id_cliente}`;
+    const endpoint = `https://spabackend-production.up.railway.app/api/clientes/${user.id_cliente}`;
     console.log("Consultando API en:", endpoint);
   
     axios.get(endpoint)
@@ -231,8 +231,8 @@ const PerfilUsuario = () => {
     }
     
     setReprogramando(true);
-    
-    axios.put(`http://localhost:3001/api/turnos/reprogramar/${turnoSeleccionado.id_turno}`, {
+
+    axios.put(`https://spabackend-production.up.railway.app/api/turnos/reprogramar/${turnoSeleccionado.id_turno}`, {
       fecha_hora: nuevosDatos.fechaCompleta
     })
       .then(response => {
@@ -276,8 +276,8 @@ const PerfilUsuario = () => {
     }
     
     setCancelando(true);
-    
-    axios.put(`http://localhost:3001/api/turnos/cancelar/${turnoSeleccionado.id_turno}`)
+
+    axios.put(`https://spabackend-production.up.railway.app/api/turnos/cancelar/${turnoSeleccionado.id_turno}`)
       .then(response => {
         console.log('Respuesta exitosa:', response.data);
         
@@ -316,7 +316,7 @@ const PerfilUsuario = () => {
     // Deshabilitar la edición mientras guardamos
     setEditando(false);
     
-    axios.put(`http://localhost:3001/api/clientes/actualizar/${user.id_cliente}`, datosUsuario)
+    axios.put(`https://spabackend-production.up.railway.app/api/clientes/actualizar/${user.id_cliente}`, datosUsuario)
       .then(response => {
         console.log('Datos actualizados:', response.data);
         alert('Datos actualizados correctamente');

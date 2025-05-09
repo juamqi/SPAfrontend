@@ -45,7 +45,7 @@ const TurnosSection = () => {
 
             // Usamos una marca de tiempo para evitar caché
             const timestamp = new Date().getTime();
-            const response = await fetch(`http://localhost:3001/api/serviciosAdm?_=${timestamp}`);
+            const response = await fetch(`https://spabackend-production.up.railway.app/api/serviciosAdm?_=${timestamp}`);
 
             if (!response.ok) {
                 throw new Error("Error al obtener los servicios");
@@ -67,7 +67,7 @@ const TurnosSection = () => {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch("http://localhost:3001/api/turnosAdmin");
+            const response = await fetch("https://spabackend-production.up.railway.app/api/turnosAdmin");
             if (!response.ok) {
                 throw new Error("Error al obtener los turnos");
             }
@@ -85,7 +85,7 @@ const TurnosSection = () => {
 
     const fetchCategorias = async () => {
         try {
-            const response = await fetch("http://localhost:3001/api/categoriasAdm");
+            const response = await fetch("https://spabackend-production.up.railway.app/api/categoriasAdm");
             if (!response.ok) throw new Error("Error al obtener categorias");
             const data = await response.json();
             setCategorias(data);
@@ -166,7 +166,7 @@ const TurnosSection = () => {
                 console.log(`Cancelando turno ID: ${turnoSeleccionado.id}`);
 
                 const response = await fetch(
-                    `http://localhost:3001/api/turnosAdmin/estado/${turnoSeleccionado.id}`,
+                    `https://spabackend-production.up.railway.app/api/turnosAdmin/estado/${turnoSeleccionado.id}`,
                     {
                         method: 'PUT',
                         headers: {
@@ -281,7 +281,7 @@ const TurnosSection = () => {
 
             if (modo === "crear") {
                 // Crear nuevo turno
-                response = await fetch('http://localhost:3001/api/turnosAdmin', {
+                response = await fetch('https://spabackend-production.up.railway.app/api/turnosAdmin', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datosFormateados)
@@ -307,7 +307,7 @@ const TurnosSection = () => {
                     id
                 };
 
-                response = await fetch(`http://localhost:3001/api/turnosAdmin/${id}`, {
+                response = await fetch(`https://spabackend-production.up.railway.app/api/turnosAdmin/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datosActualizados)
