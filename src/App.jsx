@@ -46,9 +46,12 @@ function App() {
             <Route path="/perfil" element={<PerfilUsuario />} />
           </Route>
 
+          <Route path="/dashboard" element={<PerfilUsuario />} />
+
           {/* Rutas sin Header */}
-          <Route path="/admin-login" element={<AdminLogin />} />
+          {/* <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/dashboard" element={<AdminPrivateRoute />} />
+          */ }
         </Routes>
       </Router>
     </AuthProvider>

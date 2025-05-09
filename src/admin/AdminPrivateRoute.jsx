@@ -1,4 +1,4 @@
-import { useAuth } from '../context/AuthContext';
+/* import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import AppAdmin from './AppAdmin'; 
 
@@ -17,4 +17,4 @@ const AdminPrivateRoute = () => {
   return <AppAdmin />;
 };
 
-export default AdminPrivateRoute;
+export default AdminPrivateRoute; */
