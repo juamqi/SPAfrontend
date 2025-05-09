@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import '../styles/AdminLogin.css'; 
 
-const AdminLogin = () => {
+/* const AdminLogin = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -13,7 +13,7 @@ const AdminLogin = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch('https://spabackend-production.up.railway.app/api/admin-login', {
+      const response = await fetch('https://spabackend-production.up.railway.app/api/admin/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
