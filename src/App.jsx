@@ -12,6 +12,7 @@ import Contacto from './componentes/Body/contacto.jsx';
 import Header from './componentes/Header/header.jsx';
 import Galeria from './componentes/Body/galeria.jsx';
 import PerfilUsuario from './componentes/PerfilUsuario/PerfilUsuario.jsx';
+import AppAdmin from './admin/AppAdmin.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 
 const Home = () => {
@@ -46,7 +47,7 @@ function App() {
             <Route path="/perfil" element={<PerfilUsuario />} />
           </Route>
 
-          <Route path="/dashboard" element={<PerfilUsuario />} />
+          <Route path="/dashboard" element={<AppAdmin />} />
 
           {/* Rutas sin Header */}
           {/* <Route path="/admin-login" element={<AdminLogin />} />
