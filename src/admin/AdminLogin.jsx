@@ -1,9 +1,9 @@
-import { useAuth } from '../context/AuthContext';
+/* import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import '../styles/AdminLogin.css'; 
 
-/* const AdminLogin = () => {
+const AdminLogin = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -83,4 +83,4 @@ import '../styles/AdminLogin.css';
   );
 };
 
-export default AdminLogin;
+export default AdminLogin; */
