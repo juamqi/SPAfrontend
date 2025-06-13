@@ -476,7 +476,6 @@ const ModalReserva = ({
       <ModalTurnoReservado
         isVisible={mostrarModalConfirmacion}
         onClose={handleCerrarModalConfirmacion}
-        onIrACarrito={handleIrACarrito}
         onIrAServicios={handleIrAServicios}
       />
     </>
