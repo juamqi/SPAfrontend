@@ -40,7 +40,7 @@ const ProfTurnosSection = () => {
 
             // Usamos una marca de tiempo para evitar caché
             const timestamp = new Date().getTime();
-            const response = await fetch(`http://localhost:3001/api/serviciosAdm?_=${timestamp}`);
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/serviciosAdm?_=${timestamp}`);
 
             if (!response.ok) {
                 throw new Error("Error al obtener los servicios");
@@ -61,7 +61,7 @@ const ProfTurnosSection = () => {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch("http://localhost:3001/api/turnosAdmin");
+            const response = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
             if (!response.ok) {
                 throw new Error("Error al obtener los turnos");
             }
@@ -79,7 +79,7 @@ const ProfTurnosSection = () => {
 
     const fetchCategorias = async () => {
         try {
-            const response = await fetch("http://localhost:3001/api/categoriasAdm");
+            const response = await fetch("https://spabackend-production-e093.up.railway.app/api/categoriasAdm");
             if (!response.ok) throw new Error("Error al obtener categorias");
             const data = await response.json();
             setCategorias(data);

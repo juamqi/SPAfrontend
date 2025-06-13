@@ -26,7 +26,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
     //boton pagar actualiza estado de carrito
     const actualizarEstadoCarrito = async (idCarrito, nuevoEstado) => {
         try {
-            const response = await fetch(`http://localhost:3001/api/carritos/estado/${idCarrito}`, {
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/carritos/estado/${idCarrito}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -51,7 +51,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
         if (!idCliente) return;
 
         try {
-            const response = await fetch(`http://localhost:3001/api/carritos/cliente/${idCliente}`);
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/carritos/cliente/${idCliente}`);
 
             if (!response.ok) {
                 if (response.status === 404) {
@@ -94,7 +94,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
             setLoading(true);
             setError(null);
 
-            const response = await fetch(`http://localhost:3001/api/carritos/${idCarrito}/turnos`);
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/carritos/${idCarrito}/turnos`);
 
             if (!response.ok) {
                 if (response.status === 404) {

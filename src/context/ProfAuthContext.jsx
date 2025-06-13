@@ -17,7 +17,7 @@ export const ProfAuthProvider = ({ children }) => {
   // Función de login que conecta con la BD
   const login = async (email, password) => {
     try {
-      const response = await fetch('http://localhost:3001/api/profesionales/login', {
+      const response = await fetch('https://spabackend-production-e093.up.railway.app/api/profesionales/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -53,7 +53,7 @@ export const ProfAuthProvider = ({ children }) => {
     if (!profesional) return false;
     
     try {
-      const response = await fetch('http://localhost:3001/api/profesionales', {
+      const response = await fetch('https://spabackend-production-e093.up.railway.app/api/profesionales', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'

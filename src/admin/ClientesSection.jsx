@@ -34,7 +34,7 @@ const ClientesSection = () => {
     const fetchClientes = async () => {
         try {
             setLoading(true);
-            const response = await fetch("http://localhost:3001/api/clientesAdm");
+            const response = await fetch("https://spabackend-production-e093.up.railway.app/api/clientesAdm");
             if (!response.ok) throw new Error("Error al obtener los clientes");
             
             const data = await response.json();
@@ -72,7 +72,7 @@ const ClientesSection = () => {
 
             console.log("Datos para actualizar cliente:", dataToSend);
 
-            const response = await fetch(`http://localhost:3001/api/clientesAdm/${clientesEditado.id}`, {
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/clientesAdm/${clientesEditado.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ const ClientesSection = () => {
 
             console.log("Datos a enviar para crear cliente:", dataToSend);
 
-            const response = await fetch("http://localhost:3001/api/clientesAdm", {
+            const response = await fetch("https://spabackend-production-e093.up.railway.app/api/clientesAdm", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -132,7 +132,7 @@ const ClientesSection = () => {
 
     const eliminarCliente = async (id) => {
         try {
-            const response = await fetch(`http://localhost:3001/api/clientesAdm/${id}`, {
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/clientesAdm/${id}`, {
                 method: 'DELETE',
             });
     

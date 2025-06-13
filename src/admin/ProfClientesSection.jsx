@@ -61,7 +61,7 @@ const ProfClientesSection = () => {
         const fetchClientes = async () => {
             try {
                 setLoading(true);
-                const response = await fetch("http://localhost:3001/api/clientesAdm");
+                const response = await fetch("https://spabackend-production-e093.up.railway.app/api/clientesAdm");
                 if (!response.ok) throw new Error("Error al obtener los clientes");
 
                 const data = await response.json();
@@ -88,7 +88,7 @@ const ProfClientesSection = () => {
     const fetchHistorialCliente = async (clienteId) => {
         try {
             setLoadingHistorial(true);
-            const response = await fetch(`http://localhost:3001/api/turnos/pro/${clienteId}`);
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnos/pro/${clienteId}`);
             if (!response.ok) throw new Error("Error al obtener el historial");
 
             const data = await response.json();

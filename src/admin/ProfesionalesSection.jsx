@@ -37,7 +37,7 @@ const ProfesionalesSection = () => {
             try {
                 setLoading(true);
                 setError(null);
-                const response = await fetch("http://localhost:3001/api/profesionalesAdm");
+                const response = await fetch("https://spabackend-production-e093.up.railway.app/api/profesionalesAdm");
                 if (!response.ok) {
                     throw new Error("Error al obtener los profesionales");
                 }
@@ -55,7 +55,7 @@ const ProfesionalesSection = () => {
         // Esta función obtiene todos los servicios disponibles para tener un mapeo de ID a nombre
         const fetchAllServicios = async () => {
             try {
-                const response = await fetch("http://localhost:3001/api/serviciosAdm");
+                const response = await fetch("https://spabackend-production-e093.up.railway.app/api/serviciosAdm");
                 if (!response.ok) {
                     throw new Error("Error al obtener los servicios");
                 }
@@ -137,7 +137,7 @@ const ProfesionalesSection = () => {
 
             console.log("Datos para actualizar profesional:", dataToSend);
 
-            const response = await fetch(`http://localhost:3001/api/profesionalesAdm/${profesionalEditado.id}`, {
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/profesionalesAdm/${profesionalEditado.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -179,7 +179,7 @@ const ProfesionalesSection = () => {
 
             console.log("Datos a enviar para crear profesional:", dataToSend);
 
-            const response = await fetch("http://localhost:3001/api/profesionalesAdm", {
+            const response = await fetch("https://spabackend-production-e093.up.railway.app/api/profesionalesAdm", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -201,7 +201,7 @@ const ProfesionalesSection = () => {
 
     const eliminarProfesional = async (id) => {
         try {
-            const response = await fetch(`http://localhost:3001/api/profesionalesAdm/${id}`, {
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/profesionalesAdm/${id}`, {
                 method: 'DELETE',
             });
 

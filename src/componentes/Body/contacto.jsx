@@ -33,7 +33,7 @@ const Contacto = () => {
 
   try {
     // Enviar al admin
-    const sendRes = await fetch('http://localhost:3001/api/email/email-send', {
+    const sendRes = await fetch('https://spabackend-production-e093.up.railway.app/api/email/email-send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -46,7 +46,7 @@ const Contacto = () => {
     if (!sendRes.ok) throw new Error('Fallo al enviar al admin');
 
     // Simulación de recepción
-    const reciveRes = await fetch('http://localhost:3001/api/email/email-reciver', {
+    const reciveRes = await fetch('https://spabackend-production-e093.up.railway.app/api/email/email-reciver', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

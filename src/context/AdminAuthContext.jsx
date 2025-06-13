@@ -17,7 +17,7 @@ export const AdminAuthProvider = ({ children }) => {
   // Función de login que conecta con la BD
   const login = async (email, password) => {
     try {
-      const response = await fetch('http://localhost:3001/api/admin/login', {
+      const response = await fetch('https://spabackend-production-e093.up.railway.app/api/admin/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -53,7 +53,7 @@ export const AdminAuthProvider = ({ children }) => {
     if (!admin) return false;
     
     try {
-      const response = await fetch('http://localhost:3001/api/admin', {
+      const response = await fetch('https://spabackend-production-e093.up.railway.app/api/admin', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'

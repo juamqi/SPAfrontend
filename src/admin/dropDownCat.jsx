@@ -10,7 +10,7 @@ const DropdownCategorias = ({ onChange, value }) => {
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/categoriasAdm');
+        const response = await fetch('https://spabackend-production-e093.up.railway.app/api/categoriasAdm');
         if (!response.ok) {
           throw new Error('Error al cargar las categorías');
         }

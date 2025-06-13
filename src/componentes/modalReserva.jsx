@@ -106,7 +106,7 @@ const ModalReserva = ({
     try {
       setLoading(true);
       console.log("Buscando servicio por nombre:", servicio.title);
-      const response = await axios.get("http://localhost:3001/api/servicios");
+      const response = await axios.get("https://spabackend-production-e093.up.railway.app/api/servicios");
       const serviciosData = response.data;
       console.log("Servicios obtenidos:", serviciosData);
       const servicioEncontrado = serviciosData.find(
@@ -145,7 +145,7 @@ const ModalReserva = ({
       try {
         console.log(`Llamando a la API con servicioId: ${servicioIdState}`);
         const response = await axios.get(
-          `http://localhost:3001/api/profesionales/servicio/${servicioIdState}`
+          `https://spabackend-production-e093.up.railway.app/api/profesionales/servicio/${servicioIdState}`
         );
 
         console.log("Datos de profesionales:", JSON.stringify(response.data));
@@ -183,7 +183,7 @@ const ModalReserva = ({
       }
 
       const response = await axios.get(
-        "http://localhost:3001/api/turnos/disponibilidad",
+        "https://spabackend-production-e093.up.railway.app/api/turnos/disponibilidad",
         { params }
       );
 
@@ -203,7 +203,7 @@ const ModalReserva = ({
       console.log(`Verificando carrito para cliente ${clienteId} en fecha ${fecha}`);
       
       const response = await axios.get(
-        "http://localhost:3001/api/carritos/buscar",
+        "https://spabackend-production-e093.up.railway.app/api/carritos/buscar",
         {
           params: {
             id_cliente: clienteId,
@@ -276,7 +276,7 @@ const ModalReserva = ({
         const resultadoCarrito = await verificarCarritoExistente(clienteId, fecha);
         
         const response = await axios.post(
-          "http://localhost:3001/api/turnos",
+          "https://spabackend-production-e093.up.railway.app/api/turnos",
           datosTurno,
           {
             headers: {

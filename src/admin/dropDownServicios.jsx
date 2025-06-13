@@ -24,7 +24,7 @@ const DropdownServicios = ({ onChange, value, categoriaId, onServiciosLoaded }) 
       setLoading(true);
       try {
         console.log(`Intentando cargar servicios para categoría: ${categoriaId}`);
-        const response = await fetch(`http://localhost:3001/api/serviciosAdm/servicios/categoria/${categoriaId}`);
+        const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/serviciosAdm/servicios/categoria/${categoriaId}`);
         
         if (!response.ok) {
           // Mostrar detalles del error para ayudar en el diagnóstico

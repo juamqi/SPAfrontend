@@ -61,7 +61,7 @@ const Formulario = ({ onClose }) => {
         try {
           console.log('Intentando login con:', { email: formData.email });
           
-          const response = await fetch('http://localhost:3001/api/clientes/login', {
+          const response = await fetch('https://spabackend-production-e093.up.railway.app/api/clientes/login', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -136,7 +136,7 @@ const Formulario = ({ onClose }) => {
           return;
         }
         
-        const response = await fetch('http://localhost:3001/api/clientes/register', {
+        const response = await fetch('https://spabackend-production-e093.up.railway.app/api/clientes/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -192,7 +192,7 @@ const Formulario = ({ onClose }) => {
         
         try {
           // Corregido para coincidir con la ruta del backend y los nombres de parámetros esperados
-          const response = await fetch('http://localhost:3001/api/clientes/cambiar-password', {
+          const response = await fetch('https://spabackend-production-e093.up.railway.app/api/clientes/cambiar-password', {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json'
