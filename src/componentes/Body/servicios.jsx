@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../cards';
-import Modal from '../Modal.jsx';
+import Modal from '../modal.jsx';
 import '../../styles/servicios.css';
 import '../../styles/modal.css';
 import masagesImg from '../../assets/masajes.jpg';
