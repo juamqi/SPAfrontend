@@ -38,17 +38,6 @@ const ModalTurnoReservado = ({ isVisible, onClose, onIrACarrito, onIrAServicios 
             >
               <span className="btn-text">Más servicios</span>
             </button>
-            
-            <button 
-              className="btn-carrito" 
-              onClick={(e) => {
-                  e.preventDefault(); 
-                  setMenuOpen(false);
-                  setCarritoOpen(true);
-                }}
-            >
-              <span className="btn-text">Ir al carrito</span>
-            </button>
           </div>
         </div>
       </div>
@@ -358,14 +347,6 @@ const ModalReserva = ({
     if (diaSeleccionado) {
       verificarDisponibilidad(diaSeleccionado, prof.id_profesional);
     }
-  };
-
-  // Funciones para manejar los botones del modal de confirmación
-  const handleIrACarrito = () => {
-    setMostrarModalConfirmacion(false);
-    onClose();
-    // Aquí puedes agregar la navegación al carrito
-    console.log("Ir al carrito");
   };
 
   const handleIrAServicios = () => {
