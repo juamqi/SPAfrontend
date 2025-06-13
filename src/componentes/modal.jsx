@@ -77,7 +77,11 @@ const Modal = ({ servicio, onClose }) => {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close-btn" onClick={onClose}>✕</button>
+        {/* Etiqueta superior con título */}
+        <div className="modal-header">
+          <h2 className="modal-title">{servicio.title}</h2>
+          <button className="modal-close-btn" onClick={onClose}>✕</button>
+        </div>
 
         <div className="modal-body">
           <div className="modal-image-container">
@@ -89,11 +93,10 @@ const Modal = ({ servicio, onClose }) => {
           </div>
 
           <div className="modal-details">
-            <h2 className="modal-title">{servicio.title}</h2>
             <div className="modal-content-area">
               {servicio.options ? (
                 <>
-                  <h5 className="modal-subtitle">Seleccione un servicio para conocer más:</h5>
+                  <h5 className="modal-subtitle">Seleccione un servicio para conocer más.</h5>
                   <ul className="modal-options-list">
                     {servicio.options.map((option, index) => (
                       <li
@@ -123,13 +126,7 @@ const Modal = ({ servicio, onClose }) => {
 
             <div className="modal-button-container">
               <button className="modal-reservar-btn" onClick={handleReservar}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-                Reservar turno
+                RESERVAR
               </button>
             </div>
           </div>

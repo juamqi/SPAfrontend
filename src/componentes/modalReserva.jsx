@@ -4,6 +4,58 @@ import "../styles/modalReserva.css";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext.jsx";
 
+// Nuevo componente para el modal de confirmación
+const ModalTurnoReservado = ({ isVisible, onClose, onIrACarrito, onIrAServicios }) => {
+  if (!isVisible) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-turno-reservado" onClick={e => e.stopPropagation()}>
+        {/* Header con fondo oscuro */}
+        <div className="modal-turno-header">
+          <h2 className="modal-turno-title">¡TURNO RESERVADO CORRECTAMENTE!</h2>
+          <button className="modal-turno-close" onClick={onClose}>
+            <span className="close-icon">✕</span>
+          </button>
+        </div>
+
+        {/* Contenido del modal */}
+        <div className="modal-turno-content">
+          <p className="modal-turno-description">
+            Podés también agregar otros servicios. <br/> Si querés pagar con tarjeta de débito y 
+            acceder al 15% de descuento*, andá al carrito.
+            <br />
+            <span className="modal-turno-disclaimer">
+              *Este descuento solo aplica si pagás antes de las 48 hs. del servicio.
+            </span>
+          </p>
+
+          {/* Botones */}
+          <div className="modal-turno-buttons">
+            <button 
+              className="btn-servicios" 
+              onClick={onIrAServicios}
+            >
+              <span className="btn-text">Más servicios</span>
+            </button>
+            
+            <button 
+              className="btn-carrito" 
+              onClick={(e) => {
+                  e.preventDefault(); 
+                  setMenuOpen(false);
+                  setCarritoOpen(true);
+                }}
+            >
+              <span className="btn-text">Ir al carrito</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ModalReserva = ({
   servicio,
   opcionSeleccionada,
@@ -25,6 +77,9 @@ const ModalReserva = ({
   const [horariosCargados, setHorariosCargados] = useState(false);
   const [turnosOcupados, setTurnosOcupados] = useState([]);
   const [servicioIdState, setServicioIdState] = useState(servicioId);
+  
+  // Estado para controlar el modal de confirmación
+  const [mostrarModalConfirmacion, setMostrarModalConfirmacion] = useState(false);
 
   useEffect(() => {
     console.log("Servicio recibido:", servicio);
@@ -51,7 +106,7 @@ const ModalReserva = ({
     try {
       setLoading(true);
       console.log("Buscando servicio por nombre:", servicio.title);
-      const response = await axios.get("https://spabackend-production.up.railway.app/api/servicios");
+      const response = await axios.get("http://localhost:3001/api/servicios");
       const serviciosData = response.data;
       console.log("Servicios obtenidos:", serviciosData);
       const servicioEncontrado = serviciosData.find(
@@ -90,7 +145,7 @@ const ModalReserva = ({
       try {
         console.log(`Llamando a la API con servicioId: ${servicioIdState}`);
         const response = await axios.get(
-          `https://spabackend-production.up.railway.app/api/profesionales/servicio/${servicioIdState}`
+          `http://localhost:3001/api/profesionales/servicio/${servicioIdState}`
         );
 
         console.log("Datos de profesionales:", JSON.stringify(response.data));
@@ -128,7 +183,7 @@ const ModalReserva = ({
       }
 
       const response = await axios.get(
-        "https://spabackend-production.up.railway.app/api/turnos/disponibilidad",
+        "http://localhost:3001/api/turnos/disponibilidad",
         { params }
       );
 
@@ -139,6 +194,34 @@ const ModalReserva = ({
     } catch (err) {
       console.error("Error al verificar disponibilidad:", err);
       setHorariosCargados(true);
+    }
+  };
+
+  // Nueva función para verificar si existe carrito
+  const verificarCarritoExistente = async (clienteId, fecha) => {
+    try {
+      console.log(`Verificando carrito para cliente ${clienteId} en fecha ${fecha}`);
+      
+      const response = await axios.get(
+        "http://localhost:3001/api/carritos/buscar",
+        {
+          params: {
+            id_cliente: clienteId,
+            fecha: fecha
+          }
+        }
+      );
+
+      console.log("Carrito encontrado:", response.data);
+      return { existeCarrito: true, carrito: response.data };
+    } catch (err) {
+      if (err.response && err.response.status === 404) {
+        console.log("No se encontró carrito para esta fecha");
+        return { existeCarrito: false, carrito: null };
+      } else {
+        console.error("Error al verificar carrito:", err);
+        throw err;
+      }
     }
   };
 
@@ -164,17 +247,6 @@ const ModalReserva = ({
       if (!servicioIdState)
         return alert("No se ha podido identificar el servicio seleccionado.");
 
-      const fechaHoraSQL = `${fecha} ${hora}:00`;
-      const datosTurno = {
-        id_cliente: Number(clienteId),
-        id_servicio: Number(servicioIdState),
-        id_profesional: Number(profesionalId),
-        fecha_hora: fechaHoraSQL,
-        duracion_minutos: Number(opcionSeleccionada?.duracion || 60),
-        comentarios: `Reserva para ${servicio.title}${opcionSeleccionada ? ` - ${opcionSeleccionada.nombre}` : ""}`
-      };
-      console.log("Enviando datos de turno:", datosTurno);
-
       const timeoutId = setTimeout(() => {
         setLoading(false);
         setError("La solicitud ha tardado demasiado. Por favor, inténtalo de nuevo.");
@@ -182,8 +254,29 @@ const ModalReserva = ({
 
       try {
         setLoading(true);
+
+        console.log("=== PROCESO DE CREACIÓN DE TURNO (SIMPLIFICADO) ===");
+        
+        // Crear el turno - el backend se encarga de manejar el carrito
+        const fechaHoraSQL = `${fecha} ${hora}:00`;
+        const datosTurno = {
+          id_cliente: Number(clienteId),
+          id_servicio: Number(servicioIdState),
+          id_profesional: Number(profesionalId),
+          fecha_hora: fechaHoraSQL,
+          duracion_minutos: Number(opcionSeleccionada?.duracion || 60),
+          comentarios: `Reserva para ${servicio.title}${opcionSeleccionada ? ` - ${opcionSeleccionada.nombre}` : ""}`
+          // Nota: No enviamos id_carrito, el backend lo maneja automáticamente
+        };
+        
+        console.log("Creando turno con datos:", datosTurno);
+
+        // VERIFICAR CARRITO ANTES DE CREAR EL TURNO
+        console.log("=== VERIFICANDO CARRITO EXISTENTE ===");
+        const resultadoCarrito = await verificarCarritoExistente(clienteId, fecha);
+        
         const response = await axios.post(
-          "https://spabackend-production.up.railway.app/api/turnos",
+          "http://localhost:3001/api/turnos",
           datosTurno,
           {
             headers: {
@@ -195,31 +288,33 @@ const ModalReserva = ({
 
         clearTimeout(timeoutId);
 
-        console.log("Respuesta recibida:", response.data);
+        console.log("✅ Respuesta del servidor:", response.data);
 
         if (response.data && response.data.id_turno) {
           const detallesReserva = {
             id_turno: response.data.id_turno,
+            id_carrito: response.data.id_carrito, // El backend nos devuelve el id_carrito
             servicio: servicio.title,
             opcion: opcionSeleccionada?.nombre,
             fecha,
             hora,
             profesional
           };
+          
+          console.log("✅ Reserva confirmada:", detallesReserva);
+          
           onReservaConfirmada?.(detallesReserva);
-          alert(
-            `Tu reserva ha sido confirmada para el ${formatearFecha(
-              fecha
-            )} a las ${hora}.`
-          );
-          setTimeout(onClose, 1000);
+          
+          // Mostrar el modal de confirmación en lugar del alert
+          setMostrarModalConfirmacion(true);
+          
         } else {
           throw new Error("La respuesta del servidor no incluyó el ID del turno");
         }
       } catch (err) {
         clearTimeout(timeoutId);
 
-        console.error("Error al crear el turno:", err);
+        console.error("❌ Error en el proceso de reserva:", err);
 
         if (err.response) {
           console.error("Error del servidor:", err.response.data);
@@ -265,113 +360,145 @@ const ModalReserva = ({
     }
   };
 
+  // Funciones para manejar los botones del modal de confirmación
+  const handleIrACarrito = () => {
+    setMostrarModalConfirmacion(false);
+    onClose();
+    // Aquí puedes agregar la navegación al carrito
+    console.log("Ir al carrito");
+  };
+
+  const handleIrAServicios = () => {
+    setMostrarModalConfirmacion(false);
+    onClose();
+    // Aquí puedes agregar la navegación a más servicios
+    console.log("Ir a más servicios");
+  };
+
+  const handleCerrarModalConfirmacion = () => {
+    setMostrarModalConfirmacion(false);
+    onClose();
+  };
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content modal-reserva" onClick={e => e.stopPropagation()}>
-        <button className="modal-close-btn" onClick={onClose}>
-          ✕
-        </button>
-        {error && (
-          <div className="error-mensaje">
-            {error}
-            <button onClick={() => setError(null)}>Cerrar</button>
+    <>
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content modal-reserva" onClick={e => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2 className="modal-reserva-title">Reservar Turno</h2>
+            <button className="modal-close-btn" onClick={onClose}>
+              ✕
+            </button>
           </div>
-        )}
-        <div className="modal-body">
-          {/* Imagen y resumen */}
-          <div className="modal-image-container">
-            <img src={servicio.imageSrc} alt={servicio.title} className="modal-img" />
-            <div className="modal-image-overlay">
-              <h2 className="modal-reserva-title">Reservar Turno</h2>
-              <div className="modal-servicio-info">
-                <h3>{servicio.title}</h3>
-                {opcionSeleccionada && (
-                  <p className="modal-opcion-elegida">{opcionSeleccionada.nombre}</p>
-                )}
-                <p className="modal-precio">
-                  ${opcionSeleccionada ? opcionSeleccionada.precio : servicio.precio}
-                </p>
+          {error && (
+            <div className="error-mensaje">
+              {error}
+              <button onClick={() => setError(null)}>Cerrar</button>
+            </div>
+          )}
+          <div className="modal-body">
+            {/* Imagen y resumen */}
+            <div className="modal-image-container">
+              <img src={servicio.imageSrc} alt={servicio.title} className="modal-img" />
+              <div className="modal-image-overlay">
+                <div className="modal-servicio-info">
+                  <h3>{servicio.title}</h3>
+                  {opcionSeleccionada && (
+                    <p className="modal-opcion-elegida">{opcionSeleccionada.nombre}</p>
+                  )}
+                  <p className="modal-precio">
+                    ${opcionSeleccionada ? opcionSeleccionada.precio : servicio.precio}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Detalles y formulario */}
-          <div className="modal-details modal-reserva-details">
-            <div className="modal-pasos-indicador">
-              <div className={`paso ${paso >= 1 ? "activo" : ""}`}>1. Fecha y Hora</div>
-              <div className="paso-separador" />
-              <div className={`paso ${paso >= 2 ? "activo" : ""}`}>2. Profesional</div>
-            </div>
+            {/* Detalles y formulario */}
+            <div className="modal-details modal-reserva-details">
+              <div className="modal-pasos-indicador">
+                <div className={`paso ${paso >= 1 ? "activo" : ""}`}>1. Fecha y Hora</div>
+                <div className="paso-separador" />
+                <div className={`paso ${paso >= 2 ? "activo" : ""}`}>2. Profesional</div>
+              </div>
 
-            <form onSubmit={handleSubmit} className="modal-reserva-form">
-              {paso === 1 ? (
-                <div className="modal-paso modal-paso-1">
-                  <div className="calendario-container">
-                    <CalendarioPersonalizado
-                      onSeleccionarFechaHora={handleFechaHoraSeleccionada}
-                      fechaSeleccionada={diaSeleccionado}
-                      horaSeleccionada={hora}
-                      turnosOcupados={turnosOcupados}
-                      profesionalId={profesionalId}
-                      profesionales={profesionales}
-                    />
+              <form onSubmit={handleSubmit} className="modal-reserva-form">
+                {paso === 1 ? (
+                  <div className="modal-paso modal-paso-1">
+                    <div className="calendario-container">
+                      <CalendarioPersonalizado
+                        onSeleccionarFechaHora={handleFechaHoraSeleccionada}
+                        fechaSeleccionada={diaSeleccionado}
+                        horaSeleccionada={hora}
+                        turnosOcupados={turnosOcupados}
+                        profesionalId={profesionalId}
+                        profesionales={profesionales}
+                      />
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="modal-paso modal-paso-2">
-                  <div className="form-group">
-                    <label>Selecciona un profesional:</label>
-                    {loading ? (
-                      <p>Cargando profesionales...</p>
-                    ) : (
-                      <div className="profesionales-grid">
-                        {profesionales.length > 0 ? (
-                          profesionales.map(prof => (
-                            <div
-                              key={prof.id_profesional}
-                              className={`profesional-card ${profesionalId === prof.id_profesional ? "seleccionado" : ""
-                                }`}
-                              onClick={() => seleccionarProfesional(prof)}
-                            >
-                              <div className="profesional-avatar">{prof.nombre.charAt(0)}</div>
-                              <div className="profesional-info">
-                                <h4>{`${prof.nombre} ${prof.apellido}`}</h4>
-                                <p>{servicio.title}</p>
+                ) : (
+                  <div className="modal-paso modal-paso-2">
+                    <div className="form-group">
+                      <label>Selecciona un profesional:</label>
+                      {loading ? (
+                        <p>Cargando profesionales...</p>
+                      ) : (
+                        <div className="profesionales-grid">
+                          {profesionales.length > 0 ? (
+                            profesionales.map(prof => (
+                              <div
+                                key={prof.id_profesional}
+                                className={`profesional-card ${profesionalId === prof.id_profesional ? "seleccionado" : ""
+                                  }`}
+                                onClick={() => seleccionarProfesional(prof)}
+                              >
+                                <div className="profesional-avatar">{prof.nombre.charAt(0)}</div>
+                                <div className="profesional-info">
+                                  <h4>{`${prof.nombre} ${prof.apellido}`}</h4>
+                                  <p>{servicio.title}</p>
+                                </div>
                               </div>
-                            </div>
-                          ))
-                        ) : (
-                          <p>No hay profesionales disponibles para este servicio.</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                            ))
+                          ) : (
+                            <p>No hay profesionales disponibles para este servicio.</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
-                  <div className="resumen-reserva">
-                    <h4>Resumen de la reserva</h4>
-                    <p><strong>Servicio:</strong> {servicio.title}</p>
-                    {opcionSeleccionada && <p><strong>Opción:</strong> {opcionSeleccionada.nombre}</p>}
-                    <p><strong>Fecha:</strong> {formatearFecha(fecha)}</p>
-                    <p><strong>Hora:</strong> {hora}</p>
+                    <div className="resumen-reserva">
+                      <h4>Resumen de la reserva</h4>
+                      <p><strong>Servicio:</strong> {servicio.title}</p>
+                      {opcionSeleccionada && <p><strong>Opción:</strong> {opcionSeleccionada.nombre}</p>}
+                      <p><strong>Fecha:</strong> {formatearFecha(fecha)}</p>
+                      <p><strong>Hora:</strong> {hora}</p>
+                    </div>
                   </div>
-                </div>
-              )}
-
-              <div className="modal-button-container">
-                {paso === 2 && (
-                  <button type="button" className="modal-volver-btn" onClick={volverPaso}>
-                    Volver
-                  </button>
                 )}
-                <button type="submit" className="modal-reservar-btn" disabled={loading}>
-                  {loading ? "Procesando..." : paso === 1 ? "Continuar" : "Confirmar Reserva"}
-                </button>
-              </div>
-            </form>
+
+                <div className="modal-button-container">
+                  {paso === 2 && (
+                    <button type="button" className="modal-volver-btn" onClick={volverPaso}>
+                      Volver
+                    </button>
+                  )}
+                  <button type="submit" className="modal-reservar-btn" disabled={loading}>
+                    {loading ? "Procesando..." : paso === 1 ? "Continuar" : "Confirmar Reserva"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Modal de confirmación */}
+      <ModalTurnoReservado
+        isVisible={mostrarModalConfirmacion}
+        onClose={handleCerrarModalConfirmacion}
+        onIrACarrito={handleIrACarrito}
+        onIrAServicios={handleIrAServicios}
+      />
+    </>
   );
 };
 

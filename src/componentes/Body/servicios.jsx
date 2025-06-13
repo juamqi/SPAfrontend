@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../cards';
-import Modal from '../modal.jsx';
+import Modal from '../Modal.jsx';
 import '../../styles/servicios.css';
 import '../../styles/modal.css';
 import masagesImg from '../../assets/masajes.jpg';
@@ -32,14 +32,14 @@ const Servicios = () => {
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
-        const response = await fetch('https://spabackend-production.up.railway.app/api/servicios/categorias');
+        const response = await fetch('http://localhost:3001/api/servicios/categorias');
         if (!response.ok) throw new Error('Error al obtener categorías');
         const data = await response.json();
         setCategorias(data);
 
         const serviciosData = {};
         await Promise.all(data.map(async (categoria) => {
-          const servResponse = await fetch(`https://spabackend-production.up.railway.app/api/servicios/por-categoria/${categoria.id_categoria}`);
+          const servResponse = await fetch(`http://localhost:3001/api/servicios/por-categoria/${categoria.id_categoria}`);
           if (!servResponse.ok) throw new Error(`Error al obtener servicios para ${categoria.nombre}`);
           const servicios = await servResponse.json();
           serviciosData[categoria.id_categoria] = servicios;
@@ -118,14 +118,14 @@ const Servicios = () => {
     <section className="servicios-section" id="servicios">
       <div className="servicios-overlay"></div>
       <div className="servicios-container">
-        <h2 className="section-title">Servicios</h2>
+        <h2 className="section-title">servicios</h2>
         <p className="servicios-description">
-          Descubre nuestra amplia variedad de tratamientos diseñados para renovar tu cuerpo y calmar tu mente. Para más detalles, seleccioná una categoría.
+          Descubre nuestra amplia variedad de tratamientos diseñados para renovar tu cuerpo y calmar tu mente. <br />Para hacer una reserva o conocer más información, seleccioná alguna de las siguientes categorías:
         </p>
 
         <div className="servicios-columns-wrapper">
           <div className="servicios-column">
-            <h3 className="servicios-category-title">Servicios Individuales</h3>
+            <h3 className="servicios-category-title">INDIVIDUALES</h3>
             <div className="servicios-cards-grid">
               {serviciosIndividuales.map((servicio) => (
                 <div
@@ -143,7 +143,7 @@ const Servicios = () => {
           </div>
 
           <div className="servicios-column">
-            <h3 className="servicios-category-title">Servicios Grupales</h3>
+            <h3 className="servicios-category-title">GRUPALES</h3>
             <div className="servicios-cards-grid servicios-grid-grupales">
               {serviciosGrupales.map((servicio) => (
                 <div

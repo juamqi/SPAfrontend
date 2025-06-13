@@ -13,11 +13,6 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.section-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
-}
-
 .section-card-image-container {
   position: absolute;
   top: 0;
@@ -63,7 +58,6 @@
   font-size: 1.6rem;
   font-weight: 600;
   text-align: center;
-  position: relative;
   z-index: 2; 
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   padding: 0.5rem;

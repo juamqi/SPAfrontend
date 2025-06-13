@@ -68,7 +68,7 @@
   font-weight: bold;
   margin: 0;
   letter-spacing: 2px;
-  background: linear-gradient(45deg, #fff, #FADADD);
+  background: #fff;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -76,7 +76,7 @@
 .logo-subtitle {
   font-size: 14px;
   margin: 0;
-  color: #FADADD;
+  color: #fff;
   letter-spacing: 1px;
 }
 
@@ -114,7 +114,7 @@
   font-weight: 400;
   letter-spacing: 1px;
   text-transform: uppercase;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .nav-item a::after {
@@ -124,7 +124,7 @@
   left: 50%;
   width: 0;
   height: 2px;
-  background-color: #FADADD;
+  background-color: #D8DEC3;
   transition: all 0.3s ease;
   transform: translateX(-50%);
 }
@@ -134,7 +134,7 @@
 }
 
 .nav-item a:hover {
-  color: #FADADD;
+  color: #D8DEC3;
 }
 
 .nav-item a:hover::after {

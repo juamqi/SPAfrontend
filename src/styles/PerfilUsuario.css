@@ -3,9 +3,9 @@
   flex-direction: row;
   gap: 24px;
   padding: 20px;
-  background: linear-gradient(135deg, rgba(107, 66, 38, 0.9) 0%, rgba(75, 44, 32, 0.8) 100%);
+  background: #F4F8E6;
   padding-top: 50px;
-  color: #F4EBD0;
+  color: #4A3D3D;
   box-sizing: border-box;
   border: none;
   overflow-y: auto;
@@ -15,7 +15,7 @@
 
 .perfil-seccion {
   border-radius: 12px;
-  background-color: rgba(75, 44, 32, 0.7);
+  background-color: rgba(74, 61, 61, 0.7);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   flex: 1;
@@ -31,7 +31,7 @@
 .turnos-seccion {
   flex: 3;
   max-width: 50%;
-  height: 450px;
+  height: 500px;
 }
 
 .datos-seccion {
@@ -41,13 +41,13 @@
 }
 
 .seccion-titulo {
-  font-family: 'Montserrat', sans-serif !important;
+  font-family: 'Quicksand', sans-serif !important;
   width: 100%;
+  font-weight: 600;
   padding: 12px !important;
-  background: linear-gradient(to right, #6B4226, #A16549) !important;
+  background: #4A3D3D !important;
   text-align: center;
   margin-bottom: 0;
-  letter-spacing: 1.5px !important;
   text-transform: uppercase;
   flex-shrink: 0;
   position: relative;
@@ -61,7 +61,7 @@
   transform: translateX(-50%);
   width: 60px;
   height: 3px;
-  background-color: #D4A574;
+  background-color: #4A3D3D;
   border-radius: 3px;
 }
 
@@ -92,13 +92,13 @@
 .turnos-calendario .custom-calendar {
   width: 100%;
   height: 100%;
-  border: 1px solid #D4A574;
+  border: 1px solid #FF6161;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .dia-con-turno {
-  background-color: #D4A574 !important;
-  color: #6B4226 !important;
+  background-color: #FF6161  !important;
+  color: #F4F8E6  !important;
   border-radius: 50%;
   font-weight: bold;
   position: relative;
@@ -112,7 +112,7 @@
   right: -2px;
   width: 8px;
   height: 8px;
-  background-color: #D4A574;
+  background-color: #FF6161;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.7);
 }
@@ -124,32 +124,35 @@
   flex-direction: column;
   font-family: var(--font-body);
   background-color: rgba(75, 44, 32, 0.6);
-  border: 1px solid #D4A574;
+  border: 1px solid #FF6161;
   border-radius: 8px;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .turnos-calendario .react-calendar__navigation {
-  background: linear-gradient(to right, rgba(161, 101, 73, 0.9), rgba(107, 66, 38, 0.9));
-  color: #F4EBD0;
+  background: #D8DEC3;
+  color: #4A3D3D;
   border-radius: 8px 8px 0 0;
   padding: 10px;
 }
 
 .turnos-calendario .react-calendar__navigation button {
-  color: #F4EBD0;
-  font-family: var(--font-body);
+  color: #4A3D3D;
+  font-family: 'Quicksand', sans-serif !important;
   font-weight: 600;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .turnos-calendario .react-calendar__navigation button:enabled:hover {
-  background-color: rgba(212, 165, 116, 0.3);
+  background-color: #D8DEC3;
 }
 
 .turnos-calendario .react-calendar__month-view__weekdays {
-  background-color: rgba(107, 66, 38, 0.5);
-  color: #F4EBD0;
+  background-color: #4A3D3D;
+  color: #F4F8E6;
   font-weight: 500;
   text-transform: uppercase;
   font-size: 0.8rem;
@@ -158,8 +161,8 @@
 
 .turnos-calendario .react-calendar__tile {
   background: none;
-  color: #F4EBD0;
-  font-family: var(--font-body);
+  color: #F4F8E6;
+  font-family: 'Quicksand', sans-serif !important;
   padding: 10px 5px;
   border-radius: 4px;
   transition: all 0.2s ease;
@@ -167,11 +170,11 @@
 }
 
 .turnos-calendario .react-calendar__tile--now {
-  background-color: rgba(212, 165, 116, 0.4) !important;
+  background-color: rgba(255, 97, 97, 0.4) !important;
   color: #fff !important;
   font-weight: bold !important;
-  border: 2px solid rgba(212, 165, 116, 0.8) !important;
-  box-shadow: 0 0 8px rgba(212, 165, 116, 0.3) !important;
+  border: 2px solid rgba(255, 97, 97, 0.8) !important;
+  box-shadow: 0 0 8px rgba(255, 97, 97, 0.3) !important;
 }
 
 .datos-contenido {
@@ -193,21 +196,21 @@
   flex-direction: column;
   gap: 6px;
   padding: 12px;
-  background-color: rgba(161, 101, 73, 0.25);
+  background-color: rgba(74, 61, 61, 0.25);
   border-radius: 8px;
-  border-left: 3px solid #D4A574;
+  border-left: 3px solid #FF6161;
   transition: all 0.3s ease;
 }
 
 .dato-item:hover {
-  background-color: rgba(161, 101, 73, 0.4);
+  background-color: rgba(74, 61, 61, 0.4);
   transform: translateX(3px);
 }
 
 .dato-item span {
   font-size: 16px;
   padding: 4px 8px;
-  color: #F4EBD0;
+  color: #F4F8E6;
   font-weight: 400;
 }
 
@@ -232,27 +235,26 @@
 
 .dato-grupo label {
   font-size: 14px;
-  color: #D4A574;
+  color: #D8DEC3;
   font-weight: 600;
   margin-left: 4px;
 }
 
 .dato-grupo input {
   padding: 12px;
-  border: 1px solid rgba(212, 165, 116, 0.4);
-  border-radius: 8px;
   background-color: rgba(255, 255, 255, 0.05);
-  color: #F4EBD0;
-  font-size: 15px;
-  font-family: var(--font-body);
+  border-radius: 8px;
+  color: #F4F8E6;
+  font-size: 16px;
+  font-family: 'Quicksand', sans-serif !important;
   transition: all 0.2s ease;
+  border: 1px solid rgba(255, 97, 97, 0.4);
 }
 
 .dato-grupo input:focus {
   outline: none;
-  border-color: #D4A574;
-  background-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 0 2px rgba(212, 165, 116, 0.2);
+  border-color: #FF6161;
+  box-shadow: 0 0 0 2px rgba(255, 97, 97, 0.2);
 }
 
 .modal-turno {
@@ -273,7 +275,7 @@
 }
 
 .modal-contenido {
-  background: linear-gradient(135deg, rgba(75, 44, 32, 0.95), rgba(107, 66, 38, 0.95));
+  background: linear-gradient(135deg, rgba(74, 61, 61, 0.95), rgba(216, 222, 195, 0.95));
   padding: 24px;
   border-radius: 12px;
   width: 100%;
@@ -282,17 +284,17 @@
   overflow-y: auto;
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(212, 165, 116, 0.3);
-  color: #F4EBD0;
+  color: #4A3D3D;
   position: relative;
   animation: slideUp 0.4s ease forwards;
 }
 
 .modal-contenido h3 {
-  font-family: var(--font-heading);
+  font-family: 'Quicksand', sans-serif !important;
   font-size: 1.5rem;
   margin-bottom: 20px;
   text-align: center;
-  color: #D4A574;
+  color: #FF6161;
   position: relative;
   padding-bottom: 12px;
 }
@@ -305,7 +307,7 @@
   transform: translateX(-50%);
   width: 50px;
   height: 2px;
-  background-color: #D4A574;
+  background-color: #FF6161;
 }
 
 .modal-contenido p {

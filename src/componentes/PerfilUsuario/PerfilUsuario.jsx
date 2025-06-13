@@ -64,7 +64,7 @@ const PerfilUsuario = () => {
     setLoadingTurnos(true);
     setErrorTurnos(null);
   
-    const endpoint = `https://spabackend-production.up.railway.app/api/turnos/${user.id_cliente}`;
+    const endpoint = `http://localhost:3001/api/turnos/${user.id_cliente}`;
     console.log("Consultando turnos en:", endpoint);
   
     axios.get(endpoint)
@@ -122,7 +122,7 @@ const PerfilUsuario = () => {
     setLoadingUserData(true);
     setErrorUserData(null);
   
-    const endpoint = `https://spabackend-production.up.railway.app/api/clientes/${user.id_cliente}`;
+    const endpoint = `http://localhost:3001/api/clientes/${user.id_cliente}`;
     console.log("Consultando API en:", endpoint);
   
     axios.get(endpoint)
@@ -231,8 +231,8 @@ const PerfilUsuario = () => {
     }
     
     setReprogramando(true);
-
-    axios.put(`https://spabackend-production.up.railway.app/api/turnos/reprogramar/${turnoSeleccionado.id_turno}`, {
+    
+    axios.put(`http://localhost:3001/api/turnos/reprogramar/${turnoSeleccionado.id_turno}`, {
       fecha_hora: nuevosDatos.fechaCompleta
     })
       .then(response => {
@@ -276,8 +276,8 @@ const PerfilUsuario = () => {
     }
     
     setCancelando(true);
-
-    axios.put(`https://spabackend-production.up.railway.app/api/turnos/cancelar/${turnoSeleccionado.id_turno}`)
+    
+    axios.put(`http://localhost:3001/api/turnos/cancelar/${turnoSeleccionado.id_turno}`)
       .then(response => {
         console.log('Respuesta exitosa:', response.data);
         
@@ -316,7 +316,7 @@ const PerfilUsuario = () => {
     // Deshabilitar la edición mientras guardamos
     setEditando(false);
     
-    axios.put(`https://spabackend-production.up.railway.app/api/clientes/actualizar/${user.id_cliente}`, datosUsuario)
+    axios.put(`http://localhost:3001/api/clientes/actualizar/${user.id_cliente}`, datosUsuario)
       .then(response => {
         console.log('Datos actualizados:', response.data);
         alert('Datos actualizados correctamente');
@@ -500,7 +500,7 @@ const PerfilUsuario = () => {
               {Object.entries(datosUsuario).map(([key, val]) => (
                 <div key={key} className="dato-item">
                   <Etiqueta text={key.charAt(0).toUpperCase()+key.slice(1)} 
-                           textColor="#90caf9" 
+                           textColor="#D8DEC3" 
                            padding="4px 8px" 
                   />
                   <span>{val || 'No especificado'}</span>
@@ -513,8 +513,8 @@ const PerfilUsuario = () => {
               <Boton 
                 text="Editar" 
                 onClick={handleEditar}
-                backgroundColor="#1565c0"
-                hoverBackgroundColor="#0d47a1"
+                backgroundColor="#D8DEC3"
+                color='#4A3D3D'
               />
             </div>
           )}

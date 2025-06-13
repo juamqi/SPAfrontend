@@ -5,13 +5,13 @@
 
 .login-button {
   cursor: pointer;
-  background-color: #FADADD !important; 
+  background-color: #D8DEC3 !important; 
   color: #000 !important; 
-  --hover-bg-color: #f8c8ca !important; 
+  --hover-bg-color: #D8DEC3 !important; 
 }
 
 .login-button.custom-button:hover {
-  background-color: #f8c8ca !important;
+  background-color: #BFC8A8 !important;
   color: #000 !important;
 }
 
@@ -49,6 +49,9 @@
   z-index: 100;
   animation: fadeIn 0.2s ease-out;
   overflow: hidden;
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 400 !important;
+  font-size: 1rem !important;
 }
 
 @keyframes fadeIn {
@@ -67,23 +70,23 @@
   text-align: left;
   width: 100%;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 1rem;
   text-decoration: none;
   transition: background-color 0.2s ease;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Quicksand', sans-serif;
 }
 
 .dropdown-item:hover {
-  background-color: #FADADD;
-  color: #000; 
+  background-color: #D8DEC3;
+  color: #4A3D3D; 
 }
 
 .dropdown-item svg {
-  color: #6B4226; 
+  color: #4A3D3D; 
 }
 
 .custom-button.login-button {
-  font-family: var(--font-body);
+  font-family: 'Quicksand', sans-serif;
   font-weight: 400;
   font-size: 10px;
   letter-spacing: 1px;

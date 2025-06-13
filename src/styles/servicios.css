@@ -6,8 +6,6 @@
   align-items: center;
   position: relative;
   overflow: hidden;
-  background-color: #032547;
-  background-image: linear-gradient(135deg, #0A2647 0%, #032547 100%);
 }
 
 .servicios-overlay {
@@ -15,8 +13,8 @@
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(107, 66, 38, 0.3) 0%, rgba(107, 66, 38, 0.6) 50%, rgba(107, 66, 38, 0.9) 100%);
+  bottom: 0; 
+  background: linear-gradient(180deg, #F4F8E6 0%, #F2E9E6 100%);
   z-index: 1;
 }
 
@@ -32,27 +30,28 @@
 }
 
 .section-title {
-  font-family: var(--font-heading, 'Montserrat', sans-serif);
-  font-size: 3rem;
-  color: #F4EBD0;
-  margin-bottom: 1.5rem;
+  font-family: 'Playfair Display', sans-serif !important;
+  font-size: 2.5rem !important;
+  color: #4A3D3D !important;
   position: relative;
-  font-weight: 750;
+  font-weight: 700 !important;
+  text-shadow: 0px 2px 2px rgba(0, 0, 0, 0.25) !important;
+  margin-bottom: 1.5rem;
   text-align: center;
   border-bottom: none !important;
   padding: 0%;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1) !important;
+  text-transform: lowercase;
 }
 
 .servicios-description {
-  font-family: var(--font-body, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
-  font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.9);
+  font-family: 'Quicksand', sans-serif !important;
+  font-size: 1.25rem !important;
+  color: #4A3D3D !important;
+  line-height: 2rem !important;
+  font-weight: 400 !important;
   text-align: center;
-  max-width: 700px;
   margin-bottom: 3rem;
-  line-height: 1.6;
-  animation: fadeInDown 0.8s ease-out 0.2s forwards;
-  opacity: 0;
 }
 
 .servicios-columns-wrapper {
@@ -71,22 +70,14 @@
 }
 
 .servicios-category-title {
-  font-family: var(--font-heading, 'Montserrat', sans-serif);
-  font-size: 1.6rem;
-  color: #D4A574;
+  font-family: 'Quicksand', sans-serif !important;
+  font-size: 1.25rem;
+  color: #4A3D3D !important;
   position: relative;
-  margin-bottom: 1.2rem;
-  letter-spacing: 0.5px;
+  font-weight: 700 !important;
   text-align: center;
-  padding: 8px 16px;
-  border-radius: 4px;
   display: inline-block;
   align-self: center;
-}
-
-.servicios-category-title .highlight {
-  color: #D4A574;
-  position: relative;
 }
 
 .servicios-cards-grid {
@@ -96,22 +87,6 @@
   max-height: 55vh;
   overflow-y: auto;
   padding-right: 10px;
-  scrollbar-width: thin;
-  scrollbar-color: #D4A574 rgba(255, 255, 255, 0.1);
-}
-
-.servicios-cards-grid::-webkit-scrollbar {
-  width: 6px;
-}
-
-.servicios-cards-grid::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-
-.servicios-cards-grid::-webkit-scrollbar-thumb {
-  background-color: #D4A574;
-  border-radius: 3px;
 }
 
 .servicios-grid-grupales {
@@ -119,7 +94,6 @@
 }
 
 .servicio-card-wrapper {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
@@ -128,7 +102,7 @@
 
 .servicio-card-wrapper:hover {
   transform: translateY(-5px);
-  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 rgba(0, 0, 0, 0.25);
 }
 
 .servicio-card-wrapper::after {

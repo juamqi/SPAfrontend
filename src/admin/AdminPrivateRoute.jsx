@@ -1,20 +1,18 @@
-/* import { useAuth } from '../context/AuthContext';
+import { useAdminAuth } from '../context/AdminAuthContext';
 import { Navigate } from 'react-router-dom';
 import AppAdmin from './AppAdmin'; 
 
 const AdminPrivateRoute = () => {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading } = useAdminAuth(); // ✅ Solo destructuro lo que uso
 
   if (loading) return <p>Cargando...</p>;
 
-  // En este ejemplo, consideramos admin si el nombre es 'admin'
-  const isAdmin = user?.nombre === 'admin';//cambiar nombre
-
-  if (!isAuthenticated() || !isAdmin) {
+  // Verificar si está autenticado como admin
+  if (!isAuthenticated()) {
     return <Navigate to="/admin-login" />;
   }
 
   return <AppAdmin />;
 };
 
-export default AdminPrivateRoute; */
+export default AdminPrivateRoute;

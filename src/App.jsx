@@ -2,8 +2,9 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './styles/fonts.css';
 import './App.css';
-import AdminPrivateRoute from './admin/AdminPrivateRoute';
-import AdminLogin from './admin/AdminLogin';
+import AdminPrivateRoute from './admin/AdminPrivateRoute.jsx';
+import ProfPrivateRoute from './admin/ProfPrivateRoute.jsx';
+import UnifiedLogin from './admin/AdminLogin';
 import Layout from './Layout.jsx';
 import Hero from './componentes/Body/hero.jsx';
 import Servicios from './componentes/Body/servicios.jsx';
@@ -12,8 +13,10 @@ import Contacto from './componentes/Body/contacto.jsx';
 import Header from './componentes/Header/header.jsx';
 import Galeria from './componentes/Body/galeria.jsx';
 import PerfilUsuario from './componentes/PerfilUsuario/PerfilUsuario.jsx';
-import AppAdmin from './admin/AppAdmin.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
+import Chatbot from './componentes/chatbot.jsx';
+import { AdminAuthProvider } from './context/AdminAuthContext.jsx';
+import { ProfAuthProvider } from './context/ProfAuthContext.jsx';
 
 const Home = () => {
   return (
@@ -40,24 +43,26 @@ const Home = () => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/perfil" element={<PerfilUsuario />} />
-          </Route>
-
-          <Route path="/dashboard" element={<AppAdmin />} />
-
-          {/* Rutas sin Header */}
-          {/* <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/dashboard" element={<AdminPrivateRoute />} />
-          */ }
-        </Routes>
-      </Router>
+      <AdminAuthProvider>
+        <ProfAuthProvider>
+          <Router>
+            <Chatbot />
+            <Routes>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/perfil" element={<PerfilUsuario />} />
+              </Route>
+              {/* Rutas sin Header */}
+              <Route path="/admin-login" element={<UnifiedLogin />} />
+              <Route path="/prof-login" element={<UnifiedLogin />} />
+              <Route path="/dashboard" element={<AdminPrivateRoute />} />
+              <Route path="/prof-panel" element={<ProfPrivateRoute />} />
+            </Routes>
+          </Router>
+        </ProfAuthProvider>
+      </AdminAuthProvider>
     </AuthProvider>
   );
 }
 
 export default App;
-

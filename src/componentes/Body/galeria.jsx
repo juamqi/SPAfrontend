@@ -58,15 +58,15 @@ const Galeria = () => {
           </div>
           <div className="galeria-column galeria-info">
             <div className="galeria-text-content">
-              <h2 className="section-title">Galería</h2>
+              <h2 className="section-title">galería</h2>
               <p className="galeria-description">
-                Descubre nuestras instalaciones y servicios a través de imágenes. Nuestro espacio está diseñado para brindar una experiencia completa de relajación y bienestar.
+                Descubre nuestras instalaciones y servicios a través de imágenes.
               </p>
               <p className="galeria-additional-text">
                 Cada imagen captura la esencia de nuestro spa, donde la armonía, la tranquilidad y el cuidado están presentes en cada detalle. Nos enorgullece ofrecer un ambiente donde podrás escapar del estrés cotidiano y sumergirte en una experiencia de bienestar total.
               </p>
               <div className="galeria-buttons">
-                <a href="#contacto" className="hero-button primary">Contactanos</a>
+                <a href="#contacto" className="hero-button primary">¡CONTACTANOS!</a>
               </div>
             </div>
           </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './FilterComponent.css';
 
 /**
- * Componente reutilizable para filtrar datos por término de búsqueda y estado
+ * Componente reutilizable para filtrar datos por término de búsqueda, estado y servicios
  * 
  * @param {Object} props
  * @param {Array} props.data - Array de datos a filtrar 
@@ -12,6 +12,8 @@ import './FilterComponent.css';
  * @param {string} props.title - Título del filtro (opcional)
  * @param {boolean} props.showStatusFilter - Mostrar filtro de estado (opcional)
  * @param {Array} props.availableStatuses - Lista de estados disponibles (opcional)
+ * @param {boolean} props.showServiceFilter - Mostrar filtro de servicios (opcional)
+ * @param {string} props.apiUrl - URL del endpoint de servicios (opcional, por defecto usa '/api/admin/servicios')
  */
 const FilterComponent = ({ 
   data = [], 
@@ -20,17 +22,50 @@ const FilterComponent = ({
   placeholder = "Buscar...",
   title = "Filtrar por",
   showStatusFilter = false,
-  availableStatuses = ['Solicitado', 'Cancelado', 'Realizado']
+  availableStatuses = ['Solicitado', 'Cancelado', 'Realizado'],
+  showServiceFilter = false,
+  apiUrl = '/api/admin/servicios'
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedService, setSelectedService] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
+  const [servicios, setServicios] = useState([]);
+  const [loadingServicios, setLoadingServicios] = useState(false);
+  const [errorServicios, setErrorServicios] = useState('');
   const filterRef = useRef(null);
-  //filtra fecha
+
+  // Cargar servicios desde el backend
+  useEffect(() => {
+    if (showServiceFilter) {
+      fetchServicios();
+    }
+  }, [showServiceFilter, apiUrl]);
+
+  const fetchServicios = async () => {
+    setLoadingServicios(true);
+    setErrorServicios('');
+    try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      const serviciosData = await response.json();
+      setServicios(serviciosData);
+    } catch (error) {
+      console.error('Error al cargar servicios:', error);
+      setErrorServicios('Error al cargar los servicios');
+      setServicios([]);
+    } finally {
+      setLoadingServicios(false);
+    }
+  };
+
+  // Filtrar datos cuando cambie cualquier filtro
   useEffect(() => {
     filterData();
-  }, [searchTerm, selectedStatus, selectedDate, data]);
+  }, [searchTerm, selectedStatus, selectedDate, selectedService, data]);
 
   // Efecto para manejar clics fuera del componente
   useEffect(() => {
@@ -45,11 +80,6 @@ const FilterComponent = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-  // Efecto para filtrar los datos cuando cambia el término de búsqueda o el estado
-  useEffect(() => {
-    filterData();
-  }, [searchTerm, selectedStatus, data]);
 
   const filterData = () => {
     if (!data || data.length === 0) return;
@@ -80,6 +110,20 @@ const FilterComponent = ({
     if (selectedDate) {
       filteredResults = filteredResults.filter(item => item.fecha === selectedDate);
     }
+
+    // Filtrar por servicio
+if (selectedService) {
+  // Buscar el nombre del servicio seleccionado
+  const servicioSeleccionado = servicios.find(s => s.id === parseInt(selectedService));
+  const nombreServicio = servicioSeleccionado ? servicioSeleccionado.nombre : selectedService;
+  
+  filteredResults = filteredResults.filter(item => {
+    // Comparar con el nombre del servicio (que es lo que tienen los turnos)
+    return item.servicio === nombreServicio ||
+           item.nombre_servicio === nombreServicio ||
+           item.id_servicio === parseInt(selectedService);
+  });
+}
   
     onFilterChange(filteredResults);
   };
@@ -92,16 +136,56 @@ const FilterComponent = ({
     setSelectedStatus(e.target.value);
   };
 
+  const handleServiceChange = (e) => {
+    setSelectedService(e.target.value);
+  };
+
   const handleClearFilters = () => {
     setSearchTerm('');
     setSelectedStatus('');
     setSelectedDate('');
+    setSelectedService('');
     onFilterChange(data);
   };
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
+
+  // Calcular resultados filtrados para mostrar el contador
+  const getFilteredCount = () => {
+  if (!data || data.length === 0) return 0;
+  
+  return data.filter(item => {
+    // Filtro por término de búsqueda
+    const matchesSearch = !searchTerm.trim() || 
+      (item[searchField] && 
+       item[searchField].toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (!item[searchField] && Object.values(item).some(
+        value => typeof value === 'string' && 
+        value.toLowerCase().includes(searchTerm.toLowerCase())
+      ));
+    
+    // Filtro por estado
+    const matchesStatus = !selectedStatus || item.estado === selectedStatus;
+    
+    // Filtro por fecha
+    const matchesDate = !selectedDate || item.fecha === selectedDate;
+
+    // Filtro por servicio - CORREGIDO
+    let matchesService = true;
+    if (selectedService) {
+      const servicioSeleccionado = servicios.find(s => s.id === parseInt(selectedService));
+      const nombreServicio = servicioSeleccionado ? servicioSeleccionado.nombre : selectedService;
+      
+      matchesService = item.servicio === nombreServicio ||
+                      item.nombre_servicio === nombreServicio ||
+                      item.id_servicio === parseInt(selectedService);
+    }
+    
+    return matchesSearch && matchesStatus && matchesDate && matchesService;
+  }).length;
+};
 
   return (
     <div className="filter-component" ref={filterRef}>
@@ -147,35 +231,41 @@ const FilterComponent = ({
               </select>
             </div>
           )}
-          
-          <div className="filter-actions">
-            <button 
-              className="clear-all-button" 
-              onClick={handleClearFilters}
-              disabled={!searchTerm && !selectedStatus && !selectedDate}
+
+          {showServiceFilter && (
+            <div className="service-filter">
+              <select 
+                value={selectedService} 
+                onChange={handleServiceChange}
+                className="service-select"
+                disabled={loadingServicios}
               >
-              Limpiar filtros
-            </button>
-          </div>
-          
-          <div className="filter-info">
-            <span className="results-count">
-              {data.length > 0 ? 
-                `Mostrando ${data.filter(item => {
-                  // Filtro por término de búsqueda
-                  const matchesSearch = !searchTerm.trim() || 
-                    (item[searchField] && 
-                     item[searchField].toLowerCase().includes(searchTerm.toLowerCase()));
-                  
-                  // Filtro por estado
-                  const matchesStatus = !selectedStatus || item.estado === selectedStatus;
-                  
-                  return matchesSearch && matchesStatus;
-                }).length} de ${data.length}` : 
-                "No hay datos"
-              }
-            </span>
-          </div>
+                <option value="">Todos los servicios</option>
+                {loadingServicios ? (
+                  <option disabled>Cargando servicios...</option>
+                ) : errorServicios ? (
+                  <option disabled>{errorServicios}</option>
+                ) : (
+                  servicios.map(servicio => (
+                    <option key={servicio.id} value={servicio.id}>
+                      {servicio.nombre} - {servicio.categoria} ${servicio.precio}
+                    </option>
+                  ))
+                )}
+              </select>
+              {loadingServicios && <div className="loading-spinner">⟳</div>}
+              {errorServicios && (
+                <button 
+                  className="retry-button" 
+                  onClick={fetchServicios}
+                  title="Reintentar cargar servicios"
+                >
+                  ↻
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="date-filter">
             <label htmlFor="date-input">Filtrar por fecha:</label>
             <input
@@ -194,6 +284,25 @@ const FilterComponent = ({
                 ×
               </button>
             )}
+          </div>
+          
+          <div className="filter-actions">
+            <button 
+              className="clear-all-button" 
+              onClick={handleClearFilters}
+              disabled={!searchTerm && !selectedStatus && !selectedDate && !selectedService}
+            >
+              Limpiar filtros
+            </button>
+          </div>
+          
+          <div className="filter-info">
+            <span className="results-count">
+              {data.length > 0 ? 
+                `Mostrando ${getFilteredCount()} de ${data.length}` : 
+                "No hay datos"
+              }
+            </span>
           </div>
         </div>
       )}

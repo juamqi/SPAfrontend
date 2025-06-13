@@ -1,16 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
 
 :root {
-  --color-primary: #6B4226; /* Marrón oscuro - como en PerfilUsuario */
-  --color-secondary: #D4A574; /* Dorado/Marrón claro - como en PerfilUsuario */
-  --color-text-light: #F4EBD0; /* Beige claro para texto sobre fondos oscuros */
-  --color-background: #F4EBD0; /* Beige claro para fondos */
+  --color-primary: #4A3D3D; /* Marrón oscuro - como en PerfilUsuario */
+  --color-secondary: #FF6161; /* Dorado/Marrón claro - como en PerfilUsuario */
+  --color-text-light: #F4F8E6; /* Beige claro para texto sobre fondos oscuros */
+  --color-background: #F4F8E6; /* Beige claro para fondos */
   --color-panel: rgba(75, 44, 32, 0.7); /* Marrón semi-transparente - como en PerfilUsuario */
   --color-panel-header: rgba(161, 101, 73, 0.8); /* Marrón medio - como en PerfilUsuario */
   --color-accent: #A16549; /* Color acento para elementos destacados */
   --border-radius: 10px;
   --box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  --font-body: 'Montserrat', sans-serif;
+  --font-body: 'Quicksand', sans-serif;
 }
 
 * {
@@ -93,7 +93,7 @@ html,
 .navbar-brand {
   color: var(--color-text-light);
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 500;
   margin-right: 2rem;
   letter-spacing: 0.5px;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
@@ -105,6 +105,7 @@ html,
 
 /* Cabecera del panel */
 .admin-header-simple {
+  font: var(--font-body);
   padding: 1rem 0 1.5rem 0;
   margin-bottom: 1.5rem;
   text-align: left;
@@ -112,11 +113,11 @@ html,
 }
 
 .admin-header-simple h1 {
+  font: var(--font-body);
   color: var(--color-primary);
   margin: 0;
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
   margin-bottom: 0.5rem;
   position: relative;
   display: inline-block;
@@ -134,6 +135,7 @@ html,
 }
 
 .admin-header-simple p {
+  font: var(--font-body);
   color: var(--color-accent);
   font-size: 1.1rem;
   margin: 0;
@@ -163,14 +165,13 @@ html,
 }
 
 h2 {
+  font: var(--font-body);
   color: var(--color-primary);
   margin-top: 0;
-  font-weight: 1000;
-  border-bottom: 2px solid var(--color-secondary);
-  padding-bottom: 0.75rem;
-  margin-bottom: 1.5rem;
+  font-weight: 700;
   letter-spacing: 0.5px;
   font-size: 1.8rem;
+  text-align: left;
 }
 
 /* Tablas mejoradas */
@@ -291,7 +292,7 @@ h2 {
   margin-bottom: 1.5rem;
   padding: 0.75rem 1.5rem;
   background: var(--color-secondary);
-  color: var(--color-primary);
+  color: var(--color-text-light);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -304,7 +305,7 @@ h2 {
 }
 
 .btn-agregar:hover {
-  background: #c69764;
+  background: #d34747;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(75, 56, 50, 0.15);
 }
@@ -315,7 +316,6 @@ h2 {
   font-weight: bold;
 }
 
-.btn-editar,
 .btn-eliminar {
   padding: 0.6rem 1.25rem;
   margin-top: 1rem;
@@ -325,34 +325,11 @@ h2 {
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   box-shadow: 0 2px 4px rgba(75, 56, 50, 0.1);
-}
-
-.btn-editar {
-  background-color: var(--color-secondary);
-  color: var(--color-primary);
-}
-
-.btn-editar:hover {
-  background-color: #c69764;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(75, 56, 50, 0.15);
-}
-
-.btn-editar:disabled {
-  background-color: #e4cdaf;
-  color: #8B7E74;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.btn-eliminar {
-  background-color: var(--color-primary);
-  color: var(--color-text-light);
+  background-color: var(--color-secondary) !important;
+  color: var(--color-background);
 }
 
 .btn-eliminar:hover {
-  background-color: #5a3a22;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(75, 56, 50, 0.15);
 }
@@ -506,9 +483,13 @@ h2 {
   padding: 0.75rem 1rem;
   cursor: pointer;
   border-radius: var(--border-radius) var(--border-radius) 0 0;
-  background-color: var(--color-panel-header);
+  background-color: var(--color-primary);
   color: var(--color-text-light);
   transition: background-color 0.2s ease;
+}
+
+.filter-header:hover {
+  background-color: var(--color-primary) !important;
 }
 
 .filter-title {

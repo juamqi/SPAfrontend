@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import ModalForm from "./ModalForm.jsx";
-import DropdownCategorias from "./dropDownCat.jsx";
-import DropdownServicios from "./dropDownServicios.jsx";
+import DropdownCategorias from "./DropdownCat.jsx";
+import DropdownServicios from "./DropdownServicios.jsx";
 import DropdownClientes from "./DropdownClientes.jsx";
-import DropdownProfesionalesPorServicio from "./DropDownProfesionalesPorServicio.jsx";
+import DropdownProfesionalesPorServicio from "./DropdownProfesionalesPorServicio.jsx";
 import FilterComponent from "./FilterComponent.jsx";
-
-
 
 const TurnosSection = () => {
     const [turnos, setTurnos] = useState([]);
@@ -45,7 +43,7 @@ const TurnosSection = () => {
 
             // Usamos una marca de tiempo para evitar caché
             const timestamp = new Date().getTime();
-            const response = await fetch(`https://spabackend-production.up.railway.app/api/serviciosAdm?_=${timestamp}`);
+            const response = await fetch(`http://localhost:3001/api/serviciosAdm?_=${timestamp}`);
 
             if (!response.ok) {
                 throw new Error("Error al obtener los servicios");
@@ -62,12 +60,11 @@ const TurnosSection = () => {
         }
     };
 
-
     const fetchTurnos = async () => {
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch("https://spabackend-production.up.railway.app/api/turnosAdmin");
+            const response = await fetch("http://localhost:3001/api/turnosAdmin");
             if (!response.ok) {
                 throw new Error("Error al obtener los turnos");
             }
@@ -85,7 +82,7 @@ const TurnosSection = () => {
 
     const fetchCategorias = async () => {
         try {
-            const response = await fetch("https://spabackend-production.up.railway.app/api/categoriasAdm");
+            const response = await fetch("http://localhost:3001/api/categoriasAdm");
             if (!response.ok) throw new Error("Error al obtener categorias");
             const data = await response.json();
             setCategorias(data);
@@ -101,8 +98,9 @@ const TurnosSection = () => {
         fetchTurnos();
     }, []);
 
-    // Función para manejar el cambio en el filtro
+    // Función para manejar el cambio en el filtro - ACTUALIZADA
     const handleFilterChange = (filteredData) => {
+        console.log("Datos filtrados recibidos:", filteredData);
         setTurnosFiltrados(filteredData);
     };
 
@@ -156,7 +154,6 @@ const TurnosSection = () => {
         }
     };
 
-
     const handleEliminar = async () => {
         if (turnoSeleccionado && window.confirm("¿Está seguro que desea cancelar este turno?")) {
             try {
@@ -166,7 +163,7 @@ const TurnosSection = () => {
                 console.log(`Cancelando turno ID: ${turnoSeleccionado.id}`);
 
                 const response = await fetch(
-                    `https://spabackend-production.up.railway.app/api/turnosAdmin/estado/${turnoSeleccionado.id}`,
+                    `http://localhost:3001/api/turnosAdmin/estado/${turnoSeleccionado.id}`,
                     {
                         method: 'PUT',
                         headers: {
@@ -200,39 +197,50 @@ const TurnosSection = () => {
     };
 
     const validarFormulario = () => {
-        // Validar que todos los campos estén completos
-        const camposRequeridos = ['fecha', 'hora', 'servicio_id', 'profesional_id', 'cliente_id'];
-        const camposFaltantes = camposRequeridos.filter(campo => !formulario[campo]);
+    // Validar que todos los campos estén completos
+    const camposRequeridos = ['fecha', 'hora', 'servicio_id', 'profesional_id', 'cliente_id'];
+    const camposFaltantes = camposRequeridos.filter(campo => !formulario[campo]);
 
-        if (camposFaltantes.length > 0) {
-            const mensajesCampos = {
-                'fecha': 'Fecha',
-                'hora': 'Hora',
-                'servicio_id': 'Servicio',
-                'profesional_id': 'Profesional',
-                'cliente_id': 'Cliente'
-            };
+    if (camposFaltantes.length > 0) {
+        const mensajesCampos = {
+            'fecha': 'Fecha',
+            'hora': 'Hora',
+            'servicio_id': 'Servicio',
+            'profesional_id': 'Profesional',
+            'cliente_id': 'Cliente'
+        };
 
-            const camposFaltantesNombres = camposFaltantes.map(campo => mensajesCampos[campo]);
-            throw new Error(`Por favor complete todos los campos obligatorios: ${camposFaltantesNombres.join(', ')}`);
-        }
+        const camposFaltantesNombres = camposFaltantes.map(campo => mensajesCampos[campo]);
+        throw new Error(`Por favor complete todos los campos obligatorios: ${camposFaltantesNombres.join(', ')}`);
+    }
 
-        // Validar formato de fecha
-        const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!fechaRegex.test(formulario.fecha)) {
-            throw new Error("El formato de fecha no es válido. Utilice YYYY-MM-DD");
-        }
+    // Validar formato de fecha
+    const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!fechaRegex.test(formulario.fecha)) {
+        throw new Error("El formato de fecha no es válido. Utilice YYYY-MM-DD");
+    }
 
-        // Validar formato de hora
-        const horaRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-        if (!horaRegex.test(formulario.hora)) {
-            throw new Error("El formato de hora no es válido. Utilice HH:MM");
-        }
+    // NUEVA VALIDACIÓN: Verificar que la fecha no sea anterior a hoy
+    const fechaSeleccionada = new Date(formulario.fecha);
+    const fechaHoy = new Date();
+    
+    // Establecer la hora a 00:00:00 para comparar solo las fechas
+    fechaHoy.setHours(0, 0, 0, 0);
+    fechaSeleccionada.setHours(0, 0, 0, 0);
+    
+    if (fechaSeleccionada < fechaHoy) {
+        throw new Error("No se puede agendar un turno en una fecha que ya pasó");
+    }
 
-        return true;
-    };
+    // Validar formato de hora
+    const horaRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!horaRegex.test(formulario.hora)) {
+        throw new Error("El formato de hora no es válido. Utilice HH:MM");
+    }
 
-    // Reemplazar la función handleGuardar con esta versión corregida
+    return true;
+};
+
     const handleGuardar = async () => {
         try {
             setIsLoading(true);
@@ -281,7 +289,7 @@ const TurnosSection = () => {
 
             if (modo === "crear") {
                 // Crear nuevo turno
-                response = await fetch('https://spabackend-production.up.railway.app/api/turnosAdmin', {
+                response = await fetch('http://localhost:3001/api/turnosAdmin', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datosFormateados)
@@ -307,7 +315,7 @@ const TurnosSection = () => {
                     id
                 };
 
-                response = await fetch(`https://spabackend-production.up.railway.app/api/turnosAdmin/${id}`, {
+                response = await fetch(`http://localhost:3001/api/turnosAdmin/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datosActualizados)
@@ -494,9 +502,16 @@ const TurnosSection = () => {
                         placeholder="Buscar por cliente..."
                         title="Filtrar turnos"
                         showStatusFilter={true}
+                        showServiceFilter={true} 
                         availableStatuses={estadosTurnos}
+                        apiUrl="http://localhost:3001/api/serviciosAdm"
                     />
                 </div>
+            </div>
+
+            {/* AGREGADO: Mostrar información de filtros activos */}
+            <div className="filtros-info">
+                <p>Mostrando {turnosFiltrados.length} de {turnos.length} turnos</p>
             </div>
 
             {isLoading ? (
@@ -520,7 +535,7 @@ const TurnosSection = () => {
                             {turnosFiltrados.length === 0 ? (
                                 <tr>
                                     <td colSpan="8" style={{ textAlign: "center" }}>
-                                        No hay turnos disponibles
+                                        {turnos.length === 0 ? "No hay turnos disponibles" : "No hay turnos que coincidan con los filtros aplicados"}
                                     </td>
                                 </tr>
                             ) : (

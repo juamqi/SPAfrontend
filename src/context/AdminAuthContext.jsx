@@ -14,9 +14,31 @@ export const AdminAuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (adminData) => {
-    localStorage.setItem('admin', JSON.stringify(adminData));
-    setAdmin(adminData);
+  // Función de login que conecta con la BD
+  const login = async (email, password) => {
+    try {
+      const response = await fetch('http://localhost:3001/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Guardar en localStorage y state
+        localStorage.setItem('admin', JSON.stringify(data.administrador));
+        setAdmin(data.administrador);
+        return { success: true, admin: data.administrador };
+      } else {
+        return { success: false, error: data.error || 'Error al iniciar sesión' };
+      }
+    } catch (error) {
+      console.error('Error al loguear admin:', error);
+      return { success: false, error: 'Error al conectar con el servidor' };
+    }
   };
 
   const logout = () => {
@@ -26,8 +48,49 @@ export const AdminAuthProvider = ({ children }) => {
 
   const isAuthenticated = () => !!admin;
 
+  // Función para verificar si el admin sigue existiendo (opcional)
+  const verifyAuth = async () => {
+    if (!admin) return false;
+    
+    try {
+      const response = await fetch('http://localhost:3001/api/admin', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        logout(); // Si hay error, cerrar sesión
+        return false;
+      }
+      
+      const admins = await response.json();
+      // Verificar si el admin actual sigue activo
+      const currentAdmin = admins.find(a => a.id_admin === admin.id_admin && a.estado === 1);
+      
+      if (!currentAdmin) {
+        logout();
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error verificando autenticación:', error);
+      logout();
+      return false;
+    }
+  };
+
   return (
-    <AdminAuthContext.Provider value={{ admin, loading, login, logout, isAuthenticated }}>
+    <AdminAuthContext.Provider value={{ 
+      admin, 
+      loading, 
+      login, 
+      logout, 
+      isAuthenticated, 
+      verifyAuth 
+    }}>
       {children}
     </AdminAuthContext.Provider>
   );
