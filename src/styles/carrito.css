@@ -1,3 +1,4 @@
+/* ===== ESTILOS EXISTENTES ===== */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -46,6 +47,8 @@
 }
 
 .close-button {
+    position: absolute;
+    right: 16px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
@@ -54,6 +57,12 @@
     padding: 4px;
     display: flex;
     align-items: center;
+    color: #F4F8E6;
+}
+
+.close-button:hover {
+    background-color: rgba(244, 248, 230, 0.1);
+    border-radius: 4px;
 }
 
 .fecha-selector {
@@ -82,7 +91,6 @@
     display: flex;
     align-items: center;
     max-width: 155px;
-    /* Ajusta este valor según necesites */
     display: flex;
     justify-content: flex-end;
 }
@@ -98,7 +106,6 @@
     border-radius: 4px;
     width: 100%;
     min-width: 150px;
-    /* Opcional: establece un ancho mínimo */
 }
 
 .fecha-dropdown-arrow {
@@ -153,9 +160,19 @@
     color: #4A3D3D;
 }
 
+.servicio-detalles > div {
+    margin-bottom: 4px;
+}
+
 .servicio-precio {
     color: #FF6161;
     font-weight: 600;
+}
+
+.servicio-comentarios {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
 }
 
 .servicio-checkbox {
@@ -211,6 +228,67 @@
     color: #FF6161;
 }
 
+/* ===== ESTILOS NUEVOS AGREGADOS ===== */
+
+/* Mensajes de estado */
+.error-message {
+    padding: 20px;
+    text-align: center;
+    color: #e74c3c;
+    background-color: #ffeaea;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    margin: 10px;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.loading-message {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.empty-message {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.select-date-message {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* Texto de descuento */
+.descuento-text {
+    font-size: 14px;
+    color: #666;
+    margin-top: 4px;
+    text-align: center;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 500;
+}
+
+.descuento-precio {
+    font-weight: bold;
+    color: #4A3D3D;
+}
+
 .buttons-container {
     display: flex;
     gap: 12px;
@@ -232,9 +310,15 @@
     transition: all 0.2s ease;
 }
 
-.pagar-button:hover {
+.pagar-button:hover:not(:disabled) {
     background: #e55555;
     transform: translateY(-1px);
+}
+
+.pagar-button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .pago-efectivo-button {
@@ -255,6 +339,26 @@
 .pago-efectivo-button:hover {
     background: #c7ceaf;
     transform: translateY(-1px);
+}
+
+/* ===== VISTA DE TARJETA ===== */
+.modal-header-tarjeta {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 50px;
+    background: #4A3D3D;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 13px;
+}
+
+.modal-header-tarjeta .close-button {
+    position: static;
+    transform: none;
 }
 
 .card-payment-container {
@@ -308,6 +412,29 @@
     margin: 0;
 }
 
+.tarjeta-content {
+    padding: 24px 26px;
+    height: calc(100% - 50px);
+    display: flex;
+    flex-direction: column;
+}
+
+.tarjeta-descripcion {
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    color: #4A3D3D;
+    margin: 0 0 20px 0;
+    font-family: 'Quicksand', sans-serif;
+}
+
+.tarjeta-separador {
+    width: 100%;
+    height: 1px;
+    background: #D8DEC3;
+    margin-bottom: 20px;
+}
+
 .card-content {
     padding: 24px 26px;
     height: calc(100% - 50px);
@@ -341,6 +468,7 @@
     line-height: 24px;
     color: #4A3D3D;
     margin-bottom: 8px;
+    font-family: 'Quicksand', sans-serif;
 }
 
 .input-wrapper {
@@ -361,6 +489,7 @@
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
     outline: none;
     transition: box-shadow 0.2s;
+    box-sizing: border-box;
 }
 
 .card-input:focus {
@@ -387,6 +516,39 @@
 
 .half-width .card-input {
     width: 100%;
+}
+
+.pago-footer {
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.total-pago {
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 24px;
+    text-align: center;
+    color: #4A3D3D;
+    margin-bottom: 20px;
+    font-family: 'Quicksand', sans-serif;
+}
+
+.pago-final-section {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.descuento-info {
+    flex: 1;
+    font-weight: 600;
+    font-size: 10px;
+    line-height: 16px;
+    color: #4A3D3D;
+    margin: 0;
+    text-align: left;
+    font-family: 'Quicksand', sans-serif;
 }
 
 .payment-section {
@@ -464,7 +626,7 @@
     }
 }
 
-/* Modal de éxito - Overlay */
+/* ===== MODAL DE ÉXITO ===== */
 .modal-exito-overlay {
   position: fixed;
   left: 0;
@@ -478,7 +640,6 @@
   z-index: 10000;
 }
 
-/* Contenedor principal del modal */
 .modal-exito-contenedor {
   position: relative;
   width: 588px;
@@ -489,7 +650,6 @@
   overflow: hidden;
 }
 
-/* Header del modal */
 .modal-exito-header {
   height: 50px;
   position: absolute;
@@ -504,7 +664,6 @@
   justify-content: center;
 }
 
-/* Botón de cerrar */
 .modal-exito-close {
   position: absolute;
   right: 2.72%;
@@ -529,7 +688,6 @@
   opacity: 0.8;
 }
 
-/* Título principal */
 .modal-exito-titulo {
   position: relative;
   font-family: 'Quicksand', sans-serif;
@@ -546,7 +704,6 @@
   border-bottom: none !important;
 }
 
-/* Texto del contenido */
 .modal-exito-texto {
   position: absolute;
   left: 17.35%;
@@ -566,7 +723,6 @@
   justify-content: center;
 }
 
-/* Contenedor de botones */
 .modal-exito-botones {
   position: absolute;
   left: 17.35%;
@@ -578,7 +734,6 @@
   align-items: center;
 }
 
-/* Botón de servicios */
 .boton-servicios {
   position: relative;
   flex: 1;
@@ -611,7 +766,6 @@
   box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Botón del carrito */
 .boton-carrito {
   position: relative;
   flex: 1;
@@ -644,52 +798,88 @@
   box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Responsive para dispositivos móviles */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .modal-exito-contenedor {
-    width: 95%;
-    margin: 20px;
-  }
-  
-  .modal-exito-titulo {
-    font-size: 20px;
-    line-height: 26px;
-  }
-  
-  .modal-exito-texto {
-    font-size: 14px;
-    line-height: 20px;
-    left: 10%;
-    right: 10%;
-  }
-  
-  .modal-exito-botones {
-    left: 10%;
-    right: 10%;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .boton-servicios,
-  .boton-carrito {
-    font-size: 12px;
-    min-height: 40px;
-  }
+    .carrito-modal {
+        width: 95%;
+        max-width: 432px;
+        height: 90vh;
+        max-height: 576px;
+    }
+    
+    .modal-title {
+        font-size: 20px;
+    }
+    
+    .buttons-container {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .pagar-button,
+    .pago-efectivo-button {
+        width: 100%;
+    }
+    
+    .input-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .pago-final-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+    
+    .descuento-info {
+        text-align: center;
+    }
+    
+    .modal-exito-contenedor {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .modal-exito-titulo {
+        font-size: 20px;
+        line-height: 26px;
+    }
+    
+    .modal-exito-texto {
+        font-size: 14px;
+        line-height: 20px;
+        left: 10%;
+        right: 10%;
+    }
+    
+    .modal-exito-botones {
+        left: 10%;
+        right: 10%;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .boton-servicios,
+    .boton-carrito {
+        font-size: 12px;
+        min-height: 40px;
+    }
 }
 
 @media (max-width: 480px) {
-  .modal-exito-contenedor {
-    width: 90%;
-    min-height: 350px;
-  }
-  
-  .modal-exito-titulo {
-    font-size: 18px;
-    line-height: 24px;
-  }
-  
-  .modal-exito-texto {
-    font-size: 13px;
-    line-height: 18px;
-  }
+    .modal-exito-contenedor {
+        width: 90%;
+        min-height: 350px;
+    }
+    
+    .modal-exito-titulo {
+        font-size: 18px;
+        line-height: 24px;
+    }
+    
+    .modal-exito-texto {
+        font-size: 13px;
+        line-height: 18px;
+    }
 }
