@@ -5,39 +5,47 @@ const FechaSelector = ({ idCliente, fechaSeleccionada, onFechaChange }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Función para formatear fecha de BD a formato display
+    // ✅ Función para formatear fecha de BD a formato display (usando UTC para consistencia)
     const formatearFechaDisplay = (fechaBD) => {
         const fecha = new Date(fechaBD);
-        const dia = fecha.getDate().toString().padStart(2, '0');
-        const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-        const año = fecha.getFullYear();
-        return `${dia}/${mes}/${año}`;
+        // Usar UTC para evitar problemas de zona horaria
+        const dia = fecha.getUTCDate().toString().padStart(2, '0');
+        const mes = (fecha.getUTCMonth() + 1).toString().padStart(2, '0');
+        const año = fecha.getUTCFullYear();
+        
+        const fechaFormateada = `${dia}/${mes}/${año}`;
+        console.log(`🗓️ FechaSelector - Formateando fecha: ${fechaBD} -> ${fechaFormateada}`);
+        
+        return fechaFormateada;
     };
 
-    // ✅ Función para validar si una fecha ya pasó
+    // ✅ Función para validar si una fecha ya pasó (usando UTC para consistencia)
     const esFechaPasada = (fechaCarrito) => {
-        // Obtener la fecha actual (solo fecha, sin hora)
+        // Obtener la fecha actual (solo fecha, sin hora) en UTC
         const fechaActual = new Date();
-        fechaActual.setHours(0, 0, 0, 0);
+        fechaActual.setUTCHours(0, 0, 0, 0);
 
-        // Convertir la fecha del carrito a objeto Date
+        // Convertir la fecha del carrito a objeto Date usando UTC
         let fechaParaComparar;
         
         // Verificar el formato de fecha que viene del backend
         if (fechaCarrito.includes('/')) {
             // Formato YYYY/MM/DD
             const [año, mes, dia] = fechaCarrito.split('/');
-            fechaParaComparar = new Date(parseInt(año), parseInt(mes) - 1, parseInt(dia));
+            fechaParaComparar = new Date(Date.UTC(parseInt(año), parseInt(mes) - 1, parseInt(dia)));
         } else if (fechaCarrito.includes('-')) {
             // Formato YYYY-MM-DD
-            fechaParaComparar = new Date(fechaCarrito);
+            fechaParaComparar = new Date(fechaCarrito + 'T00:00:00.000Z');
         } else {
             // Si es timestamp u otro formato
             fechaParaComparar = new Date(fechaCarrito);
+            fechaParaComparar.setUTCHours(0, 0, 0, 0);
         }
 
-        // Resetear horas para comparar solo fechas
-        fechaParaComparar.setHours(0, 0, 0, 0);
+        console.log(`📅 FechaSelector - Comparando fechas:`);
+        console.log(`   Fecha carrito: ${fechaCarrito} -> ${fechaParaComparar.toISOString()}`);
+        console.log(`   Fecha actual: ${fechaActual.toISOString()}`);
+        console.log(`   ¿Es fecha pasada? ${fechaParaComparar < fechaActual}`);
 
         // Retorna true si la fecha ya pasó
         return fechaParaComparar < fechaActual;
