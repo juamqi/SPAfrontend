@@ -66,9 +66,10 @@ const FechaSelector = ({ idCliente, fechaSeleccionada, onFechaChange }) => {
                 return 'Fecha inválida';
             }
             
-            const dia = fecha.getDate().toString().padStart(2, '0');
-            const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-            const año = fecha.getFullYear();
+            // ✅ Usar UTC para mantener consistencia con el backend
+            const dia = fecha.getUTCDate().toString().padStart(2, '0');
+            const mes = (fecha.getUTCMonth() + 1).toString().padStart(2, '0');
+            const año = fecha.getUTCFullYear();
             
             const fechaFormateada = `${dia}/${mes}/${año}`;
             console.log(`✅ FechaSelector - Fecha display formateada: ${fechaBD} -> ${fechaFormateada}`);
@@ -85,9 +86,9 @@ const FechaSelector = ({ idCliente, fechaSeleccionada, onFechaChange }) => {
         try {
             console.log(`📅 FechaSelector - Validando si es fecha pasada: ${fechaCarrito}`);
             
-            // Obtener la fecha actual (solo fecha, sin hora)
+            // ✅ Obtener la fecha actual en UTC
             const fechaActual = new Date();
-            fechaActual.setHours(0, 0, 0, 0);
+            fechaActual.setUTCHours(0, 0, 0, 0);
 
             // Parsear la fecha del carrito
             const fechaParaComparar = parsearFecha(fechaCarrito);
@@ -96,7 +97,8 @@ const FechaSelector = ({ idCliente, fechaSeleccionada, onFechaChange }) => {
                 return true; // Si no se puede parsear, considerarla como pasada por seguridad
             }
 
-            fechaParaComparar.setHours(0, 0, 0, 0);
+            // ✅ Resetear horas en UTC
+            fechaParaComparar.setUTCHours(0, 0, 0, 0);
 
             console.log(`📅 FechaSelector - Comparando fechas:`);
             console.log(`   Fecha carrito: ${fechaCarrito} -> ${fechaParaComparar.toISOString()}`);

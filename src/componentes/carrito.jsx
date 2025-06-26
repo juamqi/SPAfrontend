@@ -3,6 +3,11 @@ import { X, ArrowLeft } from 'lucide-react';
 import FechaSelector from './fechaselector.jsx';
 import '../styles/carrito.css';
 
+import React, { useState, useEffect } from 'react';
+import { X, ArrowLeft } from 'lucide-react';
+import FechaSelector from './fechaselector.jsx';
+import './CarritoCompleto.css';
+
 const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
     const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
     const [vistaActual, setVistaActual] = useState('carrito');
@@ -267,9 +272,10 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
                 return 'Fecha inválida';
             }
             
-            const año = fecha.getFullYear();
-            const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-            const dia = fecha.getDate().toString().padStart(2, '0');
+            // ✅ Usar UTC para mantener la fecha original sin ajustes de zona horaria
+            const año = fecha.getUTCFullYear();
+            const mes = (fecha.getUTCMonth() + 1).toString().padStart(2, '0');
+            const dia = fecha.getUTCDate().toString().padStart(2, '0');
             
             const fechaFormateada = `${año}/${mes}/${dia}`;
             console.log(`✅ Fecha formateada: ${fechaHora} -> ${fechaFormateada}`);
@@ -292,8 +298,9 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
                 return 'Hora inválida';
             }
             
-            const horas = fecha.getHours().toString().padStart(2, '0');
-            const minutos = fecha.getMinutes().toString().padStart(2, '0');
+            // ✅ Usar UTC para mantener la hora original sin ajustes de zona horaria
+            const horas = fecha.getUTCHours().toString().padStart(2, '0');
+            const minutos = fecha.getUTCMinutes().toString().padStart(2, '0');
             
             const horaFormateada = `${horas}:${minutos}`;
             console.log(`✅ Hora formateada: ${fechaHora} -> ${horaFormateada}`);
