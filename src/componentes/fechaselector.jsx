@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const FechaSelector = ({ idCliente, fechaSeleccionada, onFechaChange }) => {
+const FechaSelector = ({ idCliente, fechaSeleccionada, onFechaChange, forceRefresh }) => {
     const [fechasDisponibles, setFechasDisponibles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -216,6 +216,14 @@ const FechaSelector = ({ idCliente, fechaSeleccionada, onFechaChange }) => {
     useEffect(() => {
         obtenerCarritosPendientes();
     }, [idCliente]);
+
+    // ✅ Efecto para refrescar cuando se solicita desde props
+    useEffect(() => {
+        if (forceRefresh && idCliente) {
+            console.log('⚡ FechaSelector - Refresco forzado solicitado');
+            obtenerCarritosPendientes();
+        }
+    }, [forceRefresh]);
 
     // ✅ Efecto para recargar fechas periódicamente (opcional - para casos donde las fechas pasan mientras el usuario está en la página)
     useEffect(() => {

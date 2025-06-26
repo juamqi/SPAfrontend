@@ -3,9 +3,7 @@ import { X, ArrowLeft } from 'lucide-react';
 import FechaSelector from './fechaselector.jsx';
 import '../styles/carrito.css';
 
-
-
-const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
+const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
     const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
     const [vistaActual, setVistaActual] = useState('carrito');
 
@@ -309,7 +307,28 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
         }
     };
 
-    // ✅ Cargar carritos cuando se abre el modal o cambia el cliente (sin dependencia de isOpen)
+    // ✅ Función pública para refrescar datos (útil cuando se crean nuevos turnos)
+    const refrescarDatos = async () => {
+        console.log('🔄 CarritoCompleto - Refrescando datos por solicitud externa');
+        // Limpiar estados
+        setFechaSeleccionada(null);
+        setCarritoSeleccionado(null);
+        setServicios([]);
+        setCarritosPorFecha(new Map());
+        
+        // Recargar datos
+        await obtenerCarritosPorFecha();
+    };
+
+    // ✅ Efecto para refrescar cuando se solicita desde props
+    useEffect(() => {
+        if (forceRefresh && isOpen && idCliente) {
+            console.log('⚡ CarritoCompleto - Refresco forzado solicitado');
+            refrescarDatos();
+        }
+    }, [forceRefresh]);
+
+    // ✅ Cargar carritos cuando se abre el modal o cambia el cliente
     useEffect(() => {
         if (idCliente) {
             obtenerCarritosPorFecha();
@@ -318,9 +337,10 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
 
     // ✅ Efecto separado para cuando se abre el modal (para refrescar datos si es necesario)
     useEffect(() => {
-        if (isOpen && idCliente && carritosPorFecha.size === 0) {
-            // Solo volver a cargar si no hay datos
-            obtenerCarritosPorFecha();
+        if (isOpen && idCliente) {
+            // ✅ Siempre recargar cuando se abre el modal para tener datos frescos
+            console.log('🚪 CarritoCompleto - Modal abierto, refrescando datos');
+            refrescarDatos();
         }
     }, [isOpen]);
 
@@ -802,6 +822,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
                                 idCliente={idCliente}
                                 fechaSeleccionada={fechaSeleccionada}
                                 onFechaChange={handleFechaChange}
+                                forceRefresh={forceRefresh}
                             />
 
                             {/* Lista de Servicios */}
