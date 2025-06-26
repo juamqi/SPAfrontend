@@ -3,7 +3,7 @@ import { useProfAuth } from '../context/ProfAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import '../styles/AdminLogin.css';
-import { usePopupContext } from '../context/PopupContext';
+import { usePopupContext } from "../componentes/popupcontext.jsx";
 
 const AdminLogin = () => {
   const { login: adminLogin } = useAdminAuth();

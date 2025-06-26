@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ModalForm from "./ModalForm.jsx";
 import ClienteFilterComponent from "./ClienteFilterComponent.jsx";
-import { usePopupContext } from "./popupcontext.jsx";
+import { usePopupContext } from "../componentes/popupcontext.jsx";
 
 const ClientesSection = () => {
     const [clientes, setClientes] = useState([]);

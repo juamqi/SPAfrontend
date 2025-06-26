@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import ModalForm from "./ModalForm.jsx";
 import DropdownCategorias from "./dropDownCat.jsx";
 import ServicioFilterComponent from "./ServiciosFilterComponent.jsx"; 
-import { usePopupContext } from "./popupcontext.jsx";
+import { usePopupContext } from "../componentes/popupcontext.jsx";
 
 const ServiciosSection = () => {
     const [servicios, setServicios] = useState([]);

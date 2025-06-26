@@ -3,7 +3,7 @@ import ModalForm from "./ModalForm.jsx";
 import DropdownCategorias from "./dropDownCat";
 import DropdownServicios from "./dropDownServicios.jsx";
 import ProfesionalFilterComponent from "./ProfesionalFilterComponent";
-import { usePopupContext } from "./popupcontext.jsx";
+import { usePopupContext } from "../componentes/popupcontext.jsx";
 
 const ProfesionalesSection = () => {
     const [profesionales, setProfesionales] = useState([]);

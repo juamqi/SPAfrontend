@@ -5,7 +5,7 @@ import DropdownServicios from "./dropDownServicios.jsx";
 import DropdownClientes from "./DropdownClientes.jsx";
 import DropdownProfesionalesPorServicio from "./DropDownProfesionalesPorServicio.jsx";
 import FilterComponent from "./FilterComponent.jsx";
-import { usePopupContext } from "./popupcontext.jsx";
+import { usePopupContext } from "../componentes/popupcontext.jsx";
 
 const TurnosSection = () => {
     const [turnos, setTurnos] = useState([]);
