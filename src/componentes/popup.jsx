@@ -31,7 +31,7 @@ export const usePopup = () => {
   };
 
   const closePopup = (id) => {
-    setPopups(prev => prev.filter(popup => popup.id !== id));
+    setPopups(prev => prev.filter(p => p.id !== id));
   };
 
   return { popups, showPopup, closePopup };
@@ -61,48 +61,16 @@ const Popup = ({ popup, onClose }) => {
   };
 
   const getIcon = () => {
-    const iconStyles = "w-6 h-6";
+    const iconStyles = "width: 24px; height: 24px";
     switch (popup.type) {
       case 'success':
-        return (
-          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <svg className={iconStyles + " text-green-600"} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-        );
+        return `<svg style="${iconStyles}" fill="none" stroke="green" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg>`;
       case 'error':
-        return (
-          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <svg className={iconStyles + " text-red-600"} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </div>
-        );
+        return `<svg style="${iconStyles}" fill="none" stroke="red" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>`;
       case 'warning':
-        return (
-          <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
-            <svg className={iconStyles + " text-amber-600"} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-        );
-      case 'confirm':
-        return (
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-            <svg className={iconStyles + " text-blue-600"} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-        );
+        return `<svg style="${iconStyles}" fill="none" stroke="orange" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856"/></svg>`;
       default:
-        return (
-          <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mb-4">
-            <svg className={iconStyles + " text-teal-600"} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-        );
+        return `<svg style="${iconStyles}" fill="none" stroke="teal" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01"/></svg>`;
     }
   };
 
@@ -113,71 +81,106 @@ const Popup = ({ popup, onClose }) => {
       }`}
       style={{
         zIndex: 2147483647,
-        fontFamily: 'sans-serif',
-        fontSize: '16px',
-        pointerEvents: 'auto',
         padding: '1rem',
+        fontSize: '16px',
+        fontFamily: 'sans-serif',
+        pointerEvents: 'auto',
       }}
     >
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
+        style={{ pointerEvents: 'auto' }}
         onClick={popup.type !== 'confirm' ? handleClose : undefined}
       />
 
-      {/* Popup content */}
+      {/* Contenido del popup */}
       <div
-        className={`relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 mx-4 text-center transform transition-all duration-300 ${
-          isVisible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'
-        }`}
-        style={{ maxHeight: '90vh', overflowY: 'auto' }}
+        className="popup-reset"
+        style={{
+          position: 'relative',
+          backgroundColor: 'white',
+          borderRadius: '1rem',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+          padding: '2rem',
+          maxWidth: '400px',
+          width: '100%',
+          textAlign: 'center',
+          transform: isVisible ? 'scale(1)' : 'scale(0.95)',
+          transition: 'transform 0.3s ease',
+        }}
       >
-        <div className="popup-reset">
-          {getIcon()}
+        {/* Ícono */}
+        <div
+          dangerouslySetInnerHTML={{ __html: getIcon() }}
+          style={{ marginBottom: '1rem' }}
+        />
 
-          {popup.title && (
-            <h3 className="text-xl font-semibold text-gray-800 mb-3">
-              {popup.title}
-            </h3>
+        {/* Título */}
+        {popup.title && (
+          <h3 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '0.5rem' }}>
+            {popup.title}
+          </h3>
+        )}
+
+        {/* Mensaje */}
+        <p style={{ marginBottom: '1.5rem', color: '#555' }}>{popup.message}</p>
+
+        {/* Botones */}
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+          {popup.type === 'confirm' && popup.showCancel && (
+            <button
+              onClick={handleCancel}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                backgroundColor: '#eee',
+                color: '#333',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              {popup.cancelText}
+            </button>
           )}
 
-          <p className="text-gray-600 mb-6 leading-relaxed">{popup.message}</p>
-
-          <div className="flex gap-3 justify-center">
-            {popup.type === 'confirm' && popup.showCancel && (
-              <button
-                onClick={handleCancel}
-                className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200 font-medium"
-              >
-                {popup.cancelText}
-              </button>
-            )}
-
-            <button
-              onClick={handleConfirm}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors duration-200 ${
-                popup.type === 'error'
-                  ? 'bg-red-600 hover:bg-red-700 text-white'
-                  : popup.type === 'warning'
-                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                  : popup.type === 'success'
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : 'bg-teal-600 hover:bg-teal-700 text-white'
-              }`}
-            >
-              {popup.confirmText}
-            </button>
-          </div>
+          <button
+            onClick={handleConfirm}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              backgroundColor: popup.type === 'error'
+                ? '#dc2626'
+                : popup.type === 'warning'
+                ? '#d97706'
+                : popup.type === 'success'
+                ? '#16a34a'
+                : '#0d9488',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            {popup.confirmText}
+          </button>
         </div>
 
+        {/* Cerrar */}
         {popup.type !== 'confirm' && (
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition duration-200"
+            style={{
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              background: 'transparent',
+              border: 'none',
+              fontSize: '1.25rem',
+              color: '#999',
+              cursor: 'pointer',
+            }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            ×
           </button>
         )}
       </div>
@@ -187,6 +190,7 @@ const Popup = ({ popup, onClose }) => {
 
 export const PopupContainer = ({ popups, onClose }) => {
   if (popups.length === 0) return null;
+
   return createPortal(
     <div style={{ position: 'fixed', inset: 0, zIndex: 2147483647, pointerEvents: 'none' }}>
       {popups.map(popup => (
