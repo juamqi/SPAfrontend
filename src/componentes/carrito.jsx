@@ -931,7 +931,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                                     )}
                                     {/* ✅ NUEVO: Mostrar mensaje cuando NO aplica descuento */}
                                     {carritoSeleccionado && obtenerSubtotal() > 0 && !aplicaDescuento && (
-                                        <div className="sin-descuento-text">
+                                        <div className="descuento-text">
                                             TOTAL: <span className="total-precio">
                                                 {formatearPrecio(calcularTotal())}
                                             </span>
