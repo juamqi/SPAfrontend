@@ -8,6 +8,8 @@ import FilterComponent from "./FilterComponent.jsx";
 import { usePopupContext } from "../componentes/popupcontext.jsx";
 
 const ProfTurnosSection = () => {
+    const profesional = JSON.parse(localStorage.getItem("profesional"));
+    const profesionalId = profesional?.id_profesional;
     const [turnos, setTurnos] = useState([]);
     const [turnosFiltrados, setTurnosFiltrados] = useState([]);
     const [modo, setModo] = useState("crear");
@@ -68,9 +70,12 @@ const ProfTurnosSection = () => {
                 throw new Error("Error al obtener los turnos");
             }
             const data = await response.json();
-            console.log("Turnos recibidos:", data);
-            setTurnos(data);
-            setTurnosFiltrados(data); // Inicialmente, turnos filtrados = todos los turnos
+
+            // Filtrar turnos del profesional logueado
+            const turnosDelProfesional = data.filter(t => t.id_profesional  === profesionalId);
+
+            setTurnos(turnosDelProfesional);
+            setTurnosFiltrados(turnosDelProfesional);
         } catch (error) {
             console.error("Error al cargar los turnos:", error);
             setError("No se pudieron cargar los turnos. Intenta nuevamente.");
@@ -112,7 +117,7 @@ const ProfTurnosSection = () => {
     // Función para generar e imprimir PDF con los turnos de mañana
     const handleAgregar = () => {
         const fechaMañana = getFechaMañana();
-        
+
         // Filtrar turnos para mañana
         const turnosMañana = turnos.filter(turno => {
             // Asumiendo que turno.fecha está en formato YYYY-MM-DD o similar
@@ -194,12 +199,12 @@ const ProfTurnosSection = () => {
             <body>
                 <h1>TURNOS PROGRAMADOS PARA MAÑANA</h1>
                 <div class="fecha-titulo">
-                    Fecha: ${new Date(fechaMañana + 'T12:00:00').toLocaleDateString('es-AR', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                    })}
+                    Fecha: ${new Date(fechaMañana + 'T12:00:00').toLocaleDateString('es-AR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        })}
                 </div>
                 <table>
                     <thead>
@@ -234,7 +239,7 @@ const ProfTurnosSection = () => {
         ventanaImpresion.document.open();
         ventanaImpresion.document.write(contenidoHTML);
         ventanaImpresion.document.close();
-        
+
         // Esperar a que se cargue el contenido y luego imprimir
         ventanaImpresion.onload = () => {
             ventanaImpresion.focus();
@@ -330,7 +335,7 @@ const ProfTurnosSection = () => {
                     </table>
                 </div>
             )}
-            
+
         </div>
     );
 };
