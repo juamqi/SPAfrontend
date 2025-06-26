@@ -3,45 +3,6 @@ import { X, ArrowLeft } from 'lucide-react';
 import FechaSelector from './fechaselector.jsx';
 import '../styles/carrito.css';
 
-// ✅ COMPONENTE SELECTOR DE CARRITOS (definido fuera del componente principal)
-const SelectorCarritos = ({ fecha, carritosPorFecha, carritoSeleccionado, onCarritoChange, formatearPrecio }) => {
-    const carritosDeEsteFecha = carritosPorFecha.get(fecha) || [];
-    
-    if (carritosDeEsteFecha.length <= 1) {
-        return null; // No mostrar si solo hay un carrito
-    }
-
-    return (
-        <div className="selector-carritos">
-            <div className="selector-carritos-header">
-                <h4>Carritos disponibles para {fecha}</h4>
-                <span className="carritos-count">{carritosDeEsteFecha.length} carritos</span>
-            </div>
-            
-            <div className="carritos-opciones">
-                {carritosDeEsteFecha.map((carrito, index) => (
-                    <div 
-                        key={carrito.id}
-                        className={`carrito-opcion ${carritoSeleccionado?.id === carrito.id ? 'activo' : ''}`}
-                        onClick={() => onCarritoChange(carrito)}
-                    >
-                        <div className="carrito-opcion-header">
-                            <span className="carrito-numero">Carrito #{carrito.id}</span>
-                            <span className="carrito-total">{formatearPrecio(carrito.subtotal || 0)}</span>
-                        </div>
-                        <div className="carrito-opcion-detalles">
-                            <span className="carrito-estado">Estado: {carrito.estado}</span>
-                            {index === 0 && (
-                                <span className="carrito-mas-reciente">Más reciente</span>
-                            )}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
-
 const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
     const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
     const [vistaActual, setVistaActual] = useState('carrito');
@@ -200,7 +161,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
         return aplicaDescuentoResult;
     };
 
-    // ✅ FUNCIÓN CORREGIDA: obtenerCarritosPorFecha
+    // Función para obtener carritos del cliente y organizarlos por fecha
     const obtenerCarritosPorFecha = async () => {
         if (!idCliente) return;
 
@@ -227,13 +188,13 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
             fechaActual.setHours(0, 0, 0, 0);
             console.log(`🗓️ Fecha actual para comparación: ${fechaActual.toISOString()}`);
 
-            // ✅ CAMBIO PRINCIPAL: Filtrar carritos pendientes Y futuros (permite múltiples carritos por fecha)
+            // Filtrar carritos pendientes y que no hayan pasado la fecha
             const carritosPendientes = carritos.filter(carrito => {
                 console.log(`\n🔍 Evaluando carrito ${carrito.id}:`);
                 console.log(`   Estado: ${carrito.estado}`);
                 console.log(`   Fecha raw: ${carrito.fecha}`);
                 
-                // ✅ SOLO verificar que el estado sea Pendiente (sin importar si hay otros carritos pagados)
+                // Verificar que el estado sea Pendiente
                 if (carrito.estado !== 'Pendiente') {
                     console.log(`   ❌ Descartado por estado: ${carrito.estado}`);
                     return false;
@@ -259,7 +220,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
             console.log(`   Carritos totales: ${carritos.length}`);
             console.log(`   Carritos pendientes y futuros: ${carritosPendientes.length}`);
 
-            // ✅ MEJORA: Crear Map que puede contener múltiples carritos por fecha
+            // Crear un Map con fecha como key y array de carritos como value
             const carritosPorFechaMap = new Map();
             carritosPendientes.forEach(carrito => {
                 const fecha = carrito.fecha;
@@ -267,15 +228,6 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                     carritosPorFechaMap.set(fecha, []);
                 }
                 carritosPorFechaMap.get(fecha).push(carrito);
-            });
-
-            // ✅ NUEVO: Ordenar carritos por ID (más reciente primero - ID mayor)
-            carritosPorFechaMap.forEach((carritosArray, fecha) => {
-                carritosArray.sort((a, b) => {
-                    // Ordenar por ID descendente (más reciente primero)
-                    return b.id - a.id;
-                });
-                console.log(`📋 Carritos ordenados para ${fecha}:`, carritosArray.map(c => `#${c.id}`));
             });
 
             console.log(`🗂️ Carritos organizados por fecha:`, Array.from(carritosPorFechaMap.entries()));
@@ -352,63 +304,22 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
         }
     };
 
-    // ✅ FUNCIÓN DEFINIDA ANTES DE SU USO: Para manejar cambio de carrito específico
-    const handleCarritoChange = (nuevoCarrito) => {
-        try {
-            console.log('🔄 Cambiando a carrito:', nuevoCarrito);
-            
-            if (!nuevoCarrito || !nuevoCarrito.id) {
-                console.error('❌ Carrito inválido recibido:', nuevoCarrito);
-                return;
-            }
-
-            setCarritoSeleccionado(nuevoCarrito);
-            obtenerTurnosCarrito(nuevoCarrito.id);
-        } catch (error) {
-            console.error('❌ Error en handleCarritoChange:', error);
-            setError('Error al cambiar carrito: ' + error.message);
-        }
-    };
-
-    // ✅ FUNCIÓN CORREGIDA: handleFechaChange
+    // Función para manejar cambio de fecha
     const handleFechaChange = (nuevaFecha) => {
-        try {
-            console.log('📅 Fecha seleccionada en CarritoCompleto:', nuevaFecha);
-            setFechaSeleccionada(nuevaFecha);
+        console.log('📅 Fecha seleccionada en CarritoCompleto:', nuevaFecha);
+        setFechaSeleccionada(nuevaFecha);
 
-            // Validar que carritosPorFecha existe y es un Map
-            if (!carritosPorFecha || typeof carritosPorFecha.get !== 'function') {
-                console.error('❌ carritosPorFecha no es un Map válido');
-                setCarritoSeleccionado(null);
-                setServicios([]);
-                setAplicaDescuento(false);
-                return;
-            }
+        // Obtener carritos de esa fecha
+        const carritosDeEsteFecha = carritosPorFecha.get(nuevaFecha) || [];
+        console.log('🛒 Carritos encontrados para esta fecha:', carritosDeEsteFecha);
 
-            // Obtener carritos de esa fecha
-            const carritosDeEsteFecha = carritosPorFecha.get(nuevaFecha) || [];
-            console.log('🛒 Carritos encontrados para esta fecha:', carritosDeEsteFecha);
-
-            if (carritosDeEsteFecha.length > 0) {
-                // ✅ CAMBIO: Tomar el carrito MÁS RECIENTE (primero en el array ordenado)
-                const carritoMasReciente = carritosDeEsteFecha[0];
-                console.log('🎯 Carrito más reciente seleccionado:', carritoMasReciente);
-                setCarritoSeleccionado(carritoMasReciente);
-                obtenerTurnosCarrito(carritoMasReciente.id);
-
-                // ✅ NUEVO: Información adicional para debugging
-                if (carritosDeEsteFecha.length > 1) {
-                    console.log(`ℹ️  Hay ${carritosDeEsteFecha.length} carritos para esta fecha. Mostrando el más reciente.`);
-                    console.log('📋 Todos los carritos para esta fecha:', carritosDeEsteFecha);
-                }
-            } else {
-                setCarritoSeleccionado(null);
-                setServicios([]);
-                setAplicaDescuento(false);
-            }
-        } catch (error) {
-            console.error('❌ Error en handleFechaChange:', error);
-            setError('Error al cambiar fecha: ' + error.message);
+        if (carritosDeEsteFecha.length > 0) {
+            // Por ahora tomamos el primer carrito de la fecha
+            const primerCarrito = carritosDeEsteFecha[0];
+            console.log('🎯 Carrito seleccionado:', primerCarrito);
+            setCarritoSeleccionado(primerCarrito);
+            obtenerTurnosCarrito(primerCarrito.id);
+        } else {
             setCarritoSeleccionado(null);
             setServicios([]);
             setAplicaDescuento(false);
@@ -498,16 +409,11 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
     // ✅ Efecto separado para cuando se abre el modal (para refrescar datos si es necesario)
     useEffect(() => {
         if (isOpen && idCliente) {
-            try {
-                // ✅ Siempre recargar cuando se abre el modal para tener datos frescos
-                console.log('🚪 CarritoCompleto - Modal abierto, refrescando datos');
-                refrescarDatos();
-            } catch (error) {
-                console.error('❌ Error al abrir modal:', error);
-                setError('Error al cargar el carrito: ' + error.message);
-            }
+            // ✅ Siempre recargar cuando se abre el modal para tener datos frescos
+            console.log('🚪 CarritoCompleto - Modal abierto, refrescando datos');
+            refrescarDatos();
         }
-    }, [isOpen, idCliente]);
+    }, [isOpen]);
 
     // Limpiar estados cuando se cierra el modal
     useEffect(() => {
@@ -900,25 +806,6 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
 
     if (!isOpen) return null;
 
-    // ✅ NUEVO: Validación de seguridad antes del render
-    if (!idCliente) {
-        return (
-            <div className="modal-overlay">
-                <div className="carrito-modal">
-                    <div className="modal-header">
-                        <h2 className="modal-title">ERROR</h2>
-                        <button className="close-button" onClick={onClose}>
-                            <X size={20} color="#F4F8E6" />
-                        </button>
-                    </div>
-                    <div className="error-message">
-                        No se ha proporcionado un ID de cliente válido.
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <>
             {/* ✅ Modal de éxito renderizado fuera del modal principal */}
@@ -974,17 +861,6 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                                 onFechaChange={handleFechaChange}
                                 forceRefresh={forceRefresh}
                             />
-
-                            {/* ✅ NUEVO: Selector de Carritos Múltiples */}
-                            {fechaSeleccionada && (
-                                <SelectorCarritos
-                                    fecha={fechaSeleccionada}
-                                    carritosPorFecha={carritosPorFecha}
-                                    carritoSeleccionado={carritoSeleccionado}
-                                    onCarritoChange={handleCarritoChange}
-                                    formatearPrecio={formatearPrecio}
-                                />
-                            )}
 
                             {/* Lista de Servicios */}
                             <div className="servicios-lista">
@@ -1055,7 +931,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                                     )}
                                     {/* ✅ NUEVO: Mostrar mensaje cuando NO aplica descuento */}
                                     {carritoSeleccionado && obtenerSubtotal() > 0 && !aplicaDescuento && (
-                                        <div className="sin-descuento-text">
+                                        <div className="descuento-text">
                                             TOTAL: <span className="total-precio">
                                                 {formatearPrecio(calcularTotal())}
                                             </span>
