@@ -4,7 +4,7 @@ import "../styles/modalReserva.css";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext.jsx";
 import { usePopupContext } from "./popupcontext.jsx"; 
-import { useCarrito } from "../context/CarritoContext.jsx"; // ✅ NUEVO
+import { useCarrito } from "../context/carritoContext.jsx"; // ✅ NUEVO
 
 const ModalTurnoReservado = ({ isVisible, onClose, onIrACarrito, onIrAServicios }) => {
   if (!isVisible) return null;

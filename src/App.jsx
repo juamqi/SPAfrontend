@@ -14,7 +14,7 @@ import Header from './componentes/Header/header.jsx';
 import Galeria from './componentes/Body/galeria.jsx';
 import PerfilUsuario from './componentes/PerfilUsuario/PerfilUsuario.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
-import { CarritoProvider } from './context/CarritoContext.jsx'; // ✅ NUEVO: Importar CarritoProvider
+import { CarritoProvider } from './context/carritoContext.jsx'; // ✅ NUEVO: Importar CarritoProvider
 import Chatbot from './componentes/chatbot.jsx';
 import { AdminAuthProvider } from './context/AdminAuthContext.jsx';
 import { ProfAuthProvider } from './context/ProfAuthContext.jsx';
