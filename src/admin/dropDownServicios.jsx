@@ -1,9 +1,12 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 
 const DropdownServicios = ({ onChange, value, categoriaId, onServiciosLoaded }) => {
   const [servicios, setServicios] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Ref para rastrear la categoría anterior
+  const prevCategoriaId = useRef(categoriaId);
 
   // Memoizamos la función notificadora para evitar regeneraciones
   const notifyServiciosLoaded = useCallback((data) => {
@@ -48,25 +51,33 @@ const DropdownServicios = ({ onChange, value, categoriaId, onServiciosLoaded }) 
     };
 
     fetchServicios();
-  }, [categoriaId, notifyServiciosLoaded]); // Solo se ejecuta cuando cambia la categoría o la función notificadora
+  }, [categoriaId, notifyServiciosLoaded]);
 
   // Cuando cambia la categoría, resetear el valor del servicio seleccionado
   useEffect(() => {
-    // Solo resetear si:
-    // 1. hay una función onChange disponible
-    // 2. hay una categoría seleccionada
-    // 3. hay un valor actualmente seleccionado (evita actualizaciones innecesarias)
-    if (onChange && categoriaId && value) {
-      onChange('', '');
+    // Solo resetear si la categoría realmente cambió (no en el primer render)
+    if (prevCategoriaId.current !== null && prevCategoriaId.current !== categoriaId) {
+      if (onChange && value) {
+        console.log('Reseteando servicio por cambio de categoría');
+        onChange('', '');
+      }
     }
-  }, [categoriaId]); // Solo se ejecuta cuando cambia la categoría
+    
+    // Actualizar la referencia a la categoría actual
+    prevCategoriaId.current = categoriaId;
+  }, [categoriaId, onChange]);
 
   // Función para manejar el cambio de servicio
   const handleServicioChange = (e) => {
     const servicioId = e.target.value;
-    // Encontrar el nombre del servicio seleccionado
-    const servicioSeleccionado = servicios.find(s => s.id_servicio == servicioId);
+    // Encontrar el nombre del servicio seleccionado - asegurar comparación correcta de tipos
+    const servicioSeleccionado = servicios.find(s => 
+      String(s.id_servicio) === String(servicioId) || String(s.id) === String(servicioId)
+    );
     const nombreServicio = servicioSeleccionado ? servicioSeleccionado.nombre : '';
+    
+    console.log('Servicio seleccionado:', { servicioId, nombreServicio, servicioSeleccionado });
+    console.log('Servicios disponibles:', servicios.map(s => ({ id: s.id_servicio || s.id, nombre: s.nombre })));
     
     // Pasar tanto el ID como el nombre al componente padre
     onChange(servicioId, nombreServicio);
@@ -81,16 +92,15 @@ const DropdownServicios = ({ onChange, value, categoriaId, onServiciosLoaded }) 
       <label htmlFor="servicio">Selecciona un servicio</label>
       <select
         id="servicio"
-        value={value}
+        value={value ? String(value) : ''} // Convertir a string para evitar problemas de tipo
         onChange={handleServicioChange}
         disabled={servicios.length === 0}
       >
         <option value="">Seleccione un servicio</option>
         {servicios.map((servicio) => (
           <option 
-            // Aseguramos que la key sea única y esté siempre definida
             key={servicio.id_servicio || `servicio-${servicio.nombre}`} 
-            value={servicio.id_servicio || servicio.id}
+            value={String(servicio.id_servicio || servicio.id)} // Asegurar que sea string
           >
             {servicio.nombre}
           </option>
