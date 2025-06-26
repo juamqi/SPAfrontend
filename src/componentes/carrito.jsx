@@ -3,6 +3,11 @@ import { X, ArrowLeft } from 'lucide-react';
 import FechaSelector from './fechaselector.jsx';
 import '../styles/carrito.css';
 
+import React, { useState, useEffect } from 'react';
+import { X, ArrowLeft } from 'lucide-react';
+import FechaSelector from './fechaselector.jsx';
+import './CarritoCompleto.css';
+
 const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
     const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
     const [vistaActual, setVistaActual] = useState('carrito');
@@ -46,31 +51,54 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
         }
     };
 
-    // ✅ Función normalizada para formatear fechas (consistente con FechaSelector)
-    const normalizarFecha = (fechaInput) => {
+    // ✅ Función mejorada para parsear fechas con debugging
+    const parsearFecha = (fechaInput) => {
+        console.log(`🔍 Parseando fecha: "${fechaInput}" (tipo: ${typeof fechaInput})`);
+        
+        if (!fechaInput) {
+            console.error('❌ Fecha es null o undefined');
+            return null;
+        }
+
         let fecha;
         
-        if (fechaInput.includes('/')) {
-            // Formato YYYY/MM/DD del backend
-            const [año, mes, dia] = fechaInput.split('/');
-            fecha = new Date(parseInt(año), parseInt(mes) - 1, parseInt(dia));
-        } else if (fechaInput.includes('-')) {
-            // Formato YYYY-MM-DD
-            fecha = new Date(fechaInput);
-        } else {
-            // Timestamp u otro formato
-            fecha = new Date(fechaInput);
-        }
-        
-        return fecha;
-    };
+        try {
+            if (typeof fechaInput === 'string') {
+                if (fechaInput.includes('/')) {
+                    // Formato YYYY/MM/DD
+                    console.log('📅 Detectado formato YYYY/MM/DD');
+                    const [año, mes, dia] = fechaInput.split('/');
+                    fecha = new Date(parseInt(año), parseInt(mes) - 1, parseInt(dia));
+                } else if (fechaInput.includes('-')) {
+                    // Formato YYYY-MM-DD
+                    console.log('📅 Detectado formato YYYY-MM-DD');
+                    fecha = new Date(fechaInput);
+                } else if (fechaInput.match(/^\d+$/)) {
+                    // Timestamp
+                    console.log('📅 Detectado timestamp');
+                    fecha = new Date(parseInt(fechaInput));
+                } else {
+                    // Intentar parsing directo
+                    console.log('📅 Intentando parsing directo');
+                    fecha = new Date(fechaInput);
+                }
+            } else {
+                // Ya es un objeto Date o timestamp numérico
+                fecha = new Date(fechaInput);
+            }
 
-    // ✅ Función para formatear fecha como string YYYY/MM/DD (consistente)
-    const formatearFechaYYYYMMDD = (fecha) => {
-        const año = fecha.getFullYear();
-        const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-        const dia = fecha.getDate().toString().padStart(2, '0');
-        return `${año}/${mes}/${dia}`;
+            // Verificar si la fecha es válida
+            if (isNaN(fecha.getTime())) {
+                console.error(`❌ Fecha inválida después del parsing: ${fechaInput}`);
+                return null;
+            }
+
+            console.log(`✅ Fecha parseada correctamente: ${fecha.toISOString()}`);
+            return fecha;
+        } catch (error) {
+            console.error(`❌ Error al parsear fecha "${fechaInput}":`, error);
+            return null;
+        }
     };
 
     // Función para obtener carritos del cliente y organizarlos por fecha
@@ -81,6 +109,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
             setLoading(true);
             setError(null);
 
+            console.log(`🚀 Obteniendo carritos para cliente: ${idCliente}`);
             const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/carritos/cliente/${idCliente}`);
 
             if (!response.ok) {
@@ -92,29 +121,44 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
             }
 
             const carritos = await response.json();
+            console.log(`📦 Carritos recibidos del backend:`, carritos);
 
             // Obtener la fecha actual (solo fecha, sin hora)
             const fechaActual = new Date();
             fechaActual.setHours(0, 0, 0, 0);
+            console.log(`🗓️ Fecha actual para comparación: ${fechaActual.toISOString()}`);
 
             // Filtrar carritos pendientes y que no hayan pasado la fecha
             const carritosPendientes = carritos.filter(carrito => {
+                console.log(`\n🔍 Evaluando carrito ${carrito.id}:`);
+                console.log(`   Estado: ${carrito.estado}`);
+                console.log(`   Fecha raw: ${carrito.fecha}`);
+                
                 // Verificar que el estado sea Pendiente
                 if (carrito.estado !== 'Pendiente') {
+                    console.log(`   ❌ Descartado por estado: ${carrito.estado}`);
                     return false;
                 }
 
-                // ✅ Usar la función normalizada para comparar fechas
-                const fechaCarrito = normalizarFecha(carrito.fecha);
-                fechaCarrito.setHours(0, 0, 0, 0);
+                // Parsear la fecha del carrito
+                const fechaCarrito = parsearFecha(carrito.fecha);
+                if (!fechaCarrito) {
+                    console.log(`   ❌ Descartado por fecha inválida`);
+                    return false;
+                }
 
-                // Solo incluir carritos cuya fecha sea hoy o en el futuro
-                return fechaCarrito >= fechaActual;
+                fechaCarrito.setHours(0, 0, 0, 0);
+                console.log(`   Fecha parseada: ${fechaCarrito.toISOString()}`);
+                
+                const esFuturo = fechaCarrito >= fechaActual;
+                console.log(`   ¿Es futuro? ${esFuturo}`);
+
+                return esFuturo;
             });
 
-            console.log('Carritos totales:', carritos.length);
-            console.log('Carritos pendientes y futuros:', carritosPendientes.length);
-            console.log('Fecha actual para comparación:', fechaActual.toISOString().split('T')[0]);
+            console.log(`📊 Resumen de filtrado:`);
+            console.log(`   Carritos totales: ${carritos.length}`);
+            console.log(`   Carritos pendientes y futuros: ${carritosPendientes.length}`);
 
             // Crear un Map con fecha como key y array de carritos como value
             const carritosPorFechaMap = new Map();
@@ -126,11 +170,12 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
                 carritosPorFechaMap.get(fecha).push(carrito);
             });
 
+            console.log(`🗂️ Carritos organizados por fecha:`, Array.from(carritosPorFechaMap.entries()));
             setCarritosPorFecha(carritosPorFechaMap);
 
         } catch (error) {
-            console.error('Error al obtener carritos por fecha:', error);
-            setError('Error al cargar carritos');
+            console.error('❌ Error al obtener carritos por fecha:', error);
+            setError('Error al cargar carritos: ' + error.message);
         } finally {
             setLoading(false);
         }
@@ -161,11 +206,14 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
 
             // Transformar los datos del backend al formato esperado por el frontend
             const serviciosFormateados = turnos.map(turno => {
-                // ✅ Usar función normalizada para formatear fechas
+                console.log(`\n🔄 Procesando turno ${turno.id_turno}:`);
+                console.log(`   fecha_hora raw: ${turno.fecha_hora}`);
+                
                 const fechaFormateada = formatearFecha(turno.fecha_hora);
                 const horaFormateada = formatearHora(turno.fecha_hora);
                 
-                console.log(`📅 Turno ${turno.id_turno}: ${turno.fecha_hora} -> ${fechaFormateada} ${horaFormateada}`);
+                console.log(`   Fecha formateada: ${fechaFormateada}`);
+                console.log(`   Hora formateada: ${horaFormateada}`);
                 
                 return {
                     id: turno.id_turno,
@@ -180,12 +228,12 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
                 };
             });
 
-            console.log('✅ Servicios formateados:', serviciosFormateados);
+            console.log('✅ Servicios formateados finales:', serviciosFormateados);
             setServicios(serviciosFormateados);
 
         } catch (error) {
-            console.error('Error al obtener turnos del carrito:', error);
-            setError('Error al cargar los servicios del carrito');
+            console.error('❌ Error al obtener turnos del carrito:', error);
+            setError('Error al cargar los servicios del carrito: ' + error.message);
             setServicios([]);
         } finally {
             setLoading(false);
@@ -213,34 +261,53 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
         }
     };
 
-    // ✅ Función para formatear fecha desde timestamp a string (consistente con backend)
+    // ✅ Función para formatear fecha desde timestamp a string (con manejo de errores)
     const formatearFecha = (fechaHora) => {
-        // Crear fecha sin ajustes de zona horaria para evitar desfases
-        const fecha = new Date(fechaHora);
-        
-        // Usar UTC para evitar problemas de zona horaria
-        const año = fecha.getUTCFullYear();
-        const mes = (fecha.getUTCMonth() + 1).toString().padStart(2, '0');
-        const dia = fecha.getUTCDate().toString().padStart(2, '0');
-        
-        const fechaFormateada = `${año}/${mes}/${dia}`;
-        console.log(`🔄 Formateando fecha: ${fechaHora} -> ${fechaFormateada}`);
-        
-        return fechaFormateada;
+        try {
+            console.log(`🔄 Formateando fecha desde: ${fechaHora}`);
+            
+            const fecha = parsearFecha(fechaHora);
+            if (!fecha) {
+                console.error(`❌ No se pudo parsear la fecha: ${fechaHora}`);
+                return 'Fecha inválida';
+            }
+            
+            const año = fecha.getFullYear();
+            const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+            const dia = fecha.getDate().toString().padStart(2, '0');
+            
+            const fechaFormateada = `${año}/${mes}/${dia}`;
+            console.log(`✅ Fecha formateada: ${fechaHora} -> ${fechaFormateada}`);
+            
+            return fechaFormateada;
+        } catch (error) {
+            console.error(`❌ Error al formatear fecha ${fechaHora}:`, error);
+            return 'Error de fecha';
+        }
     };
 
-    // ✅ Función para formatear hora desde timestamp (consistente)
+    // ✅ Función para formatear hora desde timestamp (con manejo de errores)
     const formatearHora = (fechaHora) => {
-        const fecha = new Date(fechaHora);
-        
-        // Usar UTC para consistencia
-        const horas = fecha.getUTCHours().toString().padStart(2, '0');
-        const minutos = fecha.getUTCMinutes().toString().padStart(2, '0');
-        
-        const horaFormateada = `${horas}:${minutos}`;
-        console.log(`🕐 Formateando hora: ${fechaHora} -> ${horaFormateada}`);
-        
-        return horaFormateada;
+        try {
+            console.log(`🕐 Formateando hora desde: ${fechaHora}`);
+            
+            const fecha = parsearFecha(fechaHora);
+            if (!fecha) {
+                console.error(`❌ No se pudo parsear la hora: ${fechaHora}`);
+                return 'Hora inválida';
+            }
+            
+            const horas = fecha.getHours().toString().padStart(2, '0');
+            const minutos = fecha.getMinutes().toString().padStart(2, '0');
+            
+            const horaFormateada = `${horas}:${minutos}`;
+            console.log(`✅ Hora formateada: ${fechaHora} -> ${horaFormateada}`);
+            
+            return horaFormateada;
+        } catch (error) {
+            console.error(`❌ Error al formatear hora ${fechaHora}:`, error);
+            return 'Error de hora';
+        }
     };
 
     // ✅ Cargar carritos cuando se abre el modal o cambia el cliente (sin dependencia de isOpen)

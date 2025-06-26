@@ -5,50 +5,111 @@ const FechaSelector = ({ idCliente, fechaSeleccionada, onFechaChange }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // ✅ Función para formatear fecha de BD a formato display (usando UTC para consistencia)
-    const formatearFechaDisplay = (fechaBD) => {
-        const fecha = new Date(fechaBD);
-        // Usar UTC para evitar problemas de zona horaria
-        const dia = fecha.getUTCDate().toString().padStart(2, '0');
-        const mes = (fecha.getUTCMonth() + 1).toString().padStart(2, '0');
-        const año = fecha.getUTCFullYear();
+    // ✅ Función mejorada para parsear fechas con debugging
+    const parsearFecha = (fechaInput) => {
+        console.log(`🔍 FechaSelector - Parseando fecha: "${fechaInput}" (tipo: ${typeof fechaInput})`);
         
-        const fechaFormateada = `${dia}/${mes}/${año}`;
-        console.log(`🗓️ FechaSelector - Formateando fecha: ${fechaBD} -> ${fechaFormateada}`);
-        
-        return fechaFormateada;
-    };
-
-    // ✅ Función para validar si una fecha ya pasó (usando UTC para consistencia)
-    const esFechaPasada = (fechaCarrito) => {
-        // Obtener la fecha actual (solo fecha, sin hora) en UTC
-        const fechaActual = new Date();
-        fechaActual.setUTCHours(0, 0, 0, 0);
-
-        // Convertir la fecha del carrito a objeto Date usando UTC
-        let fechaParaComparar;
-        
-        // Verificar el formato de fecha que viene del backend
-        if (fechaCarrito.includes('/')) {
-            // Formato YYYY/MM/DD
-            const [año, mes, dia] = fechaCarrito.split('/');
-            fechaParaComparar = new Date(Date.UTC(parseInt(año), parseInt(mes) - 1, parseInt(dia)));
-        } else if (fechaCarrito.includes('-')) {
-            // Formato YYYY-MM-DD
-            fechaParaComparar = new Date(fechaCarrito + 'T00:00:00.000Z');
-        } else {
-            // Si es timestamp u otro formato
-            fechaParaComparar = new Date(fechaCarrito);
-            fechaParaComparar.setUTCHours(0, 0, 0, 0);
+        if (!fechaInput) {
+            console.error('❌ FechaSelector - Fecha es null o undefined');
+            return null;
         }
 
-        console.log(`📅 FechaSelector - Comparando fechas:`);
-        console.log(`   Fecha carrito: ${fechaCarrito} -> ${fechaParaComparar.toISOString()}`);
-        console.log(`   Fecha actual: ${fechaActual.toISOString()}`);
-        console.log(`   ¿Es fecha pasada? ${fechaParaComparar < fechaActual}`);
+        let fecha;
+        
+        try {
+            if (typeof fechaInput === 'string') {
+                if (fechaInput.includes('/')) {
+                    // Formato YYYY/MM/DD
+                    console.log('📅 FechaSelector - Detectado formato YYYY/MM/DD');
+                    const [año, mes, dia] = fechaInput.split('/');
+                    fecha = new Date(parseInt(año), parseInt(mes) - 1, parseInt(dia));
+                } else if (fechaInput.includes('-')) {
+                    // Formato YYYY-MM-DD
+                    console.log('📅 FechaSelector - Detectado formato YYYY-MM-DD');
+                    fecha = new Date(fechaInput);
+                } else if (fechaInput.match(/^\d+$/)) {
+                    // Timestamp
+                    console.log('📅 FechaSelector - Detectado timestamp');
+                    fecha = new Date(parseInt(fechaInput));
+                } else {
+                    // Intentar parsing directo
+                    console.log('📅 FechaSelector - Intentando parsing directo');
+                    fecha = new Date(fechaInput);
+                }
+            } else {
+                // Ya es un objeto Date o timestamp numérico
+                fecha = new Date(fechaInput);
+            }
 
-        // Retorna true si la fecha ya pasó
-        return fechaParaComparar < fechaActual;
+            // Verificar si la fecha es válida
+            if (isNaN(fecha.getTime())) {
+                console.error(`❌ FechaSelector - Fecha inválida después del parsing: ${fechaInput}`);
+                return null;
+            }
+
+            console.log(`✅ FechaSelector - Fecha parseada correctamente: ${fecha.toISOString()}`);
+            return fecha;
+        } catch (error) {
+            console.error(`❌ FechaSelector - Error al parsear fecha "${fechaInput}":`, error);
+            return null;
+        }
+    };
+
+    // ✅ Función para formatear fecha de BD a formato display (con manejo de errores)
+    const formatearFechaDisplay = (fechaBD) => {
+        try {
+            console.log(`🗓️ FechaSelector - Formateando para display: ${fechaBD}`);
+            
+            const fecha = parsearFecha(fechaBD);
+            if (!fecha) {
+                console.error(`❌ FechaSelector - No se pudo parsear fecha para display: ${fechaBD}`);
+                return 'Fecha inválida';
+            }
+            
+            const dia = fecha.getDate().toString().padStart(2, '0');
+            const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+            const año = fecha.getFullYear();
+            
+            const fechaFormateada = `${dia}/${mes}/${año}`;
+            console.log(`✅ FechaSelector - Fecha display formateada: ${fechaBD} -> ${fechaFormateada}`);
+            
+            return fechaFormateada;
+        } catch (error) {
+            console.error(`❌ FechaSelector - Error al formatear fecha display ${fechaBD}:`, error);
+            return 'Error de fecha';
+        }
+    };
+
+    // ✅ Función para validar si una fecha ya pasó (con manejo de errores)
+    const esFechaPasada = (fechaCarrito) => {
+        try {
+            console.log(`📅 FechaSelector - Validando si es fecha pasada: ${fechaCarrito}`);
+            
+            // Obtener la fecha actual (solo fecha, sin hora)
+            const fechaActual = new Date();
+            fechaActual.setHours(0, 0, 0, 0);
+
+            // Parsear la fecha del carrito
+            const fechaParaComparar = parsearFecha(fechaCarrito);
+            if (!fechaParaComparar) {
+                console.log(`❌ FechaSelector - No se pudo parsear fecha para comparar: ${fechaCarrito}`);
+                return true; // Si no se puede parsear, considerarla como pasada por seguridad
+            }
+
+            fechaParaComparar.setHours(0, 0, 0, 0);
+
+            console.log(`📅 FechaSelector - Comparando fechas:`);
+            console.log(`   Fecha carrito: ${fechaCarrito} -> ${fechaParaComparar.toISOString()}`);
+            console.log(`   Fecha actual: ${fechaActual.toISOString()}`);
+            
+            const esPasada = fechaParaComparar < fechaActual;
+            console.log(`   ¿Es fecha pasada? ${esPasada}`);
+
+            return esPasada;
+        } catch (error) {
+            console.error(`❌ FechaSelector - Error al validar fecha pasada ${fechaCarrito}:`, error);
+            return true; // En caso de error, considerarla como pasada por seguridad
+        }
     };
 
     // Función para obtener carritos pendientes del usuario
@@ -63,6 +124,7 @@ const FechaSelector = ({ idCliente, fechaSeleccionada, onFechaChange }) => {
             setLoading(true);
             setError(null);
 
+            console.log(`🚀 FechaSelector - Obteniendo carritos para cliente: ${idCliente}`);
             const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/carritos/cliente/${idCliente}`);
             
             if (!response.ok) {
@@ -75,56 +137,78 @@ const FechaSelector = ({ idCliente, fechaSeleccionada, onFechaChange }) => {
             }
 
             const carritos = await response.json();
+            console.log(`📦 FechaSelector - Carritos recibidos del backend:`, carritos);
             
             // ✅ Filtrar carritos pendientes Y que no hayan pasado la fecha
             const carritosPendientesYFuturos = carritos.filter(carrito => {
+                console.log(`\n🔍 FechaSelector - Evaluando carrito ${carrito.id}:`);
+                console.log(`   Estado: ${carrito.estado}`);
+                console.log(`   Fecha raw: ${carrito.fecha}`);
+                
                 // Verificar que el estado sea Pendiente
                 if (carrito.estado !== 'Pendiente') {
+                    console.log(`   ❌ Descartado por estado: ${carrito.estado}`);
                     return false;
                 }
                 
                 // Verificar que la fecha no haya pasado
                 if (esFechaPasada(carrito.fecha)) {
-                    console.log(`Fecha pasada filtrada: ${carrito.fecha}`);
+                    console.log(`   ❌ Descartado por fecha pasada: ${carrito.fecha}`);
                     return false;
                 }
                 
+                console.log(`   ✅ Carrito válido`);
                 return true;
             });
 
-            console.log('Carritos totales:', carritos.length);
-            console.log('Carritos pendientes y futuros:', carritosPendientesYFuturos.length);
+            console.log(`📊 FechaSelector - Resumen de filtrado:`);
+            console.log(`   Carritos totales: ${carritos.length}`);
+            console.log(`   Carritos pendientes y futuros: ${carritosPendientesYFuturos.length}`);
 
             // Crear array de fechas únicas con formato
             const fechasUnicas = [...new Set(carritosPendientesYFuturos.map(carrito => carrito.fecha))]
-                .map(fecha => ({
-                    valor: fecha,
-                    texto: formatearFechaDisplay(fecha),
-                    carritosCount: carritosPendientesYFuturos.filter(c => c.fecha === fecha).length
-                }))
-                .sort((a, b) => new Date(a.valor) - new Date(b.valor)); // Ordenar por fecha
+                .map(fecha => {
+                    console.log(`🗓️ FechaSelector - Procesando fecha única: ${fecha}`);
+                    const textoDisplay = formatearFechaDisplay(fecha);
+                    const conteoCarritos = carritosPendientesYFuturos.filter(c => c.fecha === fecha).length;
+                    
+                    return {
+                        valor: fecha,
+                        texto: textoDisplay,
+                        carritosCount: conteoCarritos
+                    };
+                })
+                .filter(fecha => fecha.texto !== 'Fecha inválida' && fecha.texto !== 'Error de fecha') // Filtrar fechas inválidas
+                .sort((a, b) => {
+                    // Ordenar por fecha usando las fechas parseadas
+                    const fechaA = parsearFecha(a.valor);
+                    const fechaB = parsearFecha(b.valor);
+                    if (!fechaA || !fechaB) return 0;
+                    return fechaA - fechaB;
+                });
 
+            console.log(`🗂️ FechaSelector - Fechas únicas procesadas:`, fechasUnicas);
             setFechasDisponibles(fechasUnicas);
 
             // ✅ Si la fecha actualmente seleccionada ya no está disponible, limpiarla
             if (fechaSeleccionada && !fechasUnicas.some(f => f.valor === fechaSeleccionada)) {
-                console.log(`Fecha seleccionada ${fechaSeleccionada} ya no está disponible, limpiando selección`);
+                console.log(`⚠️ FechaSelector - Fecha seleccionada ${fechaSeleccionada} ya no está disponible, limpiando selección`);
                 onFechaChange(null);
             }
 
             // Si hay fechas disponibles y no hay una seleccionada, seleccionar la primera
             if (fechasUnicas.length > 0 && !fechaSeleccionada) {
-                console.log(`Seleccionando automáticamente la primera fecha: ${fechasUnicas[0].valor}`);
+                console.log(`🎯 FechaSelector - Seleccionando automáticamente la primera fecha: ${fechasUnicas[0].valor}`);
                 onFechaChange(fechasUnicas[0].valor);
             }
 
         } catch (error) {
-            console.error('Error al obtener carritos:', error);
-            setError(error.message);
+            console.error('❌ FechaSelector - Error al obtener carritos:', error);
+            setError('Error al cargar fechas: ' + error.message);
         } finally {
             setLoading(false);
         }
-    };
+    }; // ✅ CIERRE CORRECTO DE LA FUNCIÓN
 
     // Efecto para cargar las fechas cuando cambia el idCliente
     useEffect(() => {
@@ -135,7 +219,7 @@ const FechaSelector = ({ idCliente, fechaSeleccionada, onFechaChange }) => {
     useEffect(() => {
         // Recargar fechas cada 5 minutos para filtrar fechas que hayan pasado
         const interval = setInterval(() => {
-            console.log('Recarga automática de fechas para filtrar fechas pasadas');
+            console.log('🔄 FechaSelector - Recarga automática de fechas para filtrar fechas pasadas');
             obtenerCarritosPendientes();
         }, 5 * 60 * 1000); // 5 minutos
 
@@ -144,7 +228,7 @@ const FechaSelector = ({ idCliente, fechaSeleccionada, onFechaChange }) => {
 
     // Función para recargar fechas (útil para actualizar después de cambios)
     const recargarFechas = () => {
-        console.log('Recarga manual de fechas solicitada');
+        console.log('🔄 FechaSelector - Recarga manual de fechas solicitada');
         obtenerCarritosPendientes();
     };
 
@@ -231,5 +315,5 @@ const FechaSelector = ({ idCliente, fechaSeleccionada, onFechaChange }) => {
         </div>
     );
 };
-//
+
 export default FechaSelector;
