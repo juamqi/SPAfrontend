@@ -161,7 +161,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
         return aplicaDescuentoResult;
     };
 
-    // Función para obtener carritos del cliente y organizarlos por fecha
+    // ✅ FUNCIÓN CORREGIDA: obtenerCarritosPorFecha
     const obtenerCarritosPorFecha = async () => {
         if (!idCliente) return;
 
@@ -188,13 +188,13 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
             fechaActual.setHours(0, 0, 0, 0);
             console.log(`🗓️ Fecha actual para comparación: ${fechaActual.toISOString()}`);
 
-            // Filtrar carritos pendientes y que no hayan pasado la fecha
+            // ✅ CAMBIO PRINCIPAL: Filtrar carritos pendientes Y futuros (permite múltiples carritos por fecha)
             const carritosPendientes = carritos.filter(carrito => {
                 console.log(`\n🔍 Evaluando carrito ${carrito.id}:`);
                 console.log(`   Estado: ${carrito.estado}`);
                 console.log(`   Fecha raw: ${carrito.fecha}`);
                 
-                // Verificar que el estado sea Pendiente
+                // ✅ SOLO verificar que el estado sea Pendiente (sin importar si hay otros carritos pagados)
                 if (carrito.estado !== 'Pendiente') {
                     console.log(`   ❌ Descartado por estado: ${carrito.estado}`);
                     return false;
@@ -220,7 +220,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
             console.log(`   Carritos totales: ${carritos.length}`);
             console.log(`   Carritos pendientes y futuros: ${carritosPendientes.length}`);
 
-            // Crear un Map con fecha como key y array de carritos como value
+            // ✅ MEJORA: Crear Map que puede contener múltiples carritos por fecha
             const carritosPorFechaMap = new Map();
             carritosPendientes.forEach(carrito => {
                 const fecha = carrito.fecha;
@@ -228,6 +228,15 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                     carritosPorFechaMap.set(fecha, []);
                 }
                 carritosPorFechaMap.get(fecha).push(carrito);
+            });
+
+            // ✅ NUEVO: Ordenar carritos por ID (más reciente primero - ID mayor)
+            carritosPorFechaMap.forEach((carritosArray, fecha) => {
+                carritosArray.sort((a, b) => {
+                    // Ordenar por ID descendente (más reciente primero)
+                    return b.id - a.id;
+                });
+                console.log(`📋 Carritos ordenados para ${fecha}:`, carritosArray.map(c => `#${c.id}`));
             });
 
             console.log(`🗂️ Carritos organizados por fecha:`, Array.from(carritosPorFechaMap.entries()));
@@ -862,6 +871,16 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                                 forceRefresh={forceRefresh}
                             />
 
+                            {/* ✅ NUEVO: Selector de Carritos Múltiples */}
+                            {fechaSeleccionada && (
+                                <SelectorCarritos
+                                    fecha={fechaSeleccionada}
+                                    carritosPorFecha={carritosPorFecha}
+                                    carritoSeleccionado={carritoSeleccionado}
+                                    onCarritoChange={handleCarritoChange}
+                                />
+                            )}
+
                             {/* Lista de Servicios */}
                             <div className="servicios-lista">
                                 {error && (
@@ -931,7 +950,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                                     )}
                                     {/* ✅ NUEVO: Mostrar mensaje cuando NO aplica descuento */}
                                     {carritoSeleccionado && obtenerSubtotal() > 0 && !aplicaDescuento && (
-                                        <div className="descuento-text">
+                                        <div className="sin-descuento-text">
                                             TOTAL: <span className="total-precio">
                                                 {formatearPrecio(calcularTotal())}
                                             </span>
