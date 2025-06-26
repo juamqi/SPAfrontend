@@ -373,11 +373,11 @@ const TurnosSection = () => {
             ...formulario,
             categoria: categoriaId,
             servicio: "", // Resetear servicio al cambiar categoría
-            servicio_id: "", // Resetear ID del servicio
-            profesional_id: "", // Resetear profesional al cambiar categoría
+            servicio_id: "", // ← Ya tienes esto, perfecto
+            profesional_id: "", 
             profesional_nombre: ""
         });
-        setServicioIdSeleccionado(null); // Resetear ID de servicio
+        setServicioIdSeleccionado(null);
     }
 
     const handleServicioChange = (servicioId, servicioNombre) => {
@@ -649,7 +649,7 @@ const TurnosSection = () => {
 
                 <DropdownServicios
                     categoriaId={formulario.categoria}
-                    value={formulario.servicio}
+                    value={formulario.servicio_id}  // ← Solución: pasa el ID
                     onChange={(servicioId, servicioNombre) => handleServicioChange(servicioId, servicioNombre)}
                 />
 
