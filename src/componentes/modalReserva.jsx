@@ -482,6 +482,7 @@ const ModalReserva = ({
   );
 };
 
+
 const CalendarioPersonalizado = ({
   onSeleccionarFechaHora,
   fechaSeleccionada,
@@ -495,15 +496,64 @@ const CalendarioPersonalizado = ({
     new Date(today.getFullYear(), today.getMonth(), 1)
   );
   const [diaSeleccionado, setDiaSeleccionado] = useState(
-    fechaSeleccionada || today
+    fechaSeleccionada || null
   );
   const [horaElegida, setHoraElegida] = useState(horaSeleccionada || null);
 
+  // Función para verificar si una fecha/hora está dentro del límite de 48 horas
+  const estaDentroDe48Horas = (fecha, hora) => {
+    if (!fecha || !hora) return true; // Si no hay fecha u hora, considerar como dentro del límite
+    
+    const fechaHoraSeleccionada = new Date(`${fecha.toISOString().split('T')[0]}T${hora}:00`);
+    const ahora = new Date();
+    const diferenciaMilisegundos = fechaHoraSeleccionada.getTime() - ahora.getTime();
+    const diferenciaHoras = diferenciaMilisegundos / (1000 * 60 * 60);
+    
+    return diferenciaHoras < 48;
+  };
+
+  // Función para verificar si un día está disponible (tiene al menos una hora disponible)
+  const tienePosiblesHorarios = (fecha) => {
+    const horariosTodos = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"];
+    
+    return horariosTodos.some(hora => {
+      const fechaHoraCompleta = new Date(`${fecha.toISOString().split('T')[0]}T${hora}:00`);
+      const ahora = new Date();
+      const diferenciaMilisegundos = fechaHoraCompleta.getTime() - ahora.getTime();
+      const diferenciaHoras = diferenciaMilisegundos / (1000 * 60 * 60);
+      
+      // La hora debe estar disponible (diferencia > 48 horas) y no estar ocupada
+      const dentroDelLimite = diferenciaHoras >= 48;
+      const noEstaOcupada = !estaHoraOcupada(hora, fecha);
+      
+      return dentroDelLimite && noEstaOcupada;
+    });
+  };
+
   useEffect(() => {
+    // No seleccionar automáticamente el día de hoy si no tiene horarios disponibles
     if (!fechaSeleccionada) {
-      onSeleccionarFechaHora(today, horaElegida);
+      const primerDiaDisponible = obtenerPrimerDiaDisponible();
+      if (primerDiaDisponible) {
+        setDiaSeleccionado(primerDiaDisponible);
+        onSeleccionarFechaHora(primerDiaDisponible, horaElegida);
+      }
     }
   }, []);
+
+  // Función para obtener el primer día disponible
+  const obtenerPrimerDiaDisponible = () => {
+    const hoy = new Date();
+    for (let i = 0; i < 30; i++) { // Buscar en los próximos 30 días
+      const fecha = new Date(hoy);
+      fecha.setDate(hoy.getDate() + i);
+      
+      if (tienePosiblesHorarios(fecha)) {
+        return fecha;
+      }
+    }
+    return null; // No hay días disponibles en los próximos 30 días
+  };
 
   const obtenerDiasDelMes = fecha => {
     const dias = [];
@@ -529,13 +579,16 @@ const CalendarioPersonalizado = ({
     // Días del mes actual
     for (let i = 1; i <= totalDias; i++) {
       const fechaDia = new Date(año, mes, i);
+      const tieneHorariosDisponibles = tienePosiblesHorarios(fechaDia);
+      
       dias.push({
         fecha: fechaDia,
         esDelMesActual: true,
         esPasado: fechaDia < new Date(today.getFullYear(), today.getMonth(), today.getDate()),
         esHoy: fechaDia.getDate() === today.getDate() &&
           fechaDia.getMonth() === today.getMonth() &&
-          fechaDia.getFullYear() === today.getFullYear()
+          fechaDia.getFullYear() === today.getFullYear(),
+        sinHorarios: !tieneHorariosDisponibles && fechaDia >= new Date(today.getFullYear(), today.getMonth(), today.getDate())
       });
     }
 
@@ -557,24 +610,37 @@ const CalendarioPersonalizado = ({
   };
 
   const seleccionarDia = dia => {
+    // Verificar si el día es del pasado
     if (
       dia.getTime() <
       new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
     )
       return;
+    
+    // Verificar si el día tiene horarios disponibles
+    if (!tienePosiblesHorarios(dia)) {
+      return;
+    }
+    
     setDiaSeleccionado(dia);
-    onSeleccionarFechaHora(dia, horaElegida);
+    // Limpiar la hora seleccionada cuando se cambia el día
+    setHoraElegida(null);
+    onSeleccionarFechaHora(dia, null);
   };
 
   const seleccionarHora = hora => {
+    if (estaDentroDe48Horas(diaSeleccionado, hora)) {
+      return; // No permitir seleccionar horas dentro de 48 horas
+    }
+    
     setHoraElegida(hora);
     onSeleccionarFechaHora(diaSeleccionado, hora);
   };
 
-  const estaHoraOcupada = (hora) => {
-    if (!diaSeleccionado) return false;
+  const estaHoraOcupada = (hora, fecha = diaSeleccionado) => {
+    if (!fecha) return false;
 
-    const fechaStr = diaSeleccionado.toISOString().split("T")[0];
+    const fechaStr = fecha.toISOString().split("T")[0];
 
     if (profesionalId) {
       return turnosOcupados.some(turno => {
@@ -622,6 +688,10 @@ const CalendarioPersonalizado = ({
       <h4 className="titulo-seleccion">
         Seleccioná fecha y hora de tu servicio
       </h4>
+      <p className="aviso-48hs">
+        <small>⚠️ Los turnos deben reservarse con al menos 48 horas de anticipación</small>
+      </p>
+      
       <div className="encabezado">
         <button type="button" onClick={() => cambiarMes(-1)}>
           ←
@@ -646,14 +716,18 @@ const CalendarioPersonalizado = ({
         {dias.map((dia, index) => (
           <div
             key={index}
-            className={`dia-grid ${!dia.esDelMesActual ? "otro-mes" : ""} ${dia.esPasado ? "pasado" : ""
-              } ${diaSeleccionado?.toDateString() === dia.fecha.toDateString()
+            className={`dia-grid ${!dia.esDelMesActual ? "otro-mes" : ""} ${
+              dia.esPasado ? "pasado" : ""
+            } ${
+              dia.sinHorarios ? "sin-horarios" : ""
+            } ${
+              diaSeleccionado?.toDateString() === dia.fecha.toDateString()
                 ? "seleccionado" : ""
-              } ${dia.esHoy ? "hoy" : ""
-              }`}
+            } ${dia.esHoy ? "hoy" : ""}`}
             onClick={() =>
-              dia.esDelMesActual && !dia.esPasado && seleccionarDia(dia.fecha)
+              dia.esDelMesActual && !dia.esPasado && !dia.sinHorarios && seleccionarDia(dia.fecha)
             }
+            title={dia.sinHorarios ? "No hay horarios disponibles en esta fecha" : ""}
           >
             {dia.fecha.getDate()}
           </div>
@@ -672,13 +746,26 @@ const CalendarioPersonalizado = ({
               <div className="horarios-lista">
                 {horas.map((hora, idx) => {
                   const ocupado = estaHoraOcupada(hora);
+                  const dentro48Hs = estaDentroDe48Horas(diaSeleccionado, hora);
+                  const deshabilitado = ocupado || dentro48Hs;
+                  
                   return (
                     <button
                       key={idx}
-                      className={`horario-btn ${horaElegida === hora ? "seleccionado" : ""
-                        } ${ocupado ? "ocupado" : ""}`}
-                      onClick={() => !ocupado && seleccionarHora(hora)}
-                      disabled={ocupado}
+                      className={`horario-btn ${
+                        horaElegida === hora ? "seleccionado" : ""
+                      } ${ocupado ? "ocupado" : ""} ${
+                        dentro48Hs ? "dentro-48hs" : ""
+                      }`}
+                      onClick={() => !deshabilitado && seleccionarHora(hora)}
+                      disabled={deshabilitado}
+                      title={
+                        ocupado 
+                          ? "Horario no disponible" 
+                          : dentro48Hs 
+                            ? "Debe reservar con al menos 48hs de anticipación"
+                            : ""
+                      }
                     >
                       {hora}
                     </button>
