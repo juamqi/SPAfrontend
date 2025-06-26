@@ -14,6 +14,7 @@ import Header from './componentes/Header/header.jsx';
 import Galeria from './componentes/Body/galeria.jsx';
 import PerfilUsuario from './componentes/PerfilUsuario/PerfilUsuario.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
+import { CarritoProvider } from './context/carritoContext.jsx'; // ✅ NUEVO: Importar CarritoProvider
 import Chatbot from './componentes/chatbot.jsx';
 import { AdminAuthProvider } from './context/AdminAuthContext.jsx';
 import { ProfAuthProvider } from './context/ProfAuthContext.jsx';
@@ -47,19 +48,22 @@ function App() {
       <AdminAuthProvider>
         <ProfAuthProvider>
           <PopupProvider> 
-            <Router>
-              <Chatbot />
-              <Routes>
-                <Route element={<Layout />}>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/perfil" element={<PerfilUsuario />} />
-                </Route>
-                <Route path="/admin-login" element={<UnifiedLogin />} />
-                <Route path="/prof-login" element={<UnifiedLogin />} />
-                <Route path="/dashboard" element={<AdminPrivateRoute />} />
-                <Route path="/prof-panel" element={<ProfPrivateRoute />} />
-              </Routes>
-            </Router>
+            {/* ✅ NUEVO: Envolver con CarritoProvider después de PopupProvider */}
+            <CarritoProvider>
+              <Router>
+                <Chatbot />
+                <Routes>
+                  <Route element={<Layout />}>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/perfil" element={<PerfilUsuario />} />
+                  </Route>
+                  <Route path="/admin-login" element={<UnifiedLogin />} />
+                  <Route path="/prof-login" element={<UnifiedLogin />} />
+                  <Route path="/dashboard" element={<AdminPrivateRoute />} />
+                  <Route path="/prof-panel" element={<ProfPrivateRoute />} />
+                </Routes>
+              </Router>
+            </CarritoProvider>
           </PopupProvider>
         </ProfAuthProvider>
       </AdminAuthProvider>
