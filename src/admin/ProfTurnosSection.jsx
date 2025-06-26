@@ -61,28 +61,91 @@ const ProfTurnosSection = () => {
         }
     };
 
-    const fetchTurnos = async () => {
-        try {
-            setIsLoading(true);
-            setError(null);
-            const response = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
-            if (!response.ok) {
-                throw new Error("Error al obtener los turnos");
-            }
-            const data = await response.json();
+    // Reemplaza tu función fetchTurnos con esta versión corregida:
 
-            // Filtrar turnos del profesional logueado
-            const turnosDelProfesional = data.filter(t => t.id_profesional  === profesionalId);
-
-            setTurnos(turnosDelProfesional);
-            setTurnosFiltrados(turnosDelProfesional);
-        } catch (error) {
-            console.error("Error al cargar los turnos:", error);
-            setError("No se pudieron cargar los turnos. Intenta nuevamente.");
-        } finally {
-            setIsLoading(false);
+const fetchTurnos = async () => {
+    try {
+        setIsLoading(true);
+        setError(null);
+        const response = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
+        if (!response.ok) {
+            throw new Error("Error al obtener los turnos");
         }
-    };
+        const data = await response.json();
+
+        // Debug: ver qué datos estamos recibiendo
+        console.log("Todos los turnos:", data);
+        console.log("ID del profesional logueado:", profesionalId);
+        console.log("Tipo de profesionalId:", typeof profesionalId);
+        
+        // Verificar el tipo de datos en los turnos
+        if (data.length > 0) {
+            console.log("Ejemplo de turno:", data[0]);
+            console.log("Tipo de id_profesional en turno:", typeof data[0].id_profesional);
+        }
+
+        // Filtrar turnos del profesional logueado - convertir ambos a string para comparar
+        const turnosDelProfesional = data.filter(t => {
+            const turnoIdProf = String(t.id_profesional);
+            const profId = String(profesionalId);
+            return turnoIdProf === profId;
+        });
+
+        console.log("Turnos filtrados del profesional:", turnosDelProfesional);
+
+        setTurnos(turnosDelProfesional);
+        setTurnosFiltrados(turnosDelProfesional);
+    } catch (error) {
+        console.error("Error al cargar los turnos:", error);
+        setError("No se pudieron cargar los turnos. Intenta nuevamente.");
+    } finally {
+        setIsLoading(false);
+    }
+};
+
+// También asegúrate de que el profesionalId se esté obteniendo correctamente
+// Agrega esto al inicio de tu componente para debug:
+
+useEffect(() => {
+    console.log("Profesional desde localStorage:", profesional);
+    console.log("ID del profesional:", profesionalId);
+    console.log("Tipo de ID del profesional:", typeof profesionalId);
+}, []);
+
+// Si el problema persiste, también podrías probar con esta alternativa más robusta:
+
+const fetchTurnosAlternativo = async () => {
+    try {
+        setIsLoading(true);
+        setError(null);
+        const response = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
+        if (!response.ok) {
+            throw new Error("Error al obtener los turnos");
+        }
+        const data = await response.json();
+
+        // Filtrar turnos del profesional logueado - múltiples comparaciones
+        const turnosDelProfesional = data.filter(t => {
+            // Comparar como números
+            if (Number(t.id_profesional) === Number(profesionalId)) return true;
+            // Comparar como strings
+            if (String(t.id_profesional) === String(profesionalId)) return true;
+            // Comparación directa
+            if (t.id_profesional === profesionalId) return true;
+            return false;
+        });
+
+        console.log("Turnos filtrados:", turnosDelProfesional);
+
+        setTurnos(turnosDelProfesional);
+        setTurnosFiltrados(turnosDelProfesional);
+    } catch (error) {
+        console.error("Error al cargar los turnos:", error);
+        setError("No se pudieron cargar los turnos. Intenta nuevamente.");
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     const fetchCategorias = async () => {
         try {
