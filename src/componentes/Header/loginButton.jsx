@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Formulario from '../Formularios/formulario.jsx';
 import Boton from '../Formularios/boton.jsx';
@@ -11,51 +11,8 @@ const LoginButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [carritoOpen, setCarritoOpen] = useState(false); 
-  const [forceRefreshCarrito, setForceRefreshCarrito] = useState(0); // ✅ NUEVO: Estado para forzar refresh
   const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
-
-  // ✅ NUEVO: Listener para eventos personalizados de turnos creados
-  useEffect(() => {
-    const handleTurnoCreado = () => {
-      console.log('🎉 Evento turnoCreado recibido, refrescando carrito...');
-      setForceRefreshCarrito(prev => prev + 1);
-    };
-
-    const handleAbrirCarrito = () => {
-      console.log('🛒 Evento abrirCarrito recibido...');
-      // ✅ CORREGIDO: Llamar directamente las funciones en lugar de abrirCarrito
-      setMenuOpen(false);
-      setCarritoOpen(true);
-      setForceRefreshCarrito(prev => prev + 1);
-    };
-
-    // Escuchar los eventos personalizados
-    window.addEventListener('turnoCreado', handleTurnoCreado);
-    window.addEventListener('abrirCarrito', handleAbrirCarrito);
-    
-    // Limpiar los listeners al desmontar
-    return () => {
-      window.removeEventListener('turnoCreado', handleTurnoCreado);
-      window.removeEventListener('abrirCarrito', handleAbrirCarrito);
-    };
-  }, []); // ✅ CORREGIDO: Array vacío como dependencia
-
-  // ✅ NUEVO: Listener para cuando se enfoca la ventana (opcional)
-  useEffect(() => {
-    const handleWindowFocus = () => {
-      if (carritoOpen && user?.id_cliente) {
-        console.log('👁️ Ventana enfocada con carrito abierto, refrescando...');
-        setForceRefreshCarrito(prev => prev + 1);
-      }
-    };
-
-    window.addEventListener('focus', handleWindowFocus);
-    
-    return () => {
-      window.removeEventListener('focus', handleWindowFocus);
-    };
-  }, [carritoOpen, user?.id_cliente]);
 
   const handleProfileClick = () => {
     setMenuOpen(!menuOpen);
@@ -71,22 +28,7 @@ const LoginButton = () => {
     setIsOpen(false);
   };
 
-  // ✅ NUEVA FUNCIÓN: Abrir carrito con refresh automático
-  const abrirCarrito = useCallback(() => {
-    console.log('🛒 Abriendo carrito y forzando refresh...');
-    setMenuOpen(false);
-    setCarritoOpen(true);
-    // ✅ Incrementar contador para forzar refresh
-    setForceRefreshCarrito(prev => prev + 1);
-  }, []);
-
-  // ✅ NUEVA FUNCIÓN: Cerrar carrito
-  const cerrarCarrito = useCallback(() => {
-    console.log('❌ Cerrando carrito...');
-    setCarritoOpen(false);
-  }, []);
-
-  return (
+return (
     <div className="login-container">
       {!isAuthenticated() ? (
         <>
@@ -108,10 +50,13 @@ const LoginButton = () => {
                 <User size={18} />
                 <span>Mi perfil</span>
               </Link>
-              {/* ✅ MODIFICADO: Usar la nueva función abrirCarrito */}
               <button
                 className="dropdown-item"
-                onClick={abrirCarrito}
+                onClick={(e) => {
+                  e.preventDefault(); 
+                  setMenuOpen(false);
+                  setCarritoOpen(true);
+                }}
               >
                 <ShoppingCart size={18} />
                 <span>Carrito</span>
@@ -125,12 +70,10 @@ const LoginButton = () => {
         </div>
       )}
       
-      {/* ✅ MODIFICADO: CarritoModal con props de refresh */}
       <CarritoModal
         isOpen={carritoOpen}
-        onClose={cerrarCarrito}
-        idCliente={user?.id_cliente}
-        forceRefresh={forceRefreshCarrito} // ✅ NUEVO: Prop para forzar refresh
+        onClose={() => setCarritoOpen(false)}
+        idCliente={user?.id_cliente} // Agregar esta línea
       />
     </div>
   );

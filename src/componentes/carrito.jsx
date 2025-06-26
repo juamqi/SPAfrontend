@@ -469,43 +469,45 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
     // ✅ Función pública para refrescar datos (útil cuando se crean nuevos turnos)
     const refrescarDatos = async () => {
         console.log('🔄 CarritoCompleto - Refrescando datos por solicitud externa');
+        // Limpiar estados
+        setFechaSeleccionada(null);
+        setCarritoSeleccionado(null);
+        setServicios([]);
+        setCarritosPorFecha(new Map());
+        setAplicaDescuento(false); // ✅ NUEVO: Limpiar estado de descuento
         
-        try {
-            // Limpiar estados
-            setFechaSeleccionada(null);
-            setCarritoSeleccionado(null);
-            setServicios([]);
-            setCarritosPorFecha(new Map());
-            setAplicaDescuento(false);
-            setError(null);
-            
-            // Recargar datos
-            await obtenerCarritosPorFecha();
-            
-            console.log('✅ Datos refrescados correctamente');
-        } catch (error) {
-            console.error('❌ Error al refrescar datos:', error);
-            setError('Error al refrescar el carrito: ' + error.message);
-        }
+        // Recargar datos
+        await obtenerCarritosPorFecha();
     };
 
     // ✅ Efecto para refrescar cuando se solicita desde props
     useEffect(() => {
-        if (forceRefresh && forceRefresh > 0 && isOpen && idCliente) {
-            console.log(`⚡ CarritoCompleto - Refresco forzado solicitado (${forceRefresh})`);
+        if (forceRefresh && isOpen && idCliente) {
+            console.log('⚡ CarritoCompleto - Refresco forzado solicitado');
             refrescarDatos();
         }
-    }, [forceRefresh, isOpen, idCliente]); // ✅ AGREGADO: isOpen e idCliente como dependencias
+    }, [forceRefresh]);
 
-    // ✅ NUEVO: Efecto para refrescar cada vez que se abre el modal
+    // ✅ Cargar carritos cuando se abre el modal o cambia el cliente
+    useEffect(() => {
+        if (idCliente) {
+            obtenerCarritosPorFecha();
+        }
+    }, [idCliente]);
+
+    // ✅ Efecto separado para cuando se abre el modal (para refrescar datos si es necesario)
     useEffect(() => {
         if (isOpen && idCliente) {
-            console.log('🚪 CarritoCompleto - Modal abierto, refrescando datos automáticamente');
-            refrescarDatos();
+            try {
+                // ✅ Siempre recargar cuando se abre el modal para tener datos frescos
+                console.log('🚪 CarritoCompleto - Modal abierto, refrescando datos');
+                refrescarDatos();
+            } catch (error) {
+                console.error('❌ Error al abrir modal:', error);
+                setError('Error al cargar el carrito: ' + error.message);
+            }
         }
     }, [isOpen, idCliente]);
-
-    // ✅ ELIMINADO: El efecto duplicado que estaba más abajo
 
     // Limpiar estados cuando se cierra el modal
     useEffect(() => {
