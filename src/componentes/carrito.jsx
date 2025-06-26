@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { X, ArrowLeft } from 'lucide-react';
 import FechaSelector from './fechaselector.jsx';
 import '../styles/carrito.css';
 import { usePopupContext } from "./popupcontext.jsx"; 
 
-const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
+const CarritoCompleto = forwardRef(({ isOpen, onClose, idCliente, forceRefresh }, ref) => {
     const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
     const [vistaActual, setVistaActual] = useState('carrito');
     const { showPopup } = usePopupContext(); 
@@ -27,6 +27,12 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
         expiryDate: '',
         cvv: ''
     });
+
+    // ✅ NUEVO: Exponer funciones públicas a través del ref
+    useImperativeHandle(ref, () => ({
+        refrescarDatos: refrescarDatos,
+        seleccionarFecha: (fecha) => handleFechaChange(fecha)
+    }));
 
     //boton pagar actualiza estado de carrito
     const actualizarEstadoCarrito = async (idCarrito, nuevoEstado) => {
@@ -163,8 +169,8 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
         return aplicaDescuentoResult;
     };
 
-    // Función para obtener carritos del cliente y organizarlos por fecha
-    const obtenerCarritosPorFecha = async () => {
+    // ✅ MEJORADA: Función para obtener carritos del cliente y organizarlos por fecha
+    const obtenerCarritosPorFecha = async (mantenerSeleccion = false) => {
         if (!idCliente) return;
 
         try {
@@ -235,21 +241,13 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
             console.log(`🗂️ Carritos organizados por fecha:`, Array.from(carritosPorFechaMap.entries()));
             setCarritosPorFecha(carritosPorFechaMap);
 
-            // ✅ FIX: Si hay una fecha seleccionada, recargar su carrito automáticamente
-            if (fechaSeleccionada && carritosPorFechaMap.has(fechaSeleccionada)) {
-                const carritosDeEsteFecha = carritosPorFechaMap.get(fechaSeleccionada);
-                if (carritosDeEsteFecha.length > 0) {
-                    const carritoActualizado = carritosDeEsteFecha[0];
-                    console.log('🔄 Recargando carrito de fecha seleccionada:', carritoActualizado);
-                    setCarritoSeleccionado(carritoActualizado);
-                    // Recargar los turnos del carrito actualizado
-                    await obtenerTurnosCarrito(carritoActualizado.id);
-                }
-            }
+            // ✅ NUEVO: Retornar el map para uso inmediato
+            return carritosPorFechaMap;
 
         } catch (error) {
             console.error('❌ Error al obtener carritos por fecha:', error);
             setError('Error al cargar carritos: ' + error.message);
+            return new Map();
         } finally {
             setLoading(false);
         }
@@ -308,34 +306,101 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
             // ✅ NUEVO: Verificar si aplica descuento después de cargar servicios
             verificarDescuento48hs(serviciosFormateados);
 
+            return serviciosFormateados;
+
         } catch (error) {
             console.error('❌ Error al obtener turnos del carrito:', error);
             setError('Error al cargar los servicios del carrito: ' + error.message);
             setServicios([]);
             setAplicaDescuento(false); // No aplica descuento si hay error
+            return [];
         } finally {
             setLoading(false);
         }
     };
 
-    // ✅ FIX: Función mejorada para manejar cambio de fecha
+    // ✅ NUEVA: Función pública mejorada para refrescar datos
+    const refrescarDatos = async (mantenerFechaSeleccionada = true) => {
+        console.log('🔄 CarritoCompleto - Refrescando datos...');
+        
+        try {
+            setLoading(true);
+            
+            // Guardar estado actual si se requiere
+            const fechaAnterior = mantenerFechaSeleccionada ? fechaSeleccionada : null;
+            
+            // Limpiar estados temporalmente
+            setCarritoSeleccionado(null);
+            setServicios([]);
+            setAplicaDescuento(false);
+            setError(null);
+            
+            // Recargar datos del backend
+            const nuevosCarritosPorFecha = await obtenerCarritosPorFecha();
+            
+            // ✅ CRITICAL FIX: Si había una fecha seleccionada, restaurarla
+            if (fechaAnterior && nuevosCarritosPorFecha.has(fechaAnterior)) {
+                console.log('🔄 Restaurando fecha seleccionada:', fechaAnterior);
+                
+                // Usar un pequeño delay para asegurar que el estado se actualizó
+                setTimeout(async () => {
+                    const carritosDeEsteFecha = nuevosCarritosPorFecha.get(fechaAnterior);
+                    if (carritosDeEsteFecha && carritosDeEsteFecha.length > 0) {
+                        const carritoActualizado = carritosDeEsteFecha[0];
+                        console.log('🎯 Reseleccionando carrito:', carritoActualizado);
+                        
+                        setCarritoSeleccionado(carritoActualizado);
+                        await obtenerTurnosCarrito(carritoActualizado.id);
+                    }
+                }, 100);
+            } else if (fechaAnterior) {
+                console.log('⚠️ La fecha anterior ya no tiene carritos disponibles');
+                setFechaSeleccionada(null);
+            }
+            
+            console.log('✅ Datos refrescados exitosamente');
+            
+        } catch (error) {
+            console.error('❌ Error al refrescar datos:', error);
+            setError('Error al refrescar datos: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ✅ MEJORADA: Función para manejar cambio de fecha
     const handleFechaChange = async (nuevaFecha) => {
         console.log('📅 Fecha seleccionada en CarritoCompleto:', nuevaFecha);
         setFechaSeleccionada(nuevaFecha);
 
-        // Obtener carritos de esa fecha
-        const carritosDeEsteFecha = carritosPorFecha.get(nuevaFecha) || [];
-        console.log('🛒 Carritos encontrados para esta fecha:', carritosDeEsteFecha);
+        if (!nuevaFecha) {
+            setCarritoSeleccionado(null);
+            setServicios([]);
+            setAplicaDescuento(false);
+            return;
+        }
 
-        if (carritosDeEsteFecha.length > 0) {
-            // Por ahora tomamos el primer carrito de la fecha
-            const primerCarrito = carritosDeEsteFecha[0];
-            console.log('🎯 Carrito seleccionado:', primerCarrito);
-            setCarritoSeleccionado(primerCarrito);
-            
-            // ✅ FIX: Usar await para asegurar que los turnos se cargan completamente
-            await obtenerTurnosCarrito(primerCarrito.id);
-        } else {
+        try {
+            // Obtener carritos de esa fecha
+            const carritosDeEsteFecha = carritosPorFecha.get(nuevaFecha) || [];
+            console.log('🛒 Carritos encontrados para esta fecha:', carritosDeEsteFecha);
+
+            if (carritosDeEsteFecha.length > 0) {
+                const primerCarrito = carritosDeEsteFecha[0];
+                console.log('🎯 Carrito seleccionado:', primerCarrito);
+                setCarritoSeleccionado(primerCarrito);
+                
+                // ✅ CRITICAL: Asegurar que los turnos se cargan completamente
+                const serviciosCargados = await obtenerTurnosCarrito(primerCarrito.id);
+                console.log('✅ Turnos cargados exitosamente:', serviciosCargados.length);
+            } else {
+                console.log('📭 No hay carritos para esta fecha');
+                setCarritoSeleccionado(null);
+                setServicios([]);
+                setAplicaDescuento(false);
+            }
+        } catch (error) {
+            console.error('❌ Error en handleFechaChange:', error);
             setCarritoSeleccionado(null);
             setServicios([]);
             setAplicaDescuento(false);
@@ -393,51 +458,24 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
         }
     };
 
-    // ✅ Función pública para refrescar datos (útil cuando se crean nuevos turnos)
-    const refrescarDatos = async () => {
-        console.log('🔄 CarritoCompleto - Refrescando datos por solicitud externa');
-        
-        // ✅ FIX: Guardar la fecha seleccionada antes de limpiar
-        const fechaAnterior = fechaSeleccionada;
-        
-        // Limpiar estados
-        setCarritoSeleccionado(null);
-        setServicios([]);
-        setAplicaDescuento(false);
-        
-        // Recargar datos
-        await obtenerCarritosPorFecha();
-        
-        // ✅ FIX: Si había una fecha seleccionada, mantenerla y recargar sus datos
-        if (fechaAnterior) {
-            console.log('🔄 Manteniendo fecha seleccionada:', fechaAnterior);
-            // No llamamos setFechaSeleccionada aquí porque obtenerCarritosPorFecha ya maneja la recarga
-        }
-    };
-
-    // ✅ Efecto para refrescar cuando se solicita desde props
+    // ✅ MEJORADO: Efecto para refrescar cuando se solicita desde props
     useEffect(() => {
         if (forceRefresh && isOpen && idCliente) {
             console.log('⚡ CarritoCompleto - Refresco forzado solicitado');
-            refrescarDatos();
+            const ejecutarRefresh = async () => {
+                await refrescarDatos(true); // Mantener fecha seleccionada
+            };
+            ejecutarRefresh();
         }
-    }, [forceRefresh]);
+    }, [forceRefresh, isOpen, idCliente]);
 
     // ✅ Cargar carritos cuando se abre el modal o cambia el cliente
     useEffect(() => {
-        if (idCliente) {
+        if (isOpen && idCliente) {
+            console.log('🚪 CarritoCompleto - Modal abierto, cargando datos iniciales');
             obtenerCarritosPorFecha();
         }
-    }, [idCliente]);
-
-    // ✅ Efecto separado para cuando se abre el modal (para refrescar datos si es necesario)
-    useEffect(() => {
-        if (isOpen && idCliente) {
-            // ✅ Siempre recargar cuando se abre el modal para tener datos frescos
-            console.log('🚪 CarritoCompleto - Modal abierto, refrescando datos');
-            refrescarDatos();
-        }
-    }, [isOpen]);
+    }, [isOpen, idCliente]);
 
     // Limpiar estados cuando se cierra el modal
     useEffect(() => {
@@ -1158,6 +1196,9 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
             </div>
         </>
     );
-};
+});
+
+// ✅ IMPORTANTE: Añadir displayName para debugging
+CarritoCompleto.displayName = 'CarritoCompleto';
 
 export default CarritoCompleto;

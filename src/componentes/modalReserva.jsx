@@ -38,6 +38,13 @@ const ModalTurnoReservado = ({ isVisible, onClose, onIrACarrito, onIrAServicios 
             >
               <span className="btn-text">Más servicios</span>
             </button>
+            {/* ✅ NUEVO: Botón para ir al carrito */}
+            <button
+              className="btn-carrito"
+              onClick={onIrACarrito}
+            >
+              <span className="btn-text">Ir al Carrito</span>
+            </button>
           </div>
         </div>
       </div>
@@ -51,6 +58,9 @@ const ModalReserva = ({
   servicioId,
   onClose,
   onReservaConfirmada,
+  // ✅ NUEVAS PROPS: Para integración con carrito
+  carritoRef = null,
+  onTurnoCreado = null
 }) => {
   const { user } = useAuth();
   const clienteId = user?.id_cliente;
@@ -70,6 +80,9 @@ const ModalReserva = ({
 
   // Estado para controlar el modal de confirmación
   const [mostrarModalConfirmacion, setMostrarModalConfirmacion] = useState(false);
+  
+  // ✅ NUEVO: Estado para los datos del turno creado
+  const [datosUltimoTurno, setDatosUltimoTurno] = useState(null);
 
   useEffect(() => {
     console.log("Servicio recibido:", servicio);
@@ -215,6 +228,41 @@ const ModalReserva = ({
     }
   };
 
+  // ✅ NUEVA: Función para notificar al carrito sobre el turno creado
+  const notificarTurnoCreado = async (datosTurno) => {
+    try {
+      console.log('🎉 ModalReserva - Notificando turno creado:', datosTurno);
+      
+      // ✅ OPCIÓN 1: Usar callback si se proporciona
+      if (onTurnoCreado && typeof onTurnoCreado === 'function') {
+        console.log('📞 Llamando callback onTurnoCreado...');
+        await onTurnoCreado(datosTurno);
+      }
+      
+      // ✅ OPCIÓN 2: Usar ref del carrito si se proporciona
+      if (carritoRef && carritoRef.current) {
+        console.log('🔄 Refrescando carrito mediante ref...');
+        await carritoRef.current.refrescarDatos();
+        
+        // Si conocemos la fecha, seleccionarla automáticamente
+        if (datosTurno.fecha) {
+          // Formatear fecha para que coincida con el formato esperado (YYYY/MM/DD)
+          const fechaFormateada = datosTurno.fecha.replace(/-/g, '/');
+          console.log(`📅 Seleccionando fecha en carrito: ${fechaFormateada}`);
+          setTimeout(async () => {
+            await carritoRef.current.seleccionarFecha(fechaFormateada);
+          }, 500); // Pequeño delay para asegurar que el refresh terminó
+        }
+      }
+      
+      console.log('✅ Carrito notificado exitosamente');
+      
+    } catch (error) {
+      console.error('❌ Error al notificar al carrito:', error);
+      // No lanzar error para no interrumpir el flujo de creación del turno
+    }
+  };
+
   const handleFechaHoraSeleccionada = (nuevaFecha, nuevaHora) => {
     if (nuevaFecha) {
       const fechaStr = nuevaFecha.toISOString().split("T")[0];
@@ -307,10 +355,21 @@ const ModalReserva = ({
             opcion: opcionSeleccionada?.nombre,
             fecha,
             hora,
-            profesional
+            profesional,
+            // ✅ NUEVO: Datos adicionales para el carrito
+            fechaFormateada: fecha.replace(/-/g, '/'), // Formato YYYY/MM/DD
+            servicioIdState,
+            profesionalId,
+            clienteId
           };
 
           console.log("✅ Reserva confirmada:", detallesReserva);
+
+          // ✅ NUEVO: Guardar datos para usar en el modal de confirmación
+          setDatosUltimoTurno(detallesReserva);
+
+          // ✅ NUEVO: Notificar al carrito ANTES de mostrar el modal
+          await notificarTurnoCreado(detallesReserva);
 
           onReservaConfirmada?.(detallesReserva);
 
@@ -373,6 +432,25 @@ const ModalReserva = ({
     onClose();
     // Aquí puedes agregar la navegación a más servicios
     console.log("Ir a más servicios");
+  };
+
+  // ✅ NUEVA: Función para ir al carrito
+  const handleIrACarrito = async () => {
+    console.log('🛒 Abriendo carrito desde modal de confirmación...');
+    
+    // ✅ Notificar nuevamente al carrito para asegurar datos actuales
+    if (datosUltimoTurno) {
+      await notificarTurnoCreado(datosUltimoTurno);
+    }
+    
+    // Cerrar modales
+    setMostrarModalConfirmacion(false);
+    onClose();
+    
+    // ✅ Si tienes una función para abrir el carrito, llámala aquí
+    // Por ejemplo: onIrACarrito?.(datosUltimoTurno);
+    
+    console.log('✅ Navegando al carrito...');
   };
 
   const handleCerrarModalConfirmacion = () => {
@@ -491,11 +569,12 @@ const ModalReserva = ({
         </div>
       </div>
 
-      {/* Modal de confirmación */}
+      {/* ✅ Modal de confirmación actualizado */}
       <ModalTurnoReservado
         isVisible={mostrarModalConfirmacion}
         onClose={handleCerrarModalConfirmacion}
         onIrAServicios={handleIrAServicios}
+        onIrACarrito={handleIrACarrito}
       />
     </>
   );
