@@ -352,22 +352,63 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
         }
     };
 
-    // Función para manejar cambio de fecha
+    // ✅ FUNCIÓN DEFINIDA ANTES DE SU USO: Para manejar cambio de carrito específico
+    const handleCarritoChange = (nuevoCarrito) => {
+        try {
+            console.log('🔄 Cambiando a carrito:', nuevoCarrito);
+            
+            if (!nuevoCarrito || !nuevoCarrito.id) {
+                console.error('❌ Carrito inválido recibido:', nuevoCarrito);
+                return;
+            }
+
+            setCarritoSeleccionado(nuevoCarrito);
+            obtenerTurnosCarrito(nuevoCarrito.id);
+        } catch (error) {
+            console.error('❌ Error en handleCarritoChange:', error);
+            setError('Error al cambiar carrito: ' + error.message);
+        }
+    };
+
+    // ✅ FUNCIÓN CORREGIDA: handleFechaChange
     const handleFechaChange = (nuevaFecha) => {
-        console.log('📅 Fecha seleccionada en CarritoCompleto:', nuevaFecha);
-        setFechaSeleccionada(nuevaFecha);
+        try {
+            console.log('📅 Fecha seleccionada en CarritoCompleto:', nuevaFecha);
+            setFechaSeleccionada(nuevaFecha);
 
-        // Obtener carritos de esa fecha
-        const carritosDeEsteFecha = carritosPorFecha.get(nuevaFecha) || [];
-        console.log('🛒 Carritos encontrados para esta fecha:', carritosDeEsteFecha);
+            // Validar que carritosPorFecha existe y es un Map
+            if (!carritosPorFecha || typeof carritosPorFecha.get !== 'function') {
+                console.error('❌ carritosPorFecha no es un Map válido');
+                setCarritoSeleccionado(null);
+                setServicios([]);
+                setAplicaDescuento(false);
+                return;
+            }
 
-        if (carritosDeEsteFecha.length > 0) {
-            // Por ahora tomamos el primer carrito de la fecha
-            const primerCarrito = carritosDeEsteFecha[0];
-            console.log('🎯 Carrito seleccionado:', primerCarrito);
-            setCarritoSeleccionado(primerCarrito);
-            obtenerTurnosCarrito(primerCarrito.id);
-        } else {
+            // Obtener carritos de esa fecha
+            const carritosDeEsteFecha = carritosPorFecha.get(nuevaFecha) || [];
+            console.log('🛒 Carritos encontrados para esta fecha:', carritosDeEsteFecha);
+
+            if (carritosDeEsteFecha.length > 0) {
+                // ✅ CAMBIO: Tomar el carrito MÁS RECIENTE (primero en el array ordenado)
+                const carritoMasReciente = carritosDeEsteFecha[0];
+                console.log('🎯 Carrito más reciente seleccionado:', carritoMasReciente);
+                setCarritoSeleccionado(carritoMasReciente);
+                obtenerTurnosCarrito(carritoMasReciente.id);
+
+                // ✅ NUEVO: Información adicional para debugging
+                if (carritosDeEsteFecha.length > 1) {
+                    console.log(`ℹ️  Hay ${carritosDeEsteFecha.length} carritos para esta fecha. Mostrando el más reciente.`);
+                    console.log('📋 Todos los carritos para esta fecha:', carritosDeEsteFecha);
+                }
+            } else {
+                setCarritoSeleccionado(null);
+                setServicios([]);
+                setAplicaDescuento(false);
+            }
+        } catch (error) {
+            console.error('❌ Error en handleFechaChange:', error);
+            setError('Error al cambiar fecha: ' + error.message);
             setCarritoSeleccionado(null);
             setServicios([]);
             setAplicaDescuento(false);
