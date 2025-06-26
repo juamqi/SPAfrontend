@@ -3,6 +3,45 @@ import { X, ArrowLeft } from 'lucide-react';
 import FechaSelector from './fechaselector.jsx';
 import '../styles/carrito.css';
 
+// ✅ COMPONENTE SELECTOR DE CARRITOS (definido fuera del componente principal)
+const SelectorCarritos = ({ fecha, carritosPorFecha, carritoSeleccionado, onCarritoChange, formatearPrecio }) => {
+    const carritosDeEsteFecha = carritosPorFecha.get(fecha) || [];
+    
+    if (carritosDeEsteFecha.length <= 1) {
+        return null; // No mostrar si solo hay un carrito
+    }
+
+    return (
+        <div className="selector-carritos">
+            <div className="selector-carritos-header">
+                <h4>Carritos disponibles para {fecha}</h4>
+                <span className="carritos-count">{carritosDeEsteFecha.length} carritos</span>
+            </div>
+            
+            <div className="carritos-opciones">
+                {carritosDeEsteFecha.map((carrito, index) => (
+                    <div 
+                        key={carrito.id}
+                        className={`carrito-opcion ${carritoSeleccionado?.id === carrito.id ? 'activo' : ''}`}
+                        onClick={() => onCarritoChange(carrito)}
+                    >
+                        <div className="carrito-opcion-header">
+                            <span className="carrito-numero">Carrito #{carrito.id}</span>
+                            <span className="carrito-total">{formatearPrecio(carrito.subtotal || 0)}</span>
+                        </div>
+                        <div className="carrito-opcion-detalles">
+                            <span className="carrito-estado">Estado: {carrito.estado}</span>
+                            {index === 0 && (
+                                <span className="carrito-mas-reciente">Más reciente</span>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
     const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
     const [vistaActual, setVistaActual] = useState('carrito');
@@ -418,11 +457,16 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
     // ✅ Efecto separado para cuando se abre el modal (para refrescar datos si es necesario)
     useEffect(() => {
         if (isOpen && idCliente) {
-            // ✅ Siempre recargar cuando se abre el modal para tener datos frescos
-            console.log('🚪 CarritoCompleto - Modal abierto, refrescando datos');
-            refrescarDatos();
+            try {
+                // ✅ Siempre recargar cuando se abre el modal para tener datos frescos
+                console.log('🚪 CarritoCompleto - Modal abierto, refrescando datos');
+                refrescarDatos();
+            } catch (error) {
+                console.error('❌ Error al abrir modal:', error);
+                setError('Error al cargar el carrito: ' + error.message);
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, idCliente]);
 
     // Limpiar estados cuando se cierra el modal
     useEffect(() => {
@@ -815,6 +859,25 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
 
     if (!isOpen) return null;
 
+    // ✅ NUEVO: Validación de seguridad antes del render
+    if (!idCliente) {
+        return (
+            <div className="modal-overlay">
+                <div className="carrito-modal">
+                    <div className="modal-header">
+                        <h2 className="modal-title">ERROR</h2>
+                        <button className="close-button" onClick={onClose}>
+                            <X size={20} color="#F4F8E6" />
+                        </button>
+                    </div>
+                    <div className="error-message">
+                        No se ha proporcionado un ID de cliente válido.
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             {/* ✅ Modal de éxito renderizado fuera del modal principal */}
@@ -878,6 +941,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                                     carritosPorFecha={carritosPorFecha}
                                     carritoSeleccionado={carritoSeleccionado}
                                     onCarritoChange={handleCarritoChange}
+                                    formatearPrecio={formatearPrecio}
                                 />
                             )}
 
