@@ -1,4 +1,25 @@
-import { useState, useCallback, useEffect } from 'react';
+// ✅ NUEVO: Listener para eventos personalizados de turnos creados
+  useEffect(() => {
+    const handleTurnoCreado = () => {
+      console.log('🎉 Evento turnoCreado recibido, refrescando carrito...');
+      setForceRefreshCarrito(prev => prev + 1);
+    };
+
+    const handleAbrirCarrito = () => {
+      console.log('🛒 Evento abrirCarrito recibido...');
+      abrirCarrito();
+    };
+
+    // Escuchar los eventos personalizados
+    window.addEventListener('turnoCreado', handleTurnoCreado);
+    window.addEventListener('abrirCarrito', handleAbrirCarrito);
+    
+    // Limpiar los listeners al desmontar
+    return () => {
+      window.removeEventListener('turnoCreado', handleTurnoCreado);
+      window.removeEventListener('abrirCarrito', handleAbrirCarrito);
+    };
+  }, [abrirCarrito]);import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Formulario from '../Formularios/formulario.jsx';
 import Boton from '../Formularios/boton.jsx';

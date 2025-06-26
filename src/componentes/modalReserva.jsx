@@ -38,6 +38,13 @@ const ModalTurnoReservado = ({ isVisible, onClose, onIrACarrito, onIrAServicios 
             >
               <span className="btn-text">Más servicios</span>
             </button>
+            {/* ✅ NUEVO BOTÓN: Ir al carrito */}
+            <button 
+              className="btn-carrito" 
+              onClick={onIrACarrito}
+            >
+              <span className="btn-text">Ir al carrito</span>
+            </button>
           </div>
         </div>
       </div>
@@ -294,6 +301,16 @@ const ModalReserva = ({
           
           onReservaConfirmada?.(detallesReserva);
           
+          // ✅ NUEVO: Disparar evento personalizado para notificar al carrito
+          console.log("🎉 Disparando evento turnoCreado...");
+          window.dispatchEvent(new CustomEvent('turnoCreado', { 
+            detail: { 
+              turno: detallesReserva,
+              fecha: fecha,
+              clienteId: clienteId
+            }
+          }));
+          
           // Mostrar el modal de confirmación en lugar del alert
           setMostrarModalConfirmacion(true);
           
@@ -354,6 +371,16 @@ const ModalReserva = ({
     onClose();
     // Aquí puedes agregar la navegación a más servicios
     console.log("Ir a más servicios");
+  };
+
+  // ✅ NUEVA FUNCIÓN: Para ir al carrito
+  const handleIrACarrito = () => {
+    console.log("🛒 Abriendo carrito desde modal de confirmación...");
+    setMostrarModalConfirmacion(false);
+    onClose();
+    
+    // ✅ Disparar evento para abrir el carrito
+    window.dispatchEvent(new CustomEvent('abrirCarrito'));
   };
 
   const handleCerrarModalConfirmacion = () => {
@@ -477,6 +504,7 @@ const ModalReserva = ({
         isVisible={mostrarModalConfirmacion}
         onClose={handleCerrarModalConfirmacion}
         onIrAServicios={handleIrAServicios}
+        onIrACarrito={handleIrACarrito}
       />
     </>
   );
