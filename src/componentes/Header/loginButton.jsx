@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useCarrito } from '../../context/CarritoContext.jsx'; // ✅ NUEVO
 import Formulario from '../Formularios/formulario.jsx';
 import Boton from '../Formularios/boton.jsx';
 import '../../styles/botonLogin.css';
@@ -10,9 +11,27 @@ import CarritoModal from '../carrito.jsx'
 const LoginButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [carritoOpen, setCarritoOpen] = useState(false); 
   const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
+
+  // ✅ NUEVO: Usar contexto del carrito
+  const {
+    carritoAbierto,
+    refreshTrigger,
+    abrirCarrito,
+    cerrarCarrito,
+    registrarCarritoRef
+  } = useCarrito();
+
+  // Ref para el carrito
+  const carritoRef = useRef();
+
+  // ✅ NUEVO: Registrar el ref cuando el componente se monta
+  useEffect(() => {
+    if (carritoRef.current) {
+      registrarCarritoRef(carritoRef.current);
+    }
+  }, [registrarCarritoRef]);
 
   const handleProfileClick = () => {
     setMenuOpen(!menuOpen);
@@ -28,7 +47,13 @@ const LoginButton = () => {
     setIsOpen(false);
   };
 
-return (
+  // ✅ Función para abrir carrito desde menú
+  const handleAbrirCarrito = () => {
+    setMenuOpen(false);
+    abrirCarrito();
+  };
+
+  return (
     <div className="login-container">
       {!isAuthenticated() ? (
         <>
@@ -52,11 +77,7 @@ return (
               </Link>
               <button
                 className="dropdown-item"
-                onClick={(e) => {
-                  e.preventDefault(); 
-                  setMenuOpen(false);
-                  setCarritoOpen(true);
-                }}
+                onClick={handleAbrirCarrito} // ✅ NUEVO: usar contexto
               >
                 <ShoppingCart size={18} />
                 <span>Carrito</span>
@@ -70,10 +91,13 @@ return (
         </div>
       )}
       
+      {/* ✅ CarritoModal usando contexto */}
       <CarritoModal
-        isOpen={carritoOpen}
-        onClose={() => setCarritoOpen(false)}
-        idCliente={user?.id_cliente} // Agregar esta línea
+        ref={carritoRef}
+        isOpen={carritoAbierto}
+        onClose={cerrarCarrito}
+        idCliente={user?.id_cliente}
+        forceRefresh={refreshTrigger}
       />
     </div>
   );
