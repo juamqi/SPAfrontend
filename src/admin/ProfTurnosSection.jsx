@@ -73,68 +73,22 @@ const ProfTurnosSection = () => {
         }
         const data = await response.json();
 
-        // Debug completo
-        console.log("=== DEBUG COMPLETO ===");
-        console.log("Todos los turnos recibidos:", data);
-        console.log("Cantidad de turnos:", data.length);
-        console.log("Profesional desde localStorage:", profesional);
-        console.log("ID del profesional logueado:", profesionalId);
-        console.log("Tipo de profesionalId:", typeof profesionalId);
+        // Obtener el nombre del profesional desde localStorage
+        const nombreProfesional = profesional?.nombre;
         
-        // Mostrar todos los campos de los primeros turnos para identificar el campo correcto
-        if (data.length > 0) {
-            console.log("Estructura del primer turno:", data[0]);
-            console.log("Todas las claves del primer turno:", Object.keys(data[0]));
-            
-            // Buscar campos que puedan contener el ID del profesional
-            const camposPosibles = Object.keys(data[0]).filter(key => 
-                key.toLowerCase().includes('profesional') || 
-                key.toLowerCase().includes('prof')
-            );
-            console.log("Campos posibles para profesional:", camposPosibles);
-        }
+        console.log("Nombre del profesional logueado:", nombreProfesional);
+        console.log("Todos los nombres de profesionales en turnos:", [...new Set(data.map(t => t.profesional))]);
 
-        // Mostrar todos los IDs únicos de profesionales en los turnos
-        const idsUnicos = [...new Set(data.map(t => t.id_profesional))];
-        console.log("IDs únicos de profesionales en turnos:", idsUnicos);
-        console.log("Tipos de estos IDs:", idsUnicos.map(id => typeof id));
+        // Filtrar turnos del profesional logueado por NOMBRE
+        const turnosDelProfesional = data.filter(t => 
+            t.profesional === nombreProfesional
+        );
 
-        // Temporalmente, mostrar TODOS los turnos sin filtrar para verificar que lleguen
-        console.log("Mostrando todos los turnos sin filtrar...");
-        setTurnos(data);
-        setTurnosFiltrados(data);
+        console.log("Turnos filtrados del profesional:", turnosDelProfesional);
+        console.log("Cantidad de turnos encontrados:", turnosDelProfesional.length);
 
-        // Intentar el filtrado de múltiples maneras
-        console.log("\n=== INTENTOS DE FILTRADO ===");
-        
-        // Intento 1: Comparación directa
-        const filtro1 = data.filter(t => t.id_profesional === profesionalId);
-        console.log("Filtro 1 (directo):", filtro1.length, "turnos");
-        
-        // Intento 2: Convertir a números
-        const filtro2 = data.filter(t => Number(t.id_profesional) === Number(profesionalId));
-        console.log("Filtro 2 (números):", filtro2.length, "turnos");
-        
-        // Intento 3: Convertir a strings
-        const filtro3 = data.filter(t => String(t.id_profesional) === String(profesionalId));
-        console.log("Filtro 3 (strings):", filtro3.length, "turnos");
-
-        // Mostrar comparaciones individuales para el debugging
-        data.forEach((turno, index) => {
-            if (index < 5) { // Solo los primeros 5 para no saturar la consola
-                console.log(`Turno ${index}:`, {
-                    id_turno: turno.id,
-                    id_profesional_turno: turno.id_profesional,
-                    tipo_id_profesional: typeof turno.id_profesional,
-                    profesional_logueado: profesionalId,
-                    tipo_profesional_logueado: typeof profesionalId,
-                    coincide_directo: turno.id_profesional === profesionalId,
-                    coincide_numero: Number(turno.id_profesional) === Number(profesionalId),
-                    coincide_string: String(turno.id_profesional) === String(profesionalId)
-                });
-            }
-        });
-
+        setTurnos(turnosDelProfesional);
+        setTurnosFiltrados(turnosDelProfesional);
     } catch (error) {
         console.error("Error al cargar los turnos:", error);
         setError("No se pudieron cargar los turnos. Intenta nuevamente.");
@@ -186,7 +140,6 @@ const fetchTurnosAlternativo = async () => {
         setIsLoading(false);
     }
 };
-
     const fetchCategorias = async () => {
         try {
             const response = await fetch("https://spabackend-production-e093.up.railway.app/api/categoriasAdm");
