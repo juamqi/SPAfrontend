@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { useCarrito } from '../../context/CarritoContext.jsx'; // ✅ NUEVO
+import { useCarrito } from '../../context/carritoContext.jsx'; // ✅ NUEVO
 import Formulario from '../Formularios/formulario.jsx';
 import Boton from '../Formularios/boton.jsx';
 import '../../styles/botonLogin.css';
