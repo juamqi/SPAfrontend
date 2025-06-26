@@ -5,6 +5,7 @@ import DropdownServicios from "./dropDownServicios.jsx";
 import DropdownClientes from "./DropdownClientes.jsx";
 import DropdownProfesionalesPorServicio from "./DropDownProfesionalesPorServicio.jsx";
 import FilterComponent from "./FilterComponent.jsx";
+import { usePopupContext } from "./popupcontext.jsx";
 
 const ProfTurnosSection = () => {
     const [turnos, setTurnos] = useState([]);
@@ -29,6 +30,7 @@ const ProfTurnosSection = () => {
     });
     const [categorias, setCategorias] = useState([]);
     const horasDisponibles = Array.from({ length: 14 }, (_, i) => `${(8 + i).toString().padStart(2, '0')}:00`);
+    const { showPopup } = usePopupContext();
 
     // Estados de turnos disponibles para filtrar
     const estadosTurnos = ['Solicitado', 'Cancelado'];
@@ -119,7 +121,11 @@ const ProfTurnosSection = () => {
         });
 
         if (turnosMañana.length === 0) {
-            alert('No hay turnos programados para mañana.');
+            showPopup({
+                type: 'info',
+                title: "Atención",
+                message: "No hay turnos programados para mañana.",
+            });
             return;
         }
 

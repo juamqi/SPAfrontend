@@ -3,12 +3,13 @@ import Calendar from 'react-calendar';
 import Boton from '../Formularios/boton.jsx';
 import '../../styles/popUpReprogramacion.css';
 import 'react-calendar/dist/Calendar.css';
+import { usePopupContext } from '../popupcontext.jsx';
 
-const PopupReprogramacion = ({ 
-  titulo = 'Reprogramar Turno', 
-  mensaje = 'Selecciona una nueva fecha y hora para tu turno:', 
+const PopupReprogramacion = ({
+  titulo = 'Reprogramar Turno',
+  mensaje = 'Selecciona una nueva fecha y hora para tu turno:',
   turnoActual,
-  onConfirmar, 
+  onConfirmar,
   onCancelar,
   textoConfirmar = 'Confirmar',
   textoCancelar = 'Cancelar',
@@ -19,8 +20,8 @@ const PopupReprogramacion = ({
 }) => {
   const [nuevaFecha, setNuevaFecha] = useState(new Date());
   const [nuevaHora, setNuevaHora] = useState('');
-  
-  // Generar horas disponibles (ejemplo: de 8:00 a 18:00 cada 30 min)
+  const { showPopup } = usePopupContext();
+
   const horasDisponibles = [];
   for (let hora = 8; hora <= 18; hora++) {
     horasDisponibles.push(`${hora.toString().padStart(2, '0')}:00`);
@@ -29,25 +30,27 @@ const PopupReprogramacion = ({
     }
   }
 
-  // Función para manejar la confirmación con los nuevos datos
   const handleConfirmar = () => {
     if (!nuevaHora) {
-      alert('Por favor, selecciona una hora para el turno');
+      showPopup({
+        type: 'warning',
+        title: 'Atención',
+        message: 'Por favor, selecciona una hora para el turno',
+         
+      });
       return;
     }
-    
-    // Crear un objeto con la fecha y hora seleccionadas
+
     const fechaFormateada = nuevaFecha.toISOString().split('T')[0];
     const datosTurnoReprogramado = {
       fecha: fechaFormateada,
       hora: nuevaHora,
       fechaCompleta: `${fechaFormateada}T${nuevaHora}:00`
     };
-    
+
     onConfirmar(datosTurnoReprogramado);
   };
 
-  // Función para deshabilitar fechas pasadas en el calendario
   const esDateValida = (date) => {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
@@ -59,31 +62,31 @@ const PopupReprogramacion = ({
       <div className="popup-contenido">
         <h3>{titulo}</h3>
         <p>{mensaje}</p>
-        
+
         {turnoActual && (
           <div className="turno-actual">
-            <p><strong>Turno actual:</strong> {turnoActual.fecha_hora.split('T')[0]} a las {turnoActual.fecha_hora.split('T')[1].substring(0,5)}</p>
+            <p><strong>Turno actual:</strong> {turnoActual.fecha_hora.split('T')[0]} a las {turnoActual.fecha_hora.split('T')[1].substring(0, 5)}</p>
           </div>
         )}
-        
+
         <div className="reprogramar-seleccion">
           <div className="reprogramar-calendario">
             <h4>Selecciona una nueva fecha:</h4>
-            <Calendar 
-              onChange={setNuevaFecha} 
+            <Calendar
+              onChange={setNuevaFecha}
               value={nuevaFecha}
               minDate={new Date()}
-              tileDisabled={({date}) => !esDateValida(date)}
+              tileDisabled={({ date }) => !esDateValida(date)}
               className="mini-calendario"
             />
           </div>
-          
+
           <div className="reprogramar-hora">
             <h4>Selecciona un horario:</h4>
             <div className="horas-grid">
               {horasDisponibles.map(hora => (
-                <div 
-                  key={hora} 
+                <div
+                  key={hora}
                   className={`hora-item ${nuevaHora === hora ? 'hora-seleccionada' : ''}`}
                   onClick={() => setNuevaHora(hora)}
                 >
@@ -93,17 +96,17 @@ const PopupReprogramacion = ({
             </div>
           </div>
         </div>
-        
+
         <div className="popup-botones">
-          <Boton 
-            text={textoConfirmar} 
+          <Boton
+            text={textoConfirmar}
             onClick={handleConfirmar}
             backgroundColor={colorConfirmar}
             hoverBackgroundColor={hoverColorConfirmar}
             disabled={!nuevaHora}
           />
-          <Boton 
-            text={textoCancelar} 
+          <Boton
+            text={textoCancelar}
             onClick={onCancelar}
             backgroundColor={colorCancelar}
             hoverBackgroundColor={hoverColorCancelar}

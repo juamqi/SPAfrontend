@@ -3,8 +3,8 @@ import "../styles/modal.css";
 import "../styles/modalReserva.css";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext.jsx";
+import { usePopupContext } from "./popupcontext.jsx"; 
 
-// Nuevo componente para el modal de confirmación
 const ModalTurnoReservado = ({ isVisible, onClose, onIrACarrito, onIrAServicios }) => {
   if (!isVisible) return null;
 
@@ -22,7 +22,7 @@ const ModalTurnoReservado = ({ isVisible, onClose, onIrACarrito, onIrAServicios 
         {/* Contenido del modal */}
         <div className="modal-turno-content">
           <p className="modal-turno-description">
-            Podés también agregar otros servicios. <br/> Si querés pagar con tarjeta de débito y 
+            Podés también agregar otros servicios. <br /> Si querés pagar con tarjeta de débito y
             acceder al 15% de descuento*, andá al carrito.
             <br />
             <span className="modal-turno-disclaimer">
@@ -32,8 +32,8 @@ const ModalTurnoReservado = ({ isVisible, onClose, onIrACarrito, onIrAServicios 
 
           {/* Botones */}
           <div className="modal-turno-buttons">
-            <button 
-              className="btn-servicios" 
+            <button
+              className="btn-servicios"
               onClick={onIrAServicios}
             >
               <span className="btn-text">Más servicios</span>
@@ -66,7 +66,8 @@ const ModalReserva = ({
   const [horariosCargados, setHorariosCargados] = useState(false);
   const [turnosOcupados, setTurnosOcupados] = useState([]);
   const [servicioIdState, setServicioIdState] = useState(servicioId);
-  
+  const { showPopup } = usePopupContext();
+
   // Estado para controlar el modal de confirmación
   const [mostrarModalConfirmacion, setMostrarModalConfirmacion] = useState(false);
 
@@ -190,7 +191,7 @@ const ModalReserva = ({
   const verificarCarritoExistente = async (clienteId, fecha) => {
     try {
       console.log(`Verificando carrito para cliente ${clienteId} en fecha ${fecha}`);
-      
+
       const response = await axios.get(
         "https://spabackend-production-e093.up.railway.app/api/carritos/buscar",
         {
@@ -227,25 +228,44 @@ const ModalReserva = ({
   const handleSubmit = async e => {
     e.preventDefault();
     if (paso === 1) {
-      if (!fecha || !hora)
-        return alert("Selecciona fecha y hora para continuar.");
+      if (!fecha || !hora) return showPopup({
+        type: 'warning',
+        title: 'Datos incompletos',
+        message: 'Selecciona fecha y hora para continuar.',
+         
+      });
       setPaso(2);
     } else {
-      if (!profesionalId) return alert("Selecciona un profesional.");
-      if (!clienteId) return alert("Debes iniciar sesión para reservar un turno.");
+      if (!profesionalId) return showPopup({
+        type: 'warning',
+        title: 'Atención',
+        message: 'Selecciona un profesional.',
+         
+      });
+      if (!clienteId) return showPopup({
+        type: 'warning',
+        title: 'Atención',
+        message: 'Debes iniciar sesión para reservar un turno.',
+         
+      });
       if (!servicioIdState)
-        return alert("No se ha podido identificar el servicio seleccionado.");
+        return showPopup({
+          type: 'warning',
+          title: 'Atención',
+          message: 'No se ha podido identificar el servicio seleccionado.',
+           
+        });
 
       const timeoutId = setTimeout(() => {
         setLoading(false);
         setError("La solicitud ha tardado demasiado. Por favor, inténtalo de nuevo.");
-      }, 15000); // 15 segundos de timeout
+      }, 15000); ut
 
       try {
         setLoading(true);
 
         console.log("=== PROCESO DE CREACIÓN DE TURNO (SIMPLIFICADO) ===");
-        
+
         // Crear el turno - el backend se encarga de manejar el carrito
         const fechaHoraSQL = `${fecha} ${hora}:00`;
         const datosTurno = {
@@ -257,13 +277,13 @@ const ModalReserva = ({
           comentarios: `Reserva para ${servicio.title}${opcionSeleccionada ? ` - ${opcionSeleccionada.nombre}` : ""}`
           // Nota: No enviamos id_carrito, el backend lo maneja automáticamente
         };
-        
+
         console.log("Creando turno con datos:", datosTurno);
 
         // VERIFICAR CARRITO ANTES DE CREAR EL TURNO
         console.log("=== VERIFICANDO CARRITO EXISTENTE ===");
         const resultadoCarrito = await verificarCarritoExistente(clienteId, fecha);
-        
+
         const response = await axios.post(
           "https://spabackend-production-e093.up.railway.app/api/turnos",
           datosTurno,
@@ -289,14 +309,13 @@ const ModalReserva = ({
             hora,
             profesional
           };
-          
+
           console.log("✅ Reserva confirmada:", detallesReserva);
-          
+
           onReservaConfirmada?.(detallesReserva);
-          
-          // Mostrar el modal de confirmación en lugar del alert
+
           setMostrarModalConfirmacion(true);
-          
+
         } else {
           throw new Error("La respuesta del servidor no incluyó el ID del turno");
         }

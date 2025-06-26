@@ -5,10 +5,12 @@ import Boton from './boton.jsx';
 import '../../styles/formularioRegistro.css';
 import { X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { usePopupContext } from '../../componentes/popupcontext.jsx';
 
 const Formulario = ({ onClose }) => {
-  const { login } = useAuth(); 
-  const [formMode, setFormMode] = useState('login'); 
+  const { login } = useAuth();
+  const { showPopup } = usePopupContext();
+  const [formMode, setFormMode] = useState('login');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -31,13 +33,11 @@ const Formulario = ({ onClose }) => {
       ...prevState,
       [name]: value
     }));
-    
-    // Limpiar mensajes de error cuando el usuario comienza a escribir
+
     if (passwordError && (name === 'newPassword' || name === 'confirmNewPassword' || name === 'password' || name === 'confirmPassword')) {
       setPasswordError('');
     }
-    
-    // Limpiar error general
+
     if (error) {
       setError('');
     }
@@ -47,20 +47,18 @@ const Formulario = ({ onClose }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-  
+
     try {
-      // Parte modificada de la función handleSubmit para el login
       if (formMode === 'login') {
-        // Validación básica
         if (!formData.email || !formData.password) {
           setError('Por favor complete todos los campos');
           setLoading(false);
           return;
         }
-        
+
         try {
           console.log('Intentando login con:', { email: formData.email });
-          
+
           const response = await fetch('https://spabackend-production-e093.up.railway.app/api/clientes/login', {
             method: 'POST',
             headers: {
@@ -71,34 +69,35 @@ const Formulario = ({ onClose }) => {
               password: formData.password
             })
           });
-      
-          // Log para depuración
+
           console.log('Status de respuesta:', response.status);
-          
+
           const data = await response.json();
           console.log('Datos recibidos del servidor:', data);
-      
+
           if (!response.ok) {
             setError(data.error || 'Error al iniciar sesión');
             setLoading(false);
             return;
           }
-      
-          // Verificar que la estructura de la respuesta sea la esperada
+
           if (!data.cliente || !data.cliente.id_cliente) {
             console.error('Error: La respuesta del servidor no contiene los datos esperados', data);
             setError('Error de formato en la respuesta. Contacte al administrador.');
             setLoading(false);
             return;
           }
-      
-          // Usar la función login del contexto
+
           login(data.cliente);
-          
+
           console.log('Cliente logueado:', data.cliente);
-          alert(`¡Bienvenido, ${data.cliente.nombre}!`);
-      
-          // Cerrar el modal o redirigir a otra vista
+          showPopup({
+            type: 'success',
+            title: '¡Bienvenido!',
+            message: `¡Bienvenido, ${data.cliente.nombre}!`,
+             
+          });
+
           onClose();
         } catch (err) {
           console.error('Error completo durante el login:', err);
@@ -107,35 +106,31 @@ const Formulario = ({ onClose }) => {
         }
       }
       else if (formMode === 'register') {
-        // Validaciones
         if (!formData.nombre || !formData.apellido || !formData.email || !formData.phone || !formData.direccion || !formData.password) {
           setError('Por favor complete todos los campos');
           setLoading(false);
           return;
         }
-        
-        // Validar formato de email
+
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formData.email)) {
           setError('Por favor ingrese un email válido');
           setLoading(false);
           return;
         }
-        
-        // Validar que las contraseñas coincidan
+
         if (formData.password !== formData.confirmPassword) {
           setPasswordError('Las contraseñas no coinciden');
           setLoading(false);
           return;
         }
-        
-        // Validar longitud de contraseña
+
         if (formData.password.length < 6) {
           setPasswordError('La contraseña debe tener al menos 6 caracteres');
           setLoading(false);
           return;
         }
-        
+
         const response = await fetch('https://spabackend-production-e093.up.railway.app/api/clientes/register', {
           method: 'POST',
           headers: {
@@ -150,48 +145,53 @@ const Formulario = ({ onClose }) => {
             password: formData.password
           })
         });
-    
+
         const data = await response.json();
-    
+
         if (!response.ok) {
           setError(data.error || 'Error al registrar usuario');
           setLoading(false);
           return;
         }
-    
-        alert('¡Registro exitoso! Ahora puede iniciar sesión.');
-        // Redirigir al login después de un registro exitoso
+        showPopup({
+          type: 'success',
+          title: 'Registro exitoso',
+          message: '¡Registro exitoso! Ahora puede iniciar sesión.',
+           
+        });
         setFormMode('login');
         resetForm();
-      } 
+      }
       else if (formMode === 'recovery') {
-        // Validación básica para email
         if (!formData.email) {
           setError('Por favor ingrese su correo electrónico');
           setLoading(false);
           return;
         }
-        
-        // Aquí implementarías la lógica para recuperar contraseña
-        alert(`Se ha enviado un correo para la recuperación de clave a: ${formData.email}`);
+
+        showPopup({
+          type: 'info',
+          title: 'Recuperación de contraseña',
+          message: `Se ha enviado un correo para la recuperación de clave a: ${formData.email}`,
+           
+        });
         setFormMode('login');
         resetForm();
-      } 
+      }
       else if (formMode === 'changePassword') {
         if (!formData.email || !formData.currentPassword || !formData.newPassword || !formData.confirmNewPassword) {
           setError('Por favor complete todos los campos');
           setLoading(false);
           return;
         }
-        
+
         if (formData.newPassword !== formData.confirmNewPassword) {
           setPasswordError('Las nuevas contraseñas no coinciden');
           setLoading(false);
           return;
         }
-        
+
         try {
-          // Corregido para coincidir con la ruta del backend y los nombres de parámetros esperados
           const response = await fetch('https://spabackend-production-e093.up.railway.app/api/clientes/cambiar-password', {
             method: 'PUT',
             headers: {
@@ -212,7 +212,12 @@ const Formulario = ({ onClose }) => {
             return;
           }
 
-          alert('¡Cambio de contraseña exitoso!');
+          showPopup({
+            type: 'success',
+            title: 'Cambio de contraseña',
+            message: '¡Cambio de contraseña exitoso!',
+             
+          });
           setFormMode('login');
           resetForm();
         } catch (err) {
@@ -227,7 +232,7 @@ const Formulario = ({ onClose }) => {
       setLoading(false);
     }
   };
-  
+
   const resetForm = () => {
     setFormData({
       email: '',
@@ -252,7 +257,6 @@ const Formulario = ({ onClose }) => {
 
   const goToPasswordRecovery = () => {
     setFormMode('recovery');
-    // Mantener el email si el usuario ya lo había ingresado
     setFormData(prevState => ({
       ...prevState,
       password: '',
@@ -270,7 +274,6 @@ const Formulario = ({ onClose }) => {
 
   const goToChangePassword = () => {
     setFormMode('changePassword');
-    // Mantener el email si el usuario ya lo había ingresado
     setFormData(prevState => ({
       ...prevState,
       password: '',
@@ -292,7 +295,7 @@ const Formulario = ({ onClose }) => {
   };
 
   const getFormTitle = () => {
-    switch(formMode) {
+    switch (formMode) {
       case 'login': return 'Iniciar sesión';
       case 'register': return 'Registrarse';
       case 'recovery': return 'Recuperación';
@@ -316,7 +319,7 @@ const Formulario = ({ onClose }) => {
             {error}
           </div>
         )}
-        
+
         <div className="form-group">
           <label htmlFor="email">Correo electrónico</label>
           <Input
@@ -347,14 +350,14 @@ const Formulario = ({ onClose }) => {
 
         {formMode === 'login' && (
           <div className="forgot-password-container">
-            <span 
-              className="forgot-password-link" 
+            <span
+              className="forgot-password-link"
               onClick={goToChangePassword}
             >
               Cambiar clave
             </span>
-            <span 
-              className="forgot-password-link" 
+            <span
+              className="forgot-password-link"
               onClick={goToPasswordRecovery}
             >
               Olvidé mi clave
@@ -364,7 +367,6 @@ const Formulario = ({ onClose }) => {
 
         {formMode === 'register' && (
           <>
-            {/* Nuevos campos para registro */}
             <div className="form-group">
               <label htmlFor="nombre">Nombre</label>
               <Input
@@ -444,7 +446,7 @@ const Formulario = ({ onClose }) => {
             )}
           </>
         )}
-        
+
         {formMode === 'changePassword' && (
           <>
             <div className="form-group">
@@ -540,7 +542,7 @@ const Formulario = ({ onClose }) => {
                 type="submit"
                 text={formMode === 'login' ? "Iniciar sesión" : "Confirmar registro"}
                 fullWidth
-                style={{marginBottom: '10px'}}
+                style={{ marginBottom: '10px' }}
                 disabled={loading}
               />
               <Boton
@@ -550,7 +552,7 @@ const Formulario = ({ onClose }) => {
                 hoverBackgroundColor="#154B73"
                 onClick={toggleForm}
                 fullWidth
-                style={{marginBottom: '10px'}}
+                style={{ marginBottom: '10px' }}
                 disabled={loading}
               />
             </>

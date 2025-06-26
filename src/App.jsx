@@ -17,6 +17,7 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import Chatbot from './componentes/chatbot.jsx';
 import { AdminAuthProvider } from './context/AdminAuthContext.jsx';
 import { ProfAuthProvider } from './context/ProfAuthContext.jsx';
+import { PopupProvider } from './componentes/popupcontext.jsx'; 
 
 const Home = () => {
   return (
@@ -42,26 +43,27 @@ const Home = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <AdminAuthProvider>
-        <ProfAuthProvider>
-          <Router>
-            <Chatbot />
-            <Routes>
-              <Route element={<Layout />}>
-                <Route path="/" element={<Home />} />
-                <Route path="/perfil" element={<PerfilUsuario />} />
-              </Route>
-              {/* Rutas sin Header */}
-              <Route path="/admin-login" element={<UnifiedLogin />} />
-              <Route path="/prof-login" element={<UnifiedLogin />} />
-              <Route path="/dashboard" element={<AdminPrivateRoute />} />
-              <Route path="/prof-panel" element={<ProfPrivateRoute />} />
-            </Routes>
-          </Router>
-        </ProfAuthProvider>
-      </AdminAuthProvider>
-    </AuthProvider>
+    <PopupProvider> 
+      <AuthProvider>
+        <AdminAuthProvider>
+          <ProfAuthProvider>
+            <Router>
+              <Chatbot />
+              <Routes>
+                <Route element={<Layout />}>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/perfil" element={<PerfilUsuario />} />
+                </Route>
+                <Route path="/admin-login" element={<UnifiedLogin />} />
+                <Route path="/prof-login" element={<UnifiedLogin />} />
+                <Route path="/dashboard" element={<AdminPrivateRoute />} />
+                <Route path="/prof-panel" element={<ProfPrivateRoute />} />
+              </Routes>
+            </Router>
+          </ProfAuthProvider>
+        </AdminAuthProvider>
+      </AuthProvider>
+    </PopupProvider>
   );
 }
 

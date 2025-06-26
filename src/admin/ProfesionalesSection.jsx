@@ -3,12 +3,14 @@ import ModalForm from "./ModalForm.jsx";
 import DropdownCategorias from "./dropDownCat";
 import DropdownServicios from "./dropDownServicios.jsx";
 import ProfesionalFilterComponent from "./ProfesionalFilterComponent";
+import { usePopupContext } from "./popupcontext.jsx";
 
 const ProfesionalesSection = () => {
     const [profesionales, setProfesionales] = useState([]);
     const [profesionalesFiltrados, setProfesionalesFiltrados] = useState([]);
     const [modo, setModo] = useState("crear");
     const [mostrarModal, setMostrarModal] = useState(false);
+    const { showPopup } = usePopupContext();
     const [serviciosActuales, setServiciosActuales] = useState([]);
     const [profesionalSeleccionado, setProfesionalSeleccionado] = useState(null);
     const [formulario, setFormulario] = useState({
@@ -312,7 +314,11 @@ const ProfesionalesSection = () => {
                 // Actualizar la lista de profesionales
                 setProfesionales([...profesionales, profesionalParaTabla]);
 
-                alert("Profesional creado correctamente");
+                showPopup({
+                    type: 'success',
+                    title: "Éxito",
+                    message: "Profesional creado correctamente",
+                });
             } else {
                 // Lógica para editar un profesional existente
                 await actualizarProfesional(formulario);
@@ -349,7 +355,11 @@ const ProfesionalesSection = () => {
                     return p;
                 }));
 
-                alert("Profesional actualizado correctamente");
+                showPopup({
+                    type: 'success',
+                    title: "Éxito",
+                    message: "Profesional actualizado correctamente",
+                });
             }
 
             setMostrarModal(false);
@@ -374,7 +384,11 @@ const ProfesionalesSection = () => {
                 setProfesionales(profesionales.filter(p => p.id !== profesionalSeleccionado.id));
 
                 setProfesionalSeleccionado(null);
-                alert("Profesional eliminado correctamente");
+                showPopup({
+                    type: 'success',
+                    title: "Éxito",
+                    message: "Profesional eliminado correctamente",
+                });
             } catch (error) {
                 setError("Error al eliminar el profesional: " + error.message);
             } finally {

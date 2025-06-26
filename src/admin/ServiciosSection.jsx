@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import ModalForm from "./ModalForm.jsx";
 import DropdownCategorias from "./dropDownCat.jsx";
-import ServicioFilterComponent from "./ServiciosFilterComponent.jsx"; // Importamos el componente de filtro
+import ServicioFilterComponent from "./ServiciosFilterComponent.jsx"; 
+import { usePopupContext } from "./popupcontext.jsx";
 
 const ServiciosSection = () => {
     const [servicios, setServicios] = useState([]);
@@ -19,6 +20,7 @@ const ServiciosSection = () => {
     const [categorias, setCategorias] = useState([]);
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState(null);
+    const { showPopup } = usePopupContext();
 
     const fetchServicios = async () => {
         try {
@@ -144,11 +146,20 @@ const ServiciosSection = () => {
                 }, 500);
                 
                 setServicioSeleccionado(null);
-                alert("Servicio eliminado con éxito");
-                
+                showPopup({
+                    type: 'success',
+                    title: "Éxito",
+                    message: "Servicio eliminado con éxito",
+                });
+
             } catch (error) {
                 console.error("Error al eliminar el servicio:", error);
-                alert("No se pudo eliminar el servicio. Intenta nuevamente.");
+                showPopup({
+                    type: 'error',
+                    title: "Error",
+                    message: "No se pudo eliminar el servicio. Intenta nuevamente.",
+                     
+                });
             } finally {
                 setCargando(false);
             }
@@ -198,8 +209,13 @@ const ServiciosSection = () => {
                 setTimeout(async () => {
                     await fetchServicios();
                 }, 500);
-                
-                alert("Servicio creado con éxito");
+
+                showPopup({
+                    type: 'success',
+                    title: "Éxito",
+                    message: "Servicio creado con éxito",
+                     
+                });
             } else {
                 // Si estamos editando, también necesitamos manejar la categoría
                 const categoriaSeleccionada = categorias.find(
@@ -228,8 +244,13 @@ const ServiciosSection = () => {
                 setTimeout(async () => {
                     await fetchServicios();
                 }, 500);
-                
-                alert("Servicio actualizado con éxito");
+
+                showPopup({
+                    type: 'success',
+                    title: "Éxito",
+                    message: "Servicio actualizado con éxito",
+                     
+                });
             }
             
             setMostrarModal(false);
@@ -237,7 +258,12 @@ const ServiciosSection = () => {
             
         } catch (error) {
             console.error("Error al guardar el servicio:", error);
-            alert(`No se pudo guardar el servicio: ${error.message}`);
+            showPopup({
+                type: 'error',
+                title: "Error",
+                message: `No se pudo guardar el servicio: ${error.message}`,
+                 
+            });
         } finally {
             setCargando(false);
         }
@@ -251,19 +277,35 @@ const ServiciosSection = () => {
     // Función para validar el formulario antes de enviarlo
     const validarFormulario = () => {
         if (!formulario.nombre.trim()) {
-            alert("El nombre del servicio es obligatorio");
+            showPopup({
+                type: 'error',
+                title: "Error",
+                message: "El nombre del servicio es obligatorio",
+            });
             return false;
         }
         if (!formulario.categoria) {
-            alert("Debe seleccionar una categoría");
+            showPopup({
+                type: 'error',
+                title: "Error",
+                message: "Debe seleccionar una categoría",
+            });
             return false;
         }
         if (!formulario.precio || isNaN(formulario.precio) || parseFloat(formulario.precio) <= 0) {
-            alert("El precio debe ser un número mayor que cero");
+            showPopup({
+                type: 'error',
+                title: "Error",
+                message: "El precio debe ser un número mayor que cero",
+            });
             return false;
         }
         if (!formulario.descripcion.trim()) {
-            alert("La descripción del servicio es obligatoria");
+            showPopup({
+                type: 'error',
+                title: "Error",
+                message: "La descripción del servicio es obligatoria",
+            });
             return false;
         }
         return true;

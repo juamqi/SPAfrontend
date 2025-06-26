@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { X, ArrowLeft } from 'lucide-react';
 import FechaSelector from './fechaselector.jsx';
 import '../styles/carrito.css';
+import { usePopupContext } from "./popupcontext.jsx"; 
 
 const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
     const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
     const [vistaActual, setVistaActual] = useState('carrito');
+    const { showPopup } = usePopupContext(); 
 
     // Estados para datos del backend
     const [servicios, setServicios] = useState([]);
@@ -457,16 +459,70 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
 
     // ✅ MODIFICADO: Función sin restricción de 48hs para ir a pago con tarjeta
     const irAPagoTarjeta = () => {
-        if (!servicios || servicios.length === 0) {
-            alert('No hay servicios para procesar el pago.');
+        if (!servicios || servicios.length === 0) return;
+
+        // Obtener la fecha y hora actual
+        const ahora = new Date();
+        
+        console.log('Fecha actual:', ahora);
+        console.log('Servicios disponibles:', servicios);
+        
+        // Encontrar el servicio más próximo en el tiempo
+        let servicioMasProximo = null;
+        let menorDiferencia = Infinity;
+        
+        servicios.forEach(servicio => {
+            // Convertir fecha de YYYY/MM/DD a formato ISO YYYY-MM-DD
+            const fechaISO = servicio.fecha.replace(/\//g, '-');
+            
+            // Crear objeto Date a partir de la fecha y hora del servicio
+            const fechaHoraServicio = new Date(`${fechaISO}T${servicio.hora}`);
+            
+            console.log(`Servicio: ${servicio.tipo}`);
+            console.log(`Fecha original: ${servicio.fecha}, Hora: ${servicio.hora}`);
+            console.log(`Fecha ISO: ${fechaISO}T${servicio.hora}`);
+            console.log(`Date objeto: ${fechaHoraServicio}`);
+            
+            // Calcular diferencia en milisegundos
+            const diferencia = fechaHoraServicio - ahora;
+            console.log(`Diferencia en ms: ${diferencia}`);
+            
+            // Si es el más próximo (y es futuro), guardarlo
+            if (diferencia > 0 && diferencia < menorDiferencia) {
+                menorDiferencia = diferencia;
+                servicioMasProximo = servicio;
+                console.log(`Nuevo servicio más próximo encontrado: ${servicio.tipo}`);
+            }
+        });
+        
+        console.log('Servicio más próximo:', servicioMasProximo);
+        
+        // Si no hay servicios futuros, no permitir el pago
+        if (!servicioMasProximo) {
+            showPopup({
+                type: 'warning',
+                title: 'Atención',
+                message: 'No hay servicios futuros para procesar el pago.',
+                 
+            });
             return;
         }
 
         console.log('Procediendo al pago con tarjeta...');
         console.log('Aplica descuento:', aplicaDescuento);
         
-        // ✅ ELIMINADO: Ya no verificamos las 48hs para bloquear el pago
-        // Simplemente procedemos al pago
+        // Verificar si faltan menos de 48 horas
+        if (diferenciaHoras < 48) {
+            showPopup({
+                type: 'warning',
+                title: 'Atención',
+                message: 'Faltan menos de 48 horas para el servicio. Debe pagar en efectivo.',
+                 
+            });
+            return;
+        }
+        
+        // Si todo está bien, proceder al pago con tarjeta
         setVistaActual('tarjeta');
     };
 
@@ -545,7 +601,12 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
 
         } catch (error) {
             console.error('Error al procesar el pago:', error);
-            alert('Error al procesar el pago. Por favor, intenta nuevamente.');
+            showPopup({
+                type: 'error',
+                title: 'Error al procesar el pago',
+                message: 'Por favor, intenta nuevamente.',
+                 
+            });
         }
     };
 

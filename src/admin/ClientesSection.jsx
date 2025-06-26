@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from "react";
 import ModalForm from "./ModalForm.jsx";
 import ClienteFilterComponent from "./ClienteFilterComponent.jsx";
-
+import { usePopupContext } from "./popupcontext.jsx";
 
 const ClientesSection = () => {
     const [clientes, setClientes] = useState([]);
     const [modo, setModo] = useState("crear");
     const [mostrarModal, setMostrarModal] = useState(false);
-
+    const { showPopup } = usePopupContext();
     const [clientesOriginales, setClientesOriginales] = useState([]);
     const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
     const [formulario, setFormulario] = useState({
-        id:"",
+        id: "",
         nombre: "",
         apellido: "",
         email: "",
         telefono: "",
-        direccion: "", 
+        direccion: "",
         password: "1",
         fecha_registro: "",
         estado: "",
@@ -24,49 +24,49 @@ const ClientesSection = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [filtroTexto, setFiltroTexto] = useState("");
-    
+
     const clientesFiltrados = clientes.filter(cliente =>
         `${cliente.nombre} ${cliente.apellido} ${cliente.email}`.toLowerCase().includes(filtroTexto.toLowerCase())
     );
 
 
     useEffect(() => {
-    const fetchClientes = async () => {
-        try {
-            setLoading(true);
-            const response = await fetch("https://spabackend-production-e093.up.railway.app/api/clientesAdm");
-            if (!response.ok) throw new Error("Error al obtener los clientes");
-            
-            const data = await response.json();
-            const clientesConId = data.map(cliente => ({
-                ...cliente,
-                id: cliente.id || cliente.id_cliente
-            }));
+        const fetchClientes = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch("https://spabackend-production-e093.up.railway.app/api/clientesAdm");
+                if (!response.ok) throw new Error("Error al obtener los clientes");
 
-            // Guardar tanto los originales como los actuales
-            setClientes(clientesConId);
-            setClientesOriginales(clientesConId);
-        } catch (error) {
-            console.error("Error al cargar los clientes:", error);
-            setError("No se pudieron cargar los clientes. Intenta nuevamente.");
-        } finally {
-            setLoading(false);
-        }
-    };
+                const data = await response.json();
+                const clientesConId = data.map(cliente => ({
+                    ...cliente,
+                    id: cliente.id || cliente.id_cliente
+                }));
+
+                // Guardar tanto los originales como los actuales
+                setClientes(clientesConId);
+                setClientesOriginales(clientesConId);
+            } catch (error) {
+                console.error("Error al cargar los clientes:", error);
+                setError("No se pudieron cargar los clientes. Intenta nuevamente.");
+            } finally {
+                setLoading(false);
+            }
+        };
 
         fetchClientes();
     }, []);
     const actualizarClientes = async (clientesEditado) => {
         try {
-            
-            
+
+
             const dataToSend = {
                 nombre: clientesEditado.nombre,
                 apellido: clientesEditado.apellido,
                 email: clientesEditado.email,
                 telefono: clientesEditado.telefono,
                 direccion: clientesEditado.direccion,
-                password: clientesEditado.password, 
+                password: clientesEditado.password,
                 estado: clientesEditado.estado,
             };
 
@@ -95,7 +95,7 @@ const ClientesSection = () => {
     const crearCliente = async (nuevoCliente) => {
         try {
             console.log("Datos recibidos para crear cliente:", nuevoCliente);
-            
+
 
             const dataToSend = {
                 nombre: nuevoCliente.nombre,
@@ -105,7 +105,7 @@ const ClientesSection = () => {
                 password: nuevoCliente.password,
                 estado: nuevoCliente.estado,
                 email: nuevoCliente.email,
-                
+
             };
 
             console.log("Datos a enviar para crear cliente:", dataToSend);
@@ -135,12 +135,12 @@ const ClientesSection = () => {
             const response = await fetch(`https://spabackend-production-e093.up.railway.app/clientesAdm/${id}`, {
                 method: 'DELETE',
             });
-    
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Error al eliminar el clientes');
             }
-    
+
             return await response.json();
         } catch (error) {
             console.error('Error al eliminar el clientes:', error);
@@ -148,10 +148,10 @@ const ClientesSection = () => {
         }
     };
     const handleFilterChange = (filtroTexto) => {
-    const clientesFiltrados = clientesOriginales.filter(c =>
-        `${c.nombre} ${c.apellido} ${c.email}`.toLowerCase().includes(filtroTexto.toLowerCase()));
+        const clientesFiltrados = clientesOriginales.filter(c =>
+            `${c.nombre} ${c.apellido} ${c.email}`.toLowerCase().includes(filtroTexto.toLowerCase()));
         setClientes(clientesFiltrados);
-    };  
+    };
 
     const handleAgregar = () => {
         setModo("crear");
@@ -160,7 +160,7 @@ const ClientesSection = () => {
             apellido: "",
             email: "",
             telefono: "",
-            direccion: "", 
+            direccion: "",
             password: "1",
             fecha_registro: "",
             estado: "",
@@ -180,7 +180,7 @@ const ClientesSection = () => {
         try {
             setLoading(true);
             setError(null);
-    
+
             // Validación básica
             if (
                 !formulario.nombre ||
@@ -193,15 +193,15 @@ const ClientesSection = () => {
                 setLoading(false);
                 return;
             }
-    
+
             console.log("Intentando guardar cliente:", formulario);
-    
+
             if (modo === "crear") {
                 const resultado = await crearCliente(formulario);
                 console.log("Resultado API:", resultado);
-    
+
                 const nuevoCliente = { ...formulario, id: resultado.id };
-    
+
                 const clienteParaTabla = {
                     id: nuevoCliente.id,
                     nombre: nuevoCliente.nombre,
@@ -212,20 +212,28 @@ const ClientesSection = () => {
                     email: nuevoCliente.email,
                     telefono: nuevoCliente.telefono
                 };
-    
+
                 setClientes([...clientes, clienteParaTabla]);
-    
-                alert("Cliente creado correctamente");
+
+                showPopup({
+                    type: 'success',
+                    title: "Éxito",
+                    message: 'Cliente creado correctamente'
+                });
             } else {
                 await actualizarClientes(formulario);
-    
+
                 setClientes(clientes.map(p =>
                     p.id === formulario.id ? { ...formulario, id: p.id } : p
-                  ));
-    
-                alert("Cliente actualizado correctamente");
+                ));
+
+                showPopup({
+                    type: 'success',
+                    title: "Éxito",
+                    message: 'Cliente actualizado correctamente'
+                });
             }
-    
+
             setMostrarModal(false);
             setClienteSeleccionado(null);
         } catch (error) {
@@ -235,20 +243,24 @@ const ClientesSection = () => {
             setLoading(false);
         }
     };
-    
+
     const handleEliminar = async () => {
         if (!clienteSeleccionado) return;
-        
+
         if (window.confirm("¿Estás seguro de querer eliminar a este cliente?")) {
             try {
                 setLoading(true);
                 await eliminarCliente(clienteSeleccionado.id);
-                
+
                 // Remover el profesional de la lista mostrada en UI
                 setClientes(clientes.filter(p => p.id !== clienteSeleccionado.id));
-                
+
                 setClienteSeleccionado(null);
-                alert("Cliente eliminado correctamente");
+                showPopup({
+                    type: 'success',
+                    title: "Éxito",
+                    message: 'Cliente eliminado correctamente'
+                });
             } catch (error) {
                 setError("Error al eliminar el Cliente: " + error.message);
             } finally {
@@ -315,15 +327,15 @@ const ClientesSection = () => {
                 </button>
             </div>
 
-            <ModalForm 
-                isOpen={mostrarModal} 
-                onClose={handleCancelar} 
+            <ModalForm
+                isOpen={mostrarModal}
+                onClose={handleCancelar}
                 title={`${modo === "crear" ? "Agregar" : "Editar"} Cliente`}
                 onSave={handleGuardar}
             >
                 {error && <div className="error-message-modal">{error}</div>}
                 {loading && <div className="loading-message">Procesando...</div>}
-                
+
                 <input
                     type="text"
                     placeholder="Nombre"
@@ -338,11 +350,11 @@ const ClientesSection = () => {
                     onChange={e => setFormulario({ ...formulario, apellido: e.target.value })}
                     required
                 />
-                <input 
+                <input
                     type="password"
                     placeholder="Contraseña"
                     value={formulario.password}
-                    onChange={e => setFormulario({ ...formulario, password: e.target.value})}
+                    onChange={e => setFormulario({ ...formulario, password: e.target.value })}
                 />
                 <input
                     type="text"

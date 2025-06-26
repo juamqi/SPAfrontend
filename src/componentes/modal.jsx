@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/modal.css';
 import ModalReserva from './modalReserva.jsx';
+import { usePopupContext } from "./popupcontext.jsx"; 
 
 const Modal = ({ servicio, onClose }) => {
   const [opcionSeleccionada, setOpcionSeleccionada] = useState(null);
   const [mostrarModalReserva, setMostrarModalReserva] = useState(false);
+  const { showPopup } = usePopupContext();
 
   useEffect(() => {
     setOpcionSeleccionada(null);
@@ -36,7 +38,12 @@ const Modal = ({ servicio, onClose }) => {
 
   const handleReservar = () => {
     if (servicio.options && !opcionSeleccionada) {
-      alert("Por favor seleccioná una opción primero.");
+      showPopup({
+        type: 'warning',
+        title: 'Atención',
+        message: 'Selecciona una opción para continuar.',
+         
+      });
       return;
     }
     setMostrarModalReserva(true);

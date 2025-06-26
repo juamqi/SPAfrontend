@@ -3,6 +3,7 @@ import { useProfAuth } from '../context/ProfAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import '../styles/AdminLogin.css';
+import { usePopupContext } from '../context/PopupContext';
 
 const AdminLogin = () => {
   const { login: adminLogin } = useAdminAuth();
@@ -13,6 +14,7 @@ const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { showPopup } = usePopupContext();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,11 +36,19 @@ const AdminLogin = () => {
       }
       
       if (!result.success) {
-        alert(result.error);
+        showPopup({
+          type: 'error',
+          title: "Error",
+          message: result.error
+        });
       }
     } catch (error) {
       console.error('Error inesperado:', error);
-      alert('Error inesperado al iniciar sesión');
+      showPopup({
+        type: 'error',
+        title: "Error",
+        message: 'Error inesperado al iniciar sesión'
+      });
     } finally {
       setIsLoading(false);
     }
