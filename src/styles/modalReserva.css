@@ -631,6 +631,300 @@ body.modal-open {
   overflow: hidden;
   position: relative;
 }
+.aviso-48hs {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #856404;
+}
+
+.aviso-48hs small {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Estilos para días sin horarios disponibles */
+.dia-grid.sin-horarios {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+  position: relative;
+}
+
+.dia-grid.sin-horarios:hover {
+  background-color: #f8f9fa;
+  transform: none;
+}
+
+.dia-grid.sin-horarios::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 4px;
+  height: 4px;
+  background-color: #dc3545;
+  border-radius: 50%;
+}
+
+/* Estilos para horarios dentro de 48 horas */
+.horario-btn.dentro-48hs {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.horario-btn.dentro-48hs:hover {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  transform: none;
+}
+
+.horario-btn.dentro-48hs:disabled {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+/* Mejorar el estilo de los botones ocupados */
+.horario-btn.ocupado {
+  background-color: #e9ecef;
+  border-color: #ced4da;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.horario-btn.ocupado:hover {
+  background-color: #e9ecef;
+  border-color: #ced4da;
+  transform: none;
+}
+
+/* Tooltip mejorado para móviles */
+.horario-btn[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 5px;
+}
+
+.dia-grid[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 5px;
+}
+
+/* Leyenda para el calendario */
+.calendario-leyenda {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 10px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.leyenda-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid #ccc;
+}
+
+.leyenda-disponible {
+  background-color: #e8f5e8;
+}
+
+.leyenda-ocupado {
+  background-color: #e9ecef;
+}
+
+.leyenda-48hs {
+  background-color: #f8d7da;
+}
+
+.leyenda-sin-horarios {
+  background-color: #f8f9fa;
+}
+.aviso-48hs {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #856404;
+}
+
+.aviso-48hs small {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Estilos para días sin horarios disponibles */
+.dia-grid.sin-horarios {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+  position: relative;
+}
+
+.dia-grid.sin-horarios:hover {
+  background-color: #f8f9fa;
+  transform: none;
+}
+
+.dia-grid.sin-horarios::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 4px;
+  height: 4px;
+  background-color: #dc3545;
+  border-radius: 50%;
+}
+
+/* Estilos para horarios dentro de 48 horas */
+.horario-btn.dentro-48hs {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.horario-btn.dentro-48hs:hover {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  transform: none;
+}
+
+.horario-btn.dentro-48hs:disabled {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+/* Mejorar el estilo de los botones ocupados */
+.horario-btn.ocupado {
+  background-color: #e9ecef;
+  border-color: #ced4da;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.horario-btn.ocupado:hover {
+  background-color: #e9ecef;
+  border-color: #ced4da;
+  transform: none;
+}
+
+/* Tooltip mejorado para móviles */
+.horario-btn[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 5px;
+}
+
+.dia-grid[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 5px;
+}
+
+/* Leyenda para el calendario */
+.calendario-leyenda {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 10px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.leyenda-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid #ccc;
+}
+
+.leyenda-disponible {
+  background-color: #e8f5e8;
+}
+
+.leyenda-ocupado {
+  background-color: #e9ecef;
+}
+
+.leyenda-48hs {
+  background-color: #f8d7da;
+}
+
+.leyenda-sin-horarios {
+  background-color: #f8f9fa;
+}
 
 @keyframes modalFadeIn {
   from {
