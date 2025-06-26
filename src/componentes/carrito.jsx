@@ -15,6 +15,9 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
     const [error, setError] = useState(null);
     const [mostrarModalExito, setMostrarModalExito] = useState(false);
 
+    // ✅ NUEVO: Estado para controlar si aplica descuento
+    const [aplicaDescuento, setAplicaDescuento] = useState(false);
+
     // Estados para el formulario de tarjeta
     const [formData, setFormData] = useState({
         cardholderName: '',
@@ -94,6 +97,68 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
             console.error(`❌ Error al parsear fecha "${fechaInput}":`, error);
             return null;
         }
+    };
+
+    // ✅ NUEVA: Función para verificar si aplica descuento por 48hs
+    const verificarDescuento48hs = (servicios) => {
+        if (!servicios || servicios.length === 0) {
+            setAplicaDescuento(false);
+            return false;
+        }
+
+        // Obtener la fecha y hora actual
+        const ahora = new Date();
+        
+        console.log('Verificando descuento 48hs...');
+        console.log('Fecha actual:', ahora);
+        console.log('Servicios disponibles:', servicios);
+        
+        // Encontrar el servicio más próximo en el tiempo
+        let servicioMasProximo = null;
+        let menorDiferencia = Infinity;
+        
+        servicios.forEach(servicio => {
+            // Convertir fecha de YYYY/MM/DD a formato ISO YYYY-MM-DD
+            const fechaISO = servicio.fecha.replace(/\//g, '-');
+            
+            // Crear objeto Date a partir de la fecha y hora del servicio
+            const fechaHoraServicio = new Date(`${fechaISO}T${servicio.hora}`);
+            
+            console.log(`Servicio: ${servicio.tipo}`);
+            console.log(`Fecha original: ${servicio.fecha}, Hora: ${servicio.hora}`);
+            console.log(`Fecha ISO: ${fechaISO}T${servicio.hora}`);
+            console.log(`Date objeto: ${fechaHoraServicio}`);
+            
+            // Calcular diferencia en milisegundos
+            const diferencia = fechaHoraServicio - ahora;
+            console.log(`Diferencia en ms: ${diferencia}`);
+            
+            // Si es el más próximo (y es futuro), guardarlo
+            if (diferencia > 0 && diferencia < menorDiferencia) {
+                menorDiferencia = diferencia;
+                servicioMasProximo = servicio;
+                console.log(`Nuevo servicio más próximo encontrado: ${servicio.tipo}`);
+            }
+        });
+        
+        console.log('Servicio más próximo:', servicioMasProximo);
+        
+        // Si no hay servicios futuros, no aplica descuento
+        if (!servicioMasProximo) {
+            setAplicaDescuento(false);
+            return false;
+        }
+        
+        // Convertir diferencia a horas
+        const diferenciaHoras = menorDiferencia / (1000 * 60 * 60);
+        console.log(`Horas restantes: ${diferenciaHoras.toFixed(2)}`);
+        
+        // Verificar si faltan más de 48 horas (para aplicar descuento)
+        const aplicaDescuentoResult = diferenciaHoras >= 48;
+        console.log(`¿Aplica descuento (>=48hs)? ${aplicaDescuentoResult}`);
+        
+        setAplicaDescuento(aplicaDescuentoResult);
+        return aplicaDescuentoResult;
     };
 
     // Función para obtener carritos del cliente y organizarlos por fecha
@@ -226,10 +291,14 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
             console.log('✅ Servicios formateados finales:', serviciosFormateados);
             setServicios(serviciosFormateados);
 
+            // ✅ NUEVO: Verificar si aplica descuento después de cargar servicios
+            verificarDescuento48hs(serviciosFormateados);
+
         } catch (error) {
             console.error('❌ Error al obtener turnos del carrito:', error);
             setError('Error al cargar los servicios del carrito: ' + error.message);
             setServicios([]);
+            setAplicaDescuento(false); // No aplica descuento si hay error
         } finally {
             setLoading(false);
         }
@@ -253,6 +322,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
         } else {
             setCarritoSeleccionado(null);
             setServicios([]);
+            setAplicaDescuento(false);
         }
     };
 
@@ -315,6 +385,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
         setCarritoSeleccionado(null);
         setServicios([]);
         setCarritosPorFecha(new Map());
+        setAplicaDescuento(false); // ✅ NUEVO: Limpiar estado de descuento
         
         // Recargar datos
         await obtenerCarritosPorFecha();
@@ -353,18 +424,27 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
             setVistaActual('carrito');
             setError(null);
             setMostrarModalExito(false);
+            setAplicaDescuento(false); // ✅ NUEVO: Limpiar estado de descuento
             // ✅ NO limpiar carritosPorFecha para mantener los datos cargados
         }
     }, [isOpen]);
 
+    // ✅ MODIFICADO: Calcular total con descuento condicional
     const calcularTotal = () => {
         if (!carritoSeleccionado || !carritoSeleccionado.subtotal) {
             return 0;
         }
 
         const subtotal = carritoSeleccionado.subtotal;
-        const descuento = subtotal * 0.15; // 15% descuento
-        return subtotal - descuento;
+        
+        // Solo aplicar descuento si corresponde (>=48hs)
+        if (aplicaDescuento) {
+            const descuento = subtotal * 0.15; // 15% descuento
+            return subtotal - descuento;
+        }
+        
+        // Sin descuento si es <48hs
+        return subtotal;
     };
 
     const obtenerSubtotal = () => {
@@ -375,64 +455,18 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
         return `$${precio.toLocaleString()}`;
     };
 
-    // Funciones de navegación
+    // ✅ MODIFICADO: Función sin restricción de 48hs para ir a pago con tarjeta
     const irAPagoTarjeta = () => {
-        if (!servicios || servicios.length === 0) return;
+        if (!servicios || servicios.length === 0) {
+            alert('No hay servicios para procesar el pago.');
+            return;
+        }
 
-        // Obtener la fecha y hora actual
-        const ahora = new Date();
+        console.log('Procediendo al pago con tarjeta...');
+        console.log('Aplica descuento:', aplicaDescuento);
         
-        console.log('Fecha actual:', ahora);
-        console.log('Servicios disponibles:', servicios);
-        
-        // Encontrar el servicio más próximo en el tiempo
-        let servicioMasProximo = null;
-        let menorDiferencia = Infinity;
-        
-        servicios.forEach(servicio => {
-            // Convertir fecha de YYYY/MM/DD a formato ISO YYYY-MM-DD
-            const fechaISO = servicio.fecha.replace(/\//g, '-');
-            
-            // Crear objeto Date a partir de la fecha y hora del servicio
-            const fechaHoraServicio = new Date(`${fechaISO}T${servicio.hora}`);
-            
-            console.log(`Servicio: ${servicio.tipo}`);
-            console.log(`Fecha original: ${servicio.fecha}, Hora: ${servicio.hora}`);
-            console.log(`Fecha ISO: ${fechaISO}T${servicio.hora}`);
-            console.log(`Date objeto: ${fechaHoraServicio}`);
-            
-            // Calcular diferencia en milisegundos
-            const diferencia = fechaHoraServicio - ahora;
-            console.log(`Diferencia en ms: ${diferencia}`);
-            
-            // Si es el más próximo (y es futuro), guardarlo
-            if (diferencia > 0 && diferencia < menorDiferencia) {
-                menorDiferencia = diferencia;
-                servicioMasProximo = servicio;
-                console.log(`Nuevo servicio más próximo encontrado: ${servicio.tipo}`);
-            }
-        });
-        
-        console.log('Servicio más próximo:', servicioMasProximo);
-        
-        // Si no hay servicios futuros, no permitir el pago
-        if (!servicioMasProximo) {
-            alert('No hay servicios futuros para procesar el pago.');
-            return;
-        }
-        
-        // Convertir diferencia a horas
-        const diferenciaHoras = menorDiferencia / (1000 * 60 * 60);
-        
-        console.log(`Horas restantes: ${diferenciaHoras.toFixed(2)}`);
-        
-        // Verificar si faltan menos de 48 horas
-        if (diferenciaHoras < 48) {
-            alert('Faltan menos de 48hs. Debe pagar en efectivo.');
-            return;
-        }
-        
-        // Si todo está bien, proceder al pago con tarjeta
+        // ✅ ELIMINADO: Ya no verificamos las 48hs para bloquear el pago
+        // Simplemente procedemos al pago
         setVistaActual('tarjeta');
     };
 
@@ -490,6 +524,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
             console.log('Procesando pago...', formData);
             console.log('Carrito seleccionado:', carritoSeleccionado);
             console.log('Fecha seleccionada para el pago:', fechaSeleccionada);
+            console.log('Descuento aplicado:', aplicaDescuento);
 
             // Aquí simularías el procesamiento del pago
             // Por ahora, asumimos que el pago fue exitoso
@@ -733,10 +768,12 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                                 <span>Subtotal:</span>
                                 <span>${formatearPrecio(obtenerSubtotal())}</span>
                             </div>
+                            ${aplicaDescuento ? `
                             <div class="total-item descuento">
                                 <span>Descuento (15% - Pago anticipado):</span>
                                 <span>-${formatearPrecio(obtenerSubtotal() * 0.15)}</span>
                             </div>
+                            ` : ''}
                             <div class="total-final">
                                 <span>TOTAL PAGADO:</span>
                                 <span>${formatearPrecio(calcularTotal())}</span>
@@ -785,7 +822,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                             N° DE RESERVA: #{carritoSeleccionado?.id || '-'}<br />
                             TOTAL ABONADO: {formatearPrecio(calcularTotal())}<br />
                             MÉTODO DE PAGO: TARJETA DE DÉBITO<br />
-                            {carritoSeleccionado?.descuento && `DESCUENTO APLICADO: 15%`}
+                            {aplicaDescuento && `DESCUENTO APLICADO: 15%`}
                         </p>
 
                         <div className="modal-exito-botones">
@@ -884,9 +921,18 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                                             {carritoSeleccionado ? formatearPrecio(obtenerSubtotal()) : '$0'}
                                         </span>
                                     </div>
-                                    {carritoSeleccionado && obtenerSubtotal() > 0 && (
+                                    {/* ✅ MODIFICADO: Solo mostrar descuento si aplica */}
+                                    {carritoSeleccionado && obtenerSubtotal() > 0 && aplicaDescuento && (
                                         <div className="descuento-text">
-                                            Total con descuento (15%): <span className="descuento-precio">
+                                            Pagando con más de 48hs de anticipación se aplica descuento (15%): <span className="descuento-precio">
+                                                {formatearPrecio(calcularTotal())}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {/* ✅ NUEVO: Mostrar mensaje cuando NO aplica descuento */}
+                                    {carritoSeleccionado && obtenerSubtotal() > 0 && !aplicaDescuento && (
+                                        <div className="sin-descuento-text">
+                                            TOTAL: <span className="total-precio">
                                                 {formatearPrecio(calcularTotal())}
                                             </span>
                                         </div>
@@ -1007,9 +1053,16 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                                         </div>
 
                                         <div className="pago-final-section">
-                                            <p className="descuento-info">
-                                                *Descuento del 15% aplicado por pagar con más de 48 hs. de anticipación.
-                                            </p>
+                                            {/* ✅ MODIFICADO: Mostrar mensaje de descuento solo si aplica */}
+                                            {aplicaDescuento ? (
+                                                <p className="descuento-info">
+                                                    *Descuento del 15% aplicado por pagar con más de 48 hs. de anticipación.
+                                                </p>
+                                            ) : (
+                                                <p className="sin-descuento-info">
+                                                    *No se aplica descuento (se requieren más de 48 hs. de anticipación).
+                                                </p>
+                                            )}
                                             <button type="button" onClick={handleSubmit} className="pay-btn">
                                                 PAGAR
                                             </button>
