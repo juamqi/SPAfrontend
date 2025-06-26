@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, ArrowLeft } from 'lucide-react';
 import FechaSelector from './fechaselector.jsx';
-import '../styles/carrito.css';
+import './CarritoCompleto.css';
 
 const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
     const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
@@ -51,6 +51,9 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
         if (!idCliente) return;
 
         try {
+            setLoading(true); // ✅ Agregar loading state
+            setError(null); // ✅ Limpiar errores previos
+
             const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/carritos/cliente/${idCliente}`);
 
             if (!response.ok) {
@@ -63,10 +66,43 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
 
             const carritos = await response.json();
 
-            // Filtrar carritos pendientes y organizarlos por fecha
-            const carritosPendientes = carritos.filter(carrito =>
-                carrito.estado === 'Pendiente'
-            );
+            // Obtener la fecha actual (solo fecha, sin hora)
+            const fechaActual = new Date();
+            fechaActual.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
+
+            // Filtrar carritos pendientes y que no hayan pasado la fecha
+            const carritosPendientes = carritos.filter(carrito => {
+                // Verificar que el estado sea Pendiente
+                if (carrito.estado !== 'Pendiente') {
+                    return false;
+                }
+
+                // Convertir la fecha del carrito a objeto Date
+                let fechaCarrito;
+                
+                // Verificar el formato de fecha que viene del backend
+                if (carrito.fecha.includes('/')) {
+                    // Formato YYYY/MM/DD
+                    const [año, mes, dia] = carrito.fecha.split('/');
+                    fechaCarrito = new Date(parseInt(año), parseInt(mes) - 1, parseInt(dia));
+                } else if (carrito.fecha.includes('-')) {
+                    // Formato YYYY-MM-DD
+                    fechaCarrito = new Date(carrito.fecha);
+                } else {
+                    // Si es timestamp u otro formato
+                    fechaCarrito = new Date(carrito.fecha);
+                }
+
+                // Resetear horas para comparar solo fechas
+                fechaCarrito.setHours(0, 0, 0, 0);
+
+                // Solo incluir carritos cuya fecha sea hoy o en el futuro
+                return fechaCarrito >= fechaActual;
+            });
+
+            console.log('Carritos totales:', carritos.length);
+            console.log('Carritos pendientes y futuros:', carritosPendientes.length);
+            console.log('Fecha actual para comparación:', fechaActual.toISOString().split('T')[0]);
 
             // Crear un Map con fecha como key y array de carritos como value
             const carritosPorFechaMap = new Map();
@@ -83,6 +119,8 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
         } catch (error) {
             console.error('Error al obtener carritos por fecha:', error);
             setError('Error al cargar carritos');
+        } finally {
+            setLoading(false); // ✅ Finalizar loading
         }
     };
 
@@ -167,12 +205,20 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
         return `${horas}:${minutos}`;
     };
 
-    // Cargar carritos cuando se abre el modal o cambia el cliente
+    // ✅ Cargar carritos cuando se abre el modal o cambia el cliente (sin dependencia de isOpen)
     useEffect(() => {
-        if (isOpen && idCliente) {
+        if (idCliente) {
             obtenerCarritosPorFecha();
         }
-    }, [isOpen, idCliente]);
+    }, [idCliente]); // ✅ Solo depende de idCliente, no de isOpen
+
+    // ✅ Efecto separado para cuando se abre el modal (para refrescar datos si es necesario)
+    useEffect(() => {
+        if (isOpen && idCliente && carritosPorFecha.size === 0) {
+            // Solo volver a cargar si no hay datos
+            obtenerCarritosPorFecha();
+        }
+    }, [isOpen]);
 
     // Limpiar estados cuando se cierra el modal
     useEffect(() => {
@@ -182,7 +228,8 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
             setServicios([]);
             setVistaActual('carrito');
             setError(null);
-            setMostrarModalExito(false); // ✅ Limpiar también el modal de éxito
+            setMostrarModalExito(false);
+            // ✅ NO limpiar carritosPorFecha para mantener los datos cargados
         }
     }, [isOpen]);
 
@@ -206,78 +253,78 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
 
     // Funciones de navegación
     const irAPagoTarjeta = () => {
-    if (!servicios || servicios.length === 0) return;
+        if (!servicios || servicios.length === 0) return;
 
-    // Obtener la fecha y hora actual
-    const ahora = new Date();
-    
-    console.log('Fecha actual:', ahora);
-    console.log('Servicios disponibles:', servicios);
-    
-    // Encontrar el servicio más próximo en el tiempo
-    let servicioMasProximo = null;
-    let menorDiferencia = Infinity;
-    
-    servicios.forEach(servicio => {
-        // Convertir fecha de YYYY/MM/DD a formato ISO YYYY-MM-DD
-        const fechaISO = servicio.fecha.replace(/\//g, '-');
+        // Obtener la fecha y hora actual
+        const ahora = new Date();
         
-        // Crear objeto Date a partir de la fecha y hora del servicio
-        const fechaHoraServicio = new Date(`${fechaISO}T${servicio.hora}`);
+        console.log('Fecha actual:', ahora);
+        console.log('Servicios disponibles:', servicios);
         
-        console.log(`Servicio: ${servicio.tipo}`);
-        console.log(`Fecha original: ${servicio.fecha}, Hora: ${servicio.hora}`);
-        console.log(`Fecha ISO: ${fechaISO}T${servicio.hora}`);
-        console.log(`Date objeto: ${fechaHoraServicio}`);
+        // Encontrar el servicio más próximo en el tiempo
+        let servicioMasProximo = null;
+        let menorDiferencia = Infinity;
         
-        // Calcular diferencia en milisegundos
-        const diferencia = fechaHoraServicio - ahora;
-        console.log(`Diferencia en ms: ${diferencia}`);
+        servicios.forEach(servicio => {
+            // Convertir fecha de YYYY/MM/DD a formato ISO YYYY-MM-DD
+            const fechaISO = servicio.fecha.replace(/\//g, '-');
+            
+            // Crear objeto Date a partir de la fecha y hora del servicio
+            const fechaHoraServicio = new Date(`${fechaISO}T${servicio.hora}`);
+            
+            console.log(`Servicio: ${servicio.tipo}`);
+            console.log(`Fecha original: ${servicio.fecha}, Hora: ${servicio.hora}`);
+            console.log(`Fecha ISO: ${fechaISO}T${servicio.hora}`);
+            console.log(`Date objeto: ${fechaHoraServicio}`);
+            
+            // Calcular diferencia en milisegundos
+            const diferencia = fechaHoraServicio - ahora;
+            console.log(`Diferencia en ms: ${diferencia}`);
+            
+            // Si es el más próximo (y es futuro), guardarlo
+            if (diferencia > 0 && diferencia < menorDiferencia) {
+                menorDiferencia = diferencia;
+                servicioMasProximo = servicio;
+                console.log(`Nuevo servicio más próximo encontrado: ${servicio.tipo}`);
+            }
+        });
         
-        // Si es el más próximo (y es futuro), guardarlo
-        if (diferencia > 0 && diferencia < menorDiferencia) {
-            menorDiferencia = diferencia;
-            servicioMasProximo = servicio;
-            console.log(`Nuevo servicio más próximo encontrado: ${servicio.tipo}`);
+        console.log('Servicio más próximo:', servicioMasProximo);
+        
+        // Si no hay servicios futuros, no permitir el pago
+        if (!servicioMasProximo) {
+            alert('No hay servicios futuros para procesar el pago.');
+            return;
         }
-    });
-    
-    console.log('Servicio más próximo:', servicioMasProximo);
-    
-    // Si no hay servicios futuros, no permitir el pago
-    if (!servicioMasProximo) {
-        alert('No hay servicios futuros para procesar el pago.');
-        return;
-    }
-    
-    // Convertir diferencia a horas
-    const diferenciaHoras = menorDiferencia / (1000 * 60 * 60);
-    
-    console.log(`Horas restantes: ${diferenciaHoras.toFixed(2)}`);
-    
-    // Verificar si faltan menos de 48 horas
-    if (diferenciaHoras < 48) {
-        alert('Faltan menos de 48hs. Debe pagar en efectivo.');
-        return;
-    }
-    
-    // Si todo está bien, proceder al pago con tarjeta
-    setVistaActual('tarjeta');
-};
-
-// Opcional: También puedes agregar esta función helper para debugging
-const mostrarTiempoRestante = () => {
-    if (!servicios || servicios.length === 0) return;
-    
-    const ahora = new Date();
-    
-    servicios.forEach((servicio, index) => {
-        const fechaHoraServicio = new Date(`${servicio.fecha}T${servicio.hora}`);
-        const diferenciaHoras = (fechaHoraServicio - ahora) / (1000 * 60 * 60);
         
-        console.log(`Servicio ${index + 1} (${servicio.tipo}): ${diferenciaHoras.toFixed(2)} horas restantes`);
-    });
-};
+        // Convertir diferencia a horas
+        const diferenciaHoras = menorDiferencia / (1000 * 60 * 60);
+        
+        console.log(`Horas restantes: ${diferenciaHoras.toFixed(2)}`);
+        
+        // Verificar si faltan menos de 48 horas
+        if (diferenciaHoras < 48) {
+            alert('Faltan menos de 48hs. Debe pagar en efectivo.');
+            return;
+        }
+        
+        // Si todo está bien, proceder al pago con tarjeta
+        setVistaActual('tarjeta');
+    };
+
+    // Opcional: También puedes agregar esta función helper para debugging
+    const mostrarTiempoRestante = () => {
+        if (!servicios || servicios.length === 0) return;
+        
+        const ahora = new Date();
+        
+        servicios.forEach((servicio, index) => {
+            const fechaHoraServicio = new Date(`${servicio.fecha}T${servicio.hora}`);
+            const diferenciaHoras = (fechaHoraServicio - ahora) / (1000 * 60 * 60);
+            
+            console.log(`Servicio ${index + 1} (${servicio.tipo}): ${diferenciaHoras.toFixed(2)} horas restantes`);
+        });
+    };
 
     const volverACarrito = () => {
         setVistaActual('carrito');
@@ -616,7 +663,7 @@ const mostrarTiempoRestante = () => {
         <>
             {/* ✅ Modal de éxito renderizado fuera del modal principal */}
             {mostrarModalExito && (
-                <div className="modal-exito-overlay" style={{ zIndex: 10000 }}>
+                <div className="modal-exito-overlay">
                     <div className="modal-exito-contenedor">
                         <div className="modal-exito-header"></div>
                         <button className="modal-exito-close" onClick={cerrarModalExito}>X</button>
@@ -670,26 +717,13 @@ const mostrarTiempoRestante = () => {
                             {/* Lista de Servicios */}
                             <div className="servicios-lista">
                                 {error && (
-                                    <div style={{
-                                        padding: '20px',
-                                        textAlign: 'center',
-                                        color: '#e74c3c',
-                                        backgroundColor: '#ffeaea',
-                                        border: '1px solid #f5c6cb',
-                                        borderRadius: '4px',
-                                        margin: '10px'
-                                    }}>
+                                    <div className="error-message">
                                         {error}
                                     </div>
                                 )}
 
                                 {loading && (
-                                    <div style={{
-                                        padding: '20px',
-                                        textAlign: 'center',
-                                        color: '#666',
-                                        fontStyle: 'italic'
-                                    }}>
+                                    <div className="loading-message">
                                         Cargando servicios...
                                     </div>
                                 )}
@@ -710,7 +744,7 @@ const mostrarTiempoRestante = () => {
                                                         Precio: {formatearPrecio(servicio.precio)}
                                                     </div>
                                                     {servicio.comentarios && (
-                                                        <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                                        <div className="servicio-comentarios">
                                                             Comentarios: {servicio.comentarios}
                                                         </div>
                                                     )}
@@ -719,21 +753,11 @@ const mostrarTiempoRestante = () => {
                                         </div>
                                     ))
                                 ) : !loading && !error && fechaSeleccionada && servicios.length === 0 ? (
-                                    <div style={{
-                                        padding: '20px',
-                                        textAlign: 'center',
-                                        color: '#666',
-                                        fontStyle: 'italic'
-                                    }}>
+                                    <div className="empty-message">
                                         No se encontraron servicios para esta fecha
                                     </div>
                                 ) : !loading && !error && !fechaSeleccionada ? (
-                                    <div style={{
-                                        padding: '20px',
-                                        textAlign: 'center',
-                                        color: '#666',
-                                        fontStyle: 'italic'
-                                    }}>
+                                    <div className="select-date-message">
                                         Selecciona una fecha para ver los servicios
                                     </div>
                                 ) : null}
@@ -750,8 +774,8 @@ const mostrarTiempoRestante = () => {
                                         </span>
                                     </div>
                                     {carritoSeleccionado && obtenerSubtotal() > 0 && (
-                                        <div style={{ fontSize: '14px', color: '#666', marginTop: '4px' }}>
-                                            Total con descuento (15%): <span style={{ fontWeight: 'bold', color: '#4A3D3D' }}>
+                                        <div className="descuento-text">
+                                            Total con descuento (15%): <span className="descuento-precio">
                                                 {formatearPrecio(calcularTotal())}
                                             </span>
                                         </div>
@@ -778,12 +802,11 @@ const mostrarTiempoRestante = () => {
                         // VISTA DEL MODAL DE PAGO CON TARJETA
                         <>
                             {/* Header */}
-                            <div className="modal-header" style={{ background: '#4A3D3D', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 13px' }}>
+                            <div className="modal-header-tarjeta">
                                 <button
                                     onClick={volverACarrito}
                                     className="close-button"
                                     aria-label="Volver atrás"
-                                    style={{ color: '#F4F8E6' }}
                                 >
                                     <ArrowLeft size={20} />
                                 </button>
@@ -798,12 +821,12 @@ const mostrarTiempoRestante = () => {
                             </div>
 
                             {/* Content */}
-                            <div style={{ padding: '24px 26px', height: 'calc(100% - 50px)', display: 'flex', flexDirection: 'column' }}>
-                                <p style={{ fontWeight: 500, fontSize: '16px', lineHeight: '24px', color: '#4A3D3D', margin: '0 0 20px 0' }}>
+                            <div className="tarjeta-content">
+                                <p className="tarjeta-descripcion">
                                     Sólo tarjeta de débito en un solo pago.
                                 </p>
 
-                                <div style={{ width: '100%', height: '1px', background: '#D8DEC3', marginBottom: '20px' }}></div>
+                                <div className="tarjeta-separador"></div>
 
                                 <div>
                                     {/* Nombre del titular */}
@@ -867,16 +890,15 @@ const mostrarTiempoRestante = () => {
                                     </div>
 
                                     {/* Total y botón de pago */}
-                                    <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
-                                        <div style={{ fontWeight: 600, fontSize: '16px', lineHeight: '24px', textAlign: 'center', color: '#4A3D3D', marginBottom: '20px' }}>
+                                    <div className="pago-footer">
+                                        <div className="total-pago">
                                             TOTAL: {carritoSeleccionado ? formatearPrecio(calcularTotal()) : '$0'}
                                         </div>
 
-                                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '20px' }}>
-                                            <p style={{ flex: 1, fontWeight: 600, fontSize: '10px', lineHeight: '16px', color: '#4A3D3D', margin: 0, textAlign: 'left' }}>
+                                        <div className="pago-final-section">
+                                            <p className="descuento-info">
                                                 *Descuento del 15% aplicado por pagar con más de 48 hs. de anticipación.
                                             </p>
-                                            {/* ✅ Cambiado onClick para usar handleSubmit */}
                                             <button type="button" onClick={handleSubmit} className="pay-btn">
                                                 PAGAR
                                             </button>
