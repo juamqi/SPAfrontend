@@ -43,10 +43,10 @@ const Home = () => {
 
 function App() {
   return (
-    <PopupProvider> 
-      <AuthProvider>
-        <AdminAuthProvider>
-          <ProfAuthProvider>
+    <AuthProvider>
+      <AdminAuthProvider>
+        <ProfAuthProvider>
+          <PopupProvider> 
             <Router>
               <Chatbot />
               <Routes>
@@ -60,10 +60,10 @@ function App() {
                 <Route path="/prof-panel" element={<ProfPrivateRoute />} />
               </Routes>
             </Router>
-          </ProfAuthProvider>
-        </AdminAuthProvider>
-      </AuthProvider>
-    </PopupProvider>
+          </PopupProvider>
+        </ProfAuthProvider>
+      </AdminAuthProvider>
+    </AuthProvider>
   );
 }
 

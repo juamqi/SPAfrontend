@@ -10,7 +10,7 @@ export const usePopup = () => {
       type: config.type || 'info',
       title: config.title || '',
       message: config.message || '',
-      duration: config.duration || 4000,
+      duration: config.duration || 5000, // Aumentado a 5 segundos
       onConfirm: config.onConfirm,
       onCancel: config.onCancel,
       showCancel: config.showCancel || false,
@@ -20,6 +20,7 @@ export const usePopup = () => {
 
     setPopups(prev => [...prev, popup]);
 
+    // Solo auto-cerrar si no es de tipo 'confirm'
     if (popup.duration && popup.type !== 'confirm') {
       setTimeout(() => {
         closePopup(id);
@@ -40,7 +41,9 @@ const Popup = ({ popup, onClose }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => setIsVisible(true), 10);
+    // Pequeño delay para la animación de entrada
+    const timer = setTimeout(() => setIsVisible(true), 50);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleClose = () => {
@@ -104,9 +107,12 @@ const Popup = ({ popup, onClose }) => {
   };
 
   return (
-    <div className={`fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-300 ${
-      isVisible ? 'opacity-100' : 'opacity-0'
-    }`}>
+    <div 
+      className={`fixed inset-0 flex items-center justify-center p-4 transition-all duration-300 ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      }`}
+      style={{ zIndex: 99999 }} // Z-index muy alto para asegurar que aparezca sobre todo
+    >
       {/* Overlay */}
       <div 
         className="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
@@ -179,14 +185,15 @@ export const PopupContainer = ({ popups, onClose }) => {
   if (popups.length === 0) return null;
 
   return (
-    <>
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 99999 }}>
       {popups.map(popup => (
-        <Popup 
-          key={popup.id} 
-          popup={popup} 
-          onClose={onClose}
-        />
+        <div key={popup.id} style={{ pointerEvents: 'auto' }}>
+          <Popup 
+            popup={popup} 
+            onClose={onClose}
+          />
+        </div>
       ))}
-    </>
+    </div>
   );
 };
