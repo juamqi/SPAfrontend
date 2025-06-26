@@ -63,7 +63,7 @@ const ProfTurnosSection = () => {
 
     // Reemplaza tu función fetchTurnos con esta versión corregida:
 
-const fetchTurnos = async () => {
+    const fetchTurnos = async () => {
     try {
         setIsLoading(true);
         setError(null);
@@ -73,28 +73,68 @@ const fetchTurnos = async () => {
         }
         const data = await response.json();
 
-        // Debug: ver qué datos estamos recibiendo
-        console.log("Todos los turnos:", data);
+        // Debug completo
+        console.log("=== DEBUG COMPLETO ===");
+        console.log("Todos los turnos recibidos:", data);
+        console.log("Cantidad de turnos:", data.length);
+        console.log("Profesional desde localStorage:", profesional);
         console.log("ID del profesional logueado:", profesionalId);
         console.log("Tipo de profesionalId:", typeof profesionalId);
         
-        // Verificar el tipo de datos en los turnos
+        // Mostrar todos los campos de los primeros turnos para identificar el campo correcto
         if (data.length > 0) {
-            console.log("Ejemplo de turno:", data[0]);
-            console.log("Tipo de id_profesional en turno:", typeof data[0].id_profesional);
+            console.log("Estructura del primer turno:", data[0]);
+            console.log("Todas las claves del primer turno:", Object.keys(data[0]));
+            
+            // Buscar campos que puedan contener el ID del profesional
+            const camposPosibles = Object.keys(data[0]).filter(key => 
+                key.toLowerCase().includes('profesional') || 
+                key.toLowerCase().includes('prof')
+            );
+            console.log("Campos posibles para profesional:", camposPosibles);
         }
 
-        // Filtrar turnos del profesional logueado - convertir ambos a string para comparar
-        const turnosDelProfesional = data.filter(t => {
-            const turnoIdProf = String(t.id_profesional);
-            const profId = String(profesionalId);
-            return turnoIdProf === profId;
+        // Mostrar todos los IDs únicos de profesionales en los turnos
+        const idsUnicos = [...new Set(data.map(t => t.id_profesional))];
+        console.log("IDs únicos de profesionales en turnos:", idsUnicos);
+        console.log("Tipos de estos IDs:", idsUnicos.map(id => typeof id));
+
+        // Temporalmente, mostrar TODOS los turnos sin filtrar para verificar que lleguen
+        console.log("Mostrando todos los turnos sin filtrar...");
+        setTurnos(data);
+        setTurnosFiltrados(data);
+
+        // Intentar el filtrado de múltiples maneras
+        console.log("\n=== INTENTOS DE FILTRADO ===");
+        
+        // Intento 1: Comparación directa
+        const filtro1 = data.filter(t => t.id_profesional === profesionalId);
+        console.log("Filtro 1 (directo):", filtro1.length, "turnos");
+        
+        // Intento 2: Convertir a números
+        const filtro2 = data.filter(t => Number(t.id_profesional) === Number(profesionalId));
+        console.log("Filtro 2 (números):", filtro2.length, "turnos");
+        
+        // Intento 3: Convertir a strings
+        const filtro3 = data.filter(t => String(t.id_profesional) === String(profesionalId));
+        console.log("Filtro 3 (strings):", filtro3.length, "turnos");
+
+        // Mostrar comparaciones individuales para el debugging
+        data.forEach((turno, index) => {
+            if (index < 5) { // Solo los primeros 5 para no saturar la consola
+                console.log(`Turno ${index}:`, {
+                    id_turno: turno.id,
+                    id_profesional_turno: turno.id_profesional,
+                    tipo_id_profesional: typeof turno.id_profesional,
+                    profesional_logueado: profesionalId,
+                    tipo_profesional_logueado: typeof profesionalId,
+                    coincide_directo: turno.id_profesional === profesionalId,
+                    coincide_numero: Number(turno.id_profesional) === Number(profesionalId),
+                    coincide_string: String(turno.id_profesional) === String(profesionalId)
+                });
+            }
         });
 
-        console.log("Turnos filtrados del profesional:", turnosDelProfesional);
-
-        setTurnos(turnosDelProfesional);
-        setTurnosFiltrados(turnosDelProfesional);
     } catch (error) {
         console.error("Error al cargar los turnos:", error);
         setError("No se pudieron cargar los turnos. Intenta nuevamente.");
