@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, ArrowLeft } from 'lucide-react';
 import FechaSelector from './fechaselector.jsx';
-import './CarritoCompleto.css';
+import './carrito.css';
 
 const CarritoCompleto = ({ isOpen, onClose, idCliente }) => {
     const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
