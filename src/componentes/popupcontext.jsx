@@ -5,6 +5,7 @@ const PopupContext = createContext();
 
 export const PopupProvider = ({ children }) => {
   const { popups, showPopup, closePopup } = usePopup();
+  console.log("Cantidad de popups activos:", popups.length);
 
   return (
     <PopupContext.Provider value={{ showPopup }}>

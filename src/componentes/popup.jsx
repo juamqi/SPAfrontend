@@ -183,6 +183,7 @@ const Popup = ({ popup, onClose }) => {
 
 export const PopupContainer = ({ popups, onClose }) => {
   if (popups.length === 0) return null;
+  console.log("Se está renderizando PopupContainer con:", popups);
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 99999 }}>

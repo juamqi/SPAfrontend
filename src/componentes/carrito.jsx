@@ -235,6 +235,18 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
             console.log(`🗂️ Carritos organizados por fecha:`, Array.from(carritosPorFechaMap.entries()));
             setCarritosPorFecha(carritosPorFechaMap);
 
+            // ✅ FIX: Si hay una fecha seleccionada, recargar su carrito automáticamente
+            if (fechaSeleccionada && carritosPorFechaMap.has(fechaSeleccionada)) {
+                const carritosDeEsteFecha = carritosPorFechaMap.get(fechaSeleccionada);
+                if (carritosDeEsteFecha.length > 0) {
+                    const carritoActualizado = carritosDeEsteFecha[0];
+                    console.log('🔄 Recargando carrito de fecha seleccionada:', carritoActualizado);
+                    setCarritoSeleccionado(carritoActualizado);
+                    // Recargar los turnos del carrito actualizado
+                    await obtenerTurnosCarrito(carritoActualizado.id);
+                }
+            }
+
         } catch (error) {
             console.error('❌ Error al obtener carritos por fecha:', error);
             setError('Error al cargar carritos: ' + error.message);
@@ -306,8 +318,8 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
         }
     };
 
-    // Función para manejar cambio de fecha
-    const handleFechaChange = (nuevaFecha) => {
+    // ✅ FIX: Función mejorada para manejar cambio de fecha
+    const handleFechaChange = async (nuevaFecha) => {
         console.log('📅 Fecha seleccionada en CarritoCompleto:', nuevaFecha);
         setFechaSeleccionada(nuevaFecha);
 
@@ -320,7 +332,9 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
             const primerCarrito = carritosDeEsteFecha[0];
             console.log('🎯 Carrito seleccionado:', primerCarrito);
             setCarritoSeleccionado(primerCarrito);
-            obtenerTurnosCarrito(primerCarrito.id);
+            
+            // ✅ FIX: Usar await para asegurar que los turnos se cargan completamente
+            await obtenerTurnosCarrito(primerCarrito.id);
         } else {
             setCarritoSeleccionado(null);
             setServicios([]);
@@ -382,15 +396,23 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
     // ✅ Función pública para refrescar datos (útil cuando se crean nuevos turnos)
     const refrescarDatos = async () => {
         console.log('🔄 CarritoCompleto - Refrescando datos por solicitud externa');
+        
+        // ✅ FIX: Guardar la fecha seleccionada antes de limpiar
+        const fechaAnterior = fechaSeleccionada;
+        
         // Limpiar estados
-        setFechaSeleccionada(null);
         setCarritoSeleccionado(null);
         setServicios([]);
-        setCarritosPorFecha(new Map());
-        setAplicaDescuento(false); // ✅ NUEVO: Limpiar estado de descuento
+        setAplicaDescuento(false);
         
         // Recargar datos
         await obtenerCarritosPorFecha();
+        
+        // ✅ FIX: Si había una fecha seleccionada, mantenerla y recargar sus datos
+        if (fechaAnterior) {
+            console.log('🔄 Manteniendo fecha seleccionada:', fechaAnterior);
+            // No llamamos setFechaSeleccionada aquí porque obtenerCarritosPorFecha ya maneja la recarga
+        }
     };
 
     // ✅ Efecto para refrescar cuando se solicita desde props
@@ -426,8 +448,7 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
             setVistaActual('carrito');
             setError(null);
             setMostrarModalExito(false);
-            setAplicaDescuento(false); // ✅ NUEVO: Limpiar estado de descuento
-            // ✅ NO limpiar carritosPorFecha para mantener los datos cargados
+            setAplicaDescuento(false);
         }
     }, [isOpen]);
 
@@ -503,11 +524,13 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                 type: 'warning',
                 title: 'Atención',
                 message: 'No hay servicios futuros para procesar el pago.',
-                 
             });
             return;
         }
 
+        // Convertir diferencia a horas
+        const diferenciaHoras = menorDiferencia / (1000 * 60 * 60);
+        
         console.log('Procediendo al pago con tarjeta...');
         console.log('Aplica descuento:', aplicaDescuento);
         
@@ -517,7 +540,6 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                 type: 'warning',
                 title: 'Atención',
                 message: 'Faltan menos de 48 horas para el servicio. Debe pagar en efectivo.',
-                 
             });
             return;
         }
@@ -605,7 +627,6 @@ const CarritoCompleto = ({ isOpen, onClose, idCliente, forceRefresh }) => {
                 type: 'error',
                 title: 'Error al procesar el pago',
                 message: 'Por favor, intenta nuevamente.',
-                 
             });
         }
     };
