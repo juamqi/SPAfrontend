@@ -797,92 +797,6 @@
   transform: translateY(0);
   box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.2);
 }
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-    .carrito-modal {
-        width: 95%;
-        max-width: 432px;
-        height: 90vh;
-        max-height: 576px;
-    }
-    
-    .modal-title {
-        font-size: 20px;
-    }
-    
-    .buttons-container {
-        flex-direction: column;
-        gap: 8px;
-    }
-    
-    .pagar-button,
-    .pago-efectivo-button {
-        width: 100%;
-    }
-    
-    .input-row {
-        flex-direction: column;
-        gap: 16px;
-    }
-    
-    .pago-final-section {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 16px;
-    }
-    
-    .descuento-info {
-        text-align: center;
-    }
-    
-    .modal-exito-contenedor {
-        width: 95%;
-        margin: 20px;
-    }
-    
-    .modal-exito-titulo {
-        font-size: 20px;
-        line-height: 26px;
-    }
-    
-    .modal-exito-texto {
-        font-size: 14px;
-        line-height: 20px;
-        left: 10%;
-        right: 10%;
-    }
-    
-    .modal-exito-botones {
-        left: 10%;
-        right: 10%;
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .boton-servicios,
-    .boton-carrito {
-        font-size: 12px;
-        min-height: 40px;
-    }
-}
-
-@media (max-width: 480px) {
-    .modal-exito-contenedor {
-        width: 90%;
-        min-height: 350px;
-    }
-    
-    .modal-exito-titulo {
-        font-size: 18px;
-        line-height: 24px;
-    }
-    
-    .modal-exito-texto {
-        font-size: 13px;
-        line-height: 18px;
-    }
-}
 /* ✅ Estilos para el Selector de Carritos Múltiples */
 /* Agregar estos estilos a tu archivo carrito.css */
 
@@ -994,4 +908,90 @@
     font-size: 12px;
     font-style: italic;
     margin-bottom: 15px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .carrito-modal {
+        width: 95%;
+        max-width: 432px;
+        height: 90vh;
+        max-height: 576px;
+    }
+    
+    .modal-title {
+        font-size: 20px;
+    }
+    
+    .buttons-container {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .pagar-button,
+    .pago-efectivo-button {
+        width: 100%;
+    }
+    
+    .input-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .pago-final-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+    
+    .descuento-info {
+        text-align: center;
+    }
+    
+    .modal-exito-contenedor {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .modal-exito-titulo {
+        font-size: 20px;
+        line-height: 26px;
+    }
+    
+    .modal-exito-texto {
+        font-size: 14px;
+        line-height: 20px;
+        left: 10%;
+        right: 10%;
+    }
+    
+    .modal-exito-botones {
+        left: 10%;
+        right: 10%;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .boton-servicios,
+    .boton-carrito {
+        font-size: 12px;
+        min-height: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-exito-contenedor {
+        width: 90%;
+        min-height: 350px;
+    }
+    
+    .modal-exito-titulo {
+        font-size: 18px;
+        line-height: 24px;
+    }
+    
+    .modal-exito-texto {
+        font-size: 13px;
+        line-height: 18px;
+    }
 }
