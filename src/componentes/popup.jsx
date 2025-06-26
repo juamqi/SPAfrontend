@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 export const usePopup = () => {
   const [popups, setPopups] = useState([]);
@@ -10,17 +11,16 @@ export const usePopup = () => {
       type: config.type || 'info',
       title: config.title || '',
       message: config.message || '',
-      duration: config.duration || 5000, // Aumentado a 5 segundos
+      duration: config.duration || 5000,
       onConfirm: config.onConfirm,
       onCancel: config.onCancel,
       showCancel: config.showCancel || false,
       confirmText: config.confirmText || 'Aceptar',
-      cancelText: config.cancelText || 'Cancelar'
+      cancelText: config.cancelText || 'Cancelar',
     };
 
     setPopups(prev => [...prev, popup]);
 
-    // Solo auto-cerrar si no es de tipo 'confirm'
     if (popup.duration && popup.type !== 'confirm') {
       setTimeout(() => {
         closePopup(id);
@@ -41,7 +41,6 @@ const Popup = ({ popup, onClose }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Pequeño delay para la animación de entrada
     const timer = setTimeout(() => setIsVisible(true), 50);
     return () => clearTimeout(timer);
   }, []);
@@ -62,11 +61,12 @@ const Popup = ({ popup, onClose }) => {
   };
 
   const getIcon = () => {
+    const iconStyles = "w-6 h-6";
     switch (popup.type) {
       case 'success':
         return (
           <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={iconStyles + " text-green-600"} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -74,7 +74,7 @@ const Popup = ({ popup, onClose }) => {
       case 'error':
         return (
           <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={iconStyles + " text-red-600"} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
@@ -82,7 +82,7 @@ const Popup = ({ popup, onClose }) => {
       case 'warning':
         return (
           <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={iconStyles + " text-amber-600"} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
@@ -90,7 +90,7 @@ const Popup = ({ popup, onClose }) => {
       case 'confirm':
         return (
           <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={iconStyles + " text-blue-600"} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
@@ -98,7 +98,7 @@ const Popup = ({ popup, onClose }) => {
       default:
         return (
           <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={iconStyles + " text-teal-600"} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
@@ -107,69 +107,73 @@ const Popup = ({ popup, onClose }) => {
   };
 
   return (
-    <div 
-      className={`fixed inset-0 flex items-center justify-center p-4 transition-all duration-300 ${
+    <div
+      className={`fixed inset-0 flex items-center justify-center transition-all duration-300 ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
-      style={{ zIndex: 99999 }} // Z-index muy alto para asegurar que aparezca sobre todo
+      style={{
+        zIndex: 2147483647,
+        fontFamily: 'sans-serif',
+        fontSize: '16px',
+        pointerEvents: 'auto',
+        padding: '1rem',
+      }}
     >
       {/* Overlay */}
-      <div 
+      <div
         className="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
         onClick={popup.type !== 'confirm' ? handleClose : undefined}
       />
-      
-      {/* Popup Content */}
-      <div className={`relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 text-center transform transition-all duration-300 ${
-        isVisible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'
-      }`}>
-        {/* Icono */}
-        {getIcon()}
-        
-        {/* Título */}
-        {popup.title && (
-          <h3 className="text-xl font-semibold text-gray-800 mb-3">
-            {popup.title}
-          </h3>
-        )}
-        
-        {/* Mensaje */}
-        <p className="text-gray-600 mb-6 leading-relaxed">
-          {popup.message}
-        </p>
-        
-        {/* Botones */}
-        <div className="flex gap-3 justify-center">
-          {popup.type === 'confirm' && popup.showCancel && (
-            <button
-              onClick={handleCancel}
-              className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-medium"
-            >
-              {popup.cancelText}
-            </button>
+
+      {/* Popup content */}
+      <div
+        className={`relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 mx-4 text-center transform transition-all duration-300 ${
+          isVisible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'
+        }`}
+        style={{ maxHeight: '90vh', overflowY: 'auto' }}
+      >
+        <div className="popup-reset">
+          {getIcon()}
+
+          {popup.title && (
+            <h3 className="text-xl font-semibold text-gray-800 mb-3">
+              {popup.title}
+            </h3>
           )}
-          
-          <button
-            onClick={handleConfirm}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors duration-200 ${
-              popup.type === 'error' 
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : popup.type === 'warning'
-                ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                : popup.type === 'success'
-                ? 'bg-green-600 hover:bg-green-700 text-white'
-                : 'bg-teal-600 hover:bg-teal-700 text-white'
-            }`}
-          >
-            {popup.confirmText}
-          </button>
+
+          <p className="text-gray-600 mb-6 leading-relaxed">{popup.message}</p>
+
+          <div className="flex gap-3 justify-center">
+            {popup.type === 'confirm' && popup.showCancel && (
+              <button
+                onClick={handleCancel}
+                className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200 font-medium"
+              >
+                {popup.cancelText}
+              </button>
+            )}
+
+            <button
+              onClick={handleConfirm}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors duration-200 ${
+                popup.type === 'error'
+                  ? 'bg-red-600 hover:bg-red-700 text-white'
+                  : popup.type === 'warning'
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                  : popup.type === 'success'
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-teal-600 hover:bg-teal-700 text-white'
+              }`}
+            >
+              {popup.confirmText}
+            </button>
+          </div>
         </div>
-        
-        {/* Botón de cerrar */}
+
         {popup.type !== 'confirm' && (
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition duration-200"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -183,18 +187,14 @@ const Popup = ({ popup, onClose }) => {
 
 export const PopupContainer = ({ popups, onClose }) => {
   if (popups.length === 0) return null;
-  console.log("Se está renderizando PopupContainer con:", popups);
-
-  return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 99999 }}>
+  return createPortal(
+    <div style={{ position: 'fixed', inset: 0, zIndex: 2147483647, pointerEvents: 'none' }}>
       {popups.map(popup => (
         <div key={popup.id} style={{ pointerEvents: 'auto' }}>
-          <Popup 
-            popup={popup} 
-            onClose={onClose}
-          />
+          <Popup popup={popup} onClose={onClose} />
         </div>
       ))}
-    </div>
+    </div>,
+    document.body
   );
 };
