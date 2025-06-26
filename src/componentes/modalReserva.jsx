@@ -259,7 +259,7 @@ const ModalReserva = ({
       const timeoutId = setTimeout(() => {
         setLoading(false);
         setError("La solicitud ha tardado demasiado. Por favor, inténtalo de nuevo.");
-      }, 15000); ut
+      }, 15000);
 
       try {
         setLoading(true);
