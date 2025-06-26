@@ -13,7 +13,7 @@ const DropdownProfesionalesPorServicio = ({ idServicio, value, onChange }) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`https://spabackend-production-e093.up.railway.app/profesionalesAdm/servicio/${idServicio}`);
+        const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/profesionalesAdm/servicio/${idServicio}`);
         if (!response.ok) {
           throw new Error('Error al cargar los profesionales');
         }

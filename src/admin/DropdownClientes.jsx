@@ -18,7 +18,7 @@ const DropdownClientes = ({ onChange, value, onClientesLoaded }) => {
       setLoading(true);
       try {
         console.log('Intentando cargar clientes');
-        const response = await fetch('https://spabackend-production-e093.up.railway.app/clientesAdm');
+        const response = await fetch('https://spabackend-production-e093.up.railway.app/api/clientesAdm');
         
         if (!response.ok) {
           // Mostrar detalles del error para ayudar en el diagnóstico
