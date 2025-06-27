@@ -140,7 +140,7 @@ const ProfTurnosSection = () => {
     // NUEVA FUNCIONALIDAD: Agregar turno
     const handleAgregar = () => {
         setModo("crear");
-        const fechaHoy = new Date().toISOString().substring(0, 10); // Formato YYYY-MM-DD
+        const fechaHoy = new Date().toLocaleDateString('en-CA');
         setFormulario({
             fecha: fechaHoy,
             hora: "",
