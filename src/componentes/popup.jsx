@@ -61,83 +61,173 @@ const Popup = ({ popup, onClose }) => {
   };
 
   const getIcon = () => {
-    const iconStyles = "width: 24px; height: 24px";
+    const iconStyles = "width: 24px; height: 24px; display: block; margin: 0 auto;";
     switch (popup.type) {
       case 'success':
-        return `<svg style="${iconStyles}" fill="none" stroke="green" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg>`;
+        return `<svg style="${iconStyles}" fill="none" stroke="#10b981" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
       case 'error':
-        return `<svg style="${iconStyles}" fill="none" stroke="red" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>`;
+        return `<svg style="${iconStyles}" fill="none" stroke="#ef4444" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>`;
       case 'warning':
-        return `<svg style="${iconStyles}" fill="none" stroke="orange" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856"/></svg>`;
+        return `<svg style="${iconStyles}" fill="none" stroke="#f59e0b" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
       default:
-        return `<svg style="${iconStyles}" fill="none" stroke="teal" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01"/></svg>`;
+        return `<svg style="${iconStyles}" fill="none" stroke="#06b6d4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+    }
+  };
+
+  const overlayStyles = {
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    right: '0',
+    bottom: '0',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backdropFilter: 'blur(4px)',
+    WebkitBackdropFilter: 'blur(4px)',
+    zIndex: '2147483647',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+    boxSizing: 'border-box',
+    opacity: isVisible ? '1' : '0',
+    transition: 'opacity 0.3s ease',
+    pointerEvents: 'auto',
+  };
+
+  const popupStyles = {
+    position: 'relative',
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+    padding: '32px',
+    maxWidth: '420px',
+    width: '100%',
+    textAlign: 'center',
+    transform: isVisible ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(20px)',
+    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxSizing: 'border-box',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    fontSize: '16px',
+    lineHeight: '1.5',
+    color: '#1f2937',
+    margin: '0',
+    border: 'none',
+    outline: 'none',
+  };
+
+  const iconContainerStyles = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '48px',
+    height: '48px',
+    margin: '0 auto 24px auto',
+    borderRadius: '50%',
+    backgroundColor: popup.type === 'success' ? '#ecfdf5' :
+                      popup.type === 'error' ? '#fef2f2' :
+                      popup.type === 'warning' ? '#fffbeb' : '#f0fdfa',
+  };
+
+  const titleStyles = {
+    fontSize: '20px',
+    fontWeight: '600',
+    margin: '0 0 12px 0',
+    color: '#111827',
+    lineHeight: '1.4',
+  };
+
+  const messageStyles = {
+    fontSize: '16px',
+    margin: '0 0 32px 0',
+    color: '#6b7280',
+    lineHeight: '1.6',
+  };
+
+  const buttonContainerStyles = {
+    display: 'flex',
+    gap: '12px',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+  };
+
+  const getButtonStyles = (isPrimary = true) => ({
+    padding: '12px 24px',
+    borderRadius: '8px',
+    fontSize: '16px',
+    fontWeight: '500',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    fontFamily: 'inherit',
+    minWidth: '80px',
+    backgroundColor: isPrimary ? 
+      (popup.type === 'error' ? '#ef4444' :
+       popup.type === 'warning' ? '#f59e0b' :
+       popup.type === 'success' ? '#10b981' : '#06b6d4') : '#f3f4f6',
+    color: isPrimary ? '#ffffff' : '#374151',
+    boxShadow: isPrimary ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none',
+    ':hover': {
+      transform: 'translateY(-1px)',
+      boxShadow: isPrimary ? '0 4px 12px rgba(0, 0, 0, 0.15)' : '0 1px 3px rgba(0, 0, 0, 0.1)',
+    }
+  });
+
+  const closeButtonStyles = {
+    position: 'absolute',
+    top: '16px',
+    right: '16px',
+    background: 'transparent',
+    border: 'none',
+    fontSize: '24px',
+    color: '#9ca3af',
+    cursor: 'pointer',
+    width: '32px',
+    height: '32px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.2s ease',
+    fontFamily: 'inherit',
+    ':hover': {
+      backgroundColor: '#f3f4f6',
+      color: '#6b7280',
     }
   };
 
   return (
-    <div
-      className={`fixed inset-0 flex items-center justify-center transition-all duration-300 ${
-        isVisible ? 'opacity-100' : 'opacity-0'
-      }`}
-      style={{
-        zIndex: 2147483647,
-        padding: '1rem',
-        fontSize: '16px',
-        fontFamily: 'sans-serif',
-        pointerEvents: 'auto',
-      }}
-    >
-      {/* Overlay */}
-      <div
-        className="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm"
-        style={{ pointerEvents: 'auto' }}
-        onClick={popup.type !== 'confirm' ? handleClose : undefined}
-      />
-
-      {/* Contenido del popup */}
-      <div
-        className="popup-reset"
-        style={{
-          position: 'relative',
-          backgroundColor: 'white',
-          borderRadius: '1rem',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-          padding: '2rem',
-          maxWidth: '400px',
-          width: '100%',
-          textAlign: 'center',
-          transform: isVisible ? 'scale(1)' : 'scale(0.95)',
-          transition: 'transform 0.3s ease',
-        }}
-      >
+    <div style={overlayStyles} onClick={popup.type !== 'confirm' ? handleClose : undefined}>
+      <div style={popupStyles} onClick={(e) => e.stopPropagation()}>
         {/* Ícono */}
-        <div
-          dangerouslySetInnerHTML={{ __html: getIcon() }}
-          style={{ marginBottom: '1rem' }}
-        />
+        <div style={iconContainerStyles}>
+          <div dangerouslySetInnerHTML={{ __html: getIcon() }} />
+        </div>
 
         {/* Título */}
         {popup.title && (
-          <h3 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '0.5rem' }}>
+          <h3 style={titleStyles}>
             {popup.title}
           </h3>
         )}
 
         {/* Mensaje */}
-        <p style={{ marginBottom: '1.5rem', color: '#555' }}>{popup.message}</p>
+        <p style={messageStyles}>{popup.message}</p>
 
         {/* Botones */}
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+        <div style={buttonContainerStyles}>
           {popup.type === 'confirm' && popup.showCancel && (
             <button
               onClick={handleCancel}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                backgroundColor: '#eee',
-                color: '#333',
-                border: 'none',
-                cursor: 'pointer',
+              style={getButtonStyles(false)}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#e5e7eb';
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#f3f4f6';
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = 'none';
               }}
             >
               {popup.cancelText}
@@ -146,38 +236,32 @@ const Popup = ({ popup, onClose }) => {
 
           <button
             onClick={handleConfirm}
-            style={{
-              padding: '0.5rem 1rem',
-              borderRadius: '0.5rem',
-              backgroundColor: popup.type === 'error'
-                ? '#dc2626'
-                : popup.type === 'warning'
-                ? '#d97706'
-                : popup.type === 'success'
-                ? '#16a34a'
-                : '#0d9488',
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
+            style={getButtonStyles(true)}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
             }}
           >
             {popup.confirmText}
           </button>
         </div>
 
-        {/* Cerrar */}
+        {/* Botón cerrar */}
         {popup.type !== 'confirm' && (
           <button
             onClick={handleClose}
-            style={{
-              position: 'absolute',
-              top: '1rem',
-              right: '1rem',
-              background: 'transparent',
-              border: 'none',
-              fontSize: '1.25rem',
-              color: '#999',
-              cursor: 'pointer',
+            style={closeButtonStyles}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = '#f3f4f6';
+              e.target.style.color = '#6b7280';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+              e.target.style.color = '#9ca3af';
             }}
           >
             ×
@@ -192,7 +276,15 @@ export const PopupContainer = ({ popups, onClose }) => {
   if (popups.length === 0) return null;
 
   return createPortal(
-    <div style={{ position: 'fixed', inset: 0, zIndex: 2147483647, pointerEvents: 'none' }}>
+    <div style={{ 
+      position: 'fixed', 
+      top: 0, 
+      left: 0, 
+      right: 0, 
+      bottom: 0, 
+      zIndex: 2147483647, 
+      pointerEvents: 'none' 
+    }}>
       {popups.map(popup => (
         <div key={popup.id} style={{ pointerEvents: 'auto' }}>
           <Popup popup={popup} onClose={onClose} />
