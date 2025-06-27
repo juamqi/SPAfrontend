@@ -5,7 +5,6 @@ const DropdownProfesionalesPorServicio = ({ idServicio, value, onChange }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Cargar profesionales filtrados por id_servicio
   useEffect(() => {
     if (!idServicio) return;
 
@@ -39,7 +38,12 @@ const DropdownProfesionalesPorServicio = ({ idServicio, value, onChange }) => {
       <select
         id="profesional"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          const id = e.target.value;
+          const profesional = profesionales.find(p => p.id.toString() === id);
+          const nombreCompleto = profesional ? `${profesional.nombre} ${profesional.apellido}` : "";
+          onChange(id, nombreCompleto);
+        }}
       >
         <option value="">Seleccione un profesional</option>
         {profesionales.map((p) => (
