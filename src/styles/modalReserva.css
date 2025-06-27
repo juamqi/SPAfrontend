@@ -82,7 +82,7 @@
 }
 .error-mensaje {
   position: fixed;
-  top: 20px;
+  top: 200px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10002;
