@@ -3,7 +3,6 @@ import ModalForm from "./ModalForm.jsx";
 import DropdownCategorias from "./dropDownCat.jsx";
 import DropdownServicios from "./dropDownServicios.jsx";
 import DropdownClientes from "./DropdownClientes.jsx";
-import DropdownProfesionalesPorServicio from "./DropDownProfesionalesPorServicio.jsx";
 import FilterComponent from "./FilterComponent.jsx";
 import { usePopupContext } from "../componentes/popupcontext.jsx";
 
@@ -29,6 +28,7 @@ const ProfTurnosSection = () => {
         cliente_id: "",
         cliente_nombre: "",
         precio: "",
+        comentarios: "",
     });
     const [categorias, setCategorias] = useState([]);
     const horasDisponibles = Array.from({ length: 14 }, (_, i) => `${(8 + i).toString().padStart(2, '0')}:00`);
@@ -137,6 +137,241 @@ const ProfTurnosSection = () => {
         return new Date().toISOString().split('T')[0];
     };
 
+    // NUEVA FUNCIONALIDAD: Agregar turno
+    const handleAgregar = () => {
+        setModo("crear");
+        const fechaHoy = new Date().toISOString().substring(0, 10); // Formato YYYY-MM-DD
+        setFormulario({
+            fecha: fechaHoy,
+            hora: "",
+            categoria: "",
+            servicio: "",
+            servicio_id: "",
+            cliente_id: "",
+            cliente_nombre: "",
+            precio: "",
+            comentarios: "",
+        });
+        setServicioIdSeleccionado(null);
+        setMostrarModal(true);
+    };
+
+    // NUEVA FUNCIONALIDAD: Validar formulario
+    const validarFormulario = () => {
+        const camposRequeridos = ['fecha', 'hora', 'servicio_id', 'cliente_id'];
+        const camposFaltantes = camposRequeridos.filter(campo => !formulario[campo]);
+
+        if (camposFaltantes.length > 0) {
+            const mensajesCampos = {
+                'fecha': 'Fecha',
+                'hora': 'Hora',
+                'servicio_id': 'Servicio',
+                'cliente_id': 'Cliente'
+            };
+
+            const camposFaltantesNombres = camposFaltantes.map(campo => mensajesCampos[campo]);
+            throw new Error(`Por favor complete todos los campos obligatorios: ${camposFaltantesNombres.join(', ')}`);
+        }
+
+        // Validar formato de fecha
+        const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!fechaRegex.test(formulario.fecha)) {
+            throw new Error("El formato de fecha no es válido. Utilice YYYY-MM-DD");
+        }
+
+        // Verificar que la fecha no sea anterior a hoy
+        const fechaSeleccionada = new Date(formulario.fecha);
+        const fechaHoy = new Date();
+
+        // Establecer la hora a 00:00:00 para comparar solo las fechas
+        fechaHoy.setHours(0, 0, 0, 0);
+        fechaSeleccionada.setHours(0, 0, 0, 0);
+
+        if (fechaSeleccionada < fechaHoy) {
+            throw new Error("No se puede agendar un turno en una fecha que ya pasó");
+        }
+
+        // Validar formato de hora
+        const horaRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+        if (!horaRegex.test(formulario.hora)) {
+            throw new Error("El formato de hora no es válido. Utilice HH:MM");
+        }
+
+        return true;
+    };
+
+    // NUEVA FUNCIONALIDAD: Guardar turno
+    const handleGuardar = async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
+
+            // Validar el formulario
+            validarFormulario();
+
+            // Conversión explícita y segura de IDs a enteros
+            const id_servicio = parseInt(formulario.servicio_id, 10);
+            const id_cliente = parseInt(formulario.cliente_id, 10);
+            const id_profesional = parseInt(profesionalId, 10); // Usar el ID del profesional logueado
+
+            // Validaciones adicionales
+            if (isNaN(id_servicio)) {
+                throw new Error("El servicio seleccionado no es válido. Por favor seleccione un servicio válido.");
+            }
+
+            if (isNaN(id_cliente)) {
+                throw new Error("El ID del cliente no es válido. Por favor seleccione un cliente válido.");
+            }
+
+            if (isNaN(id_profesional)) {
+                throw new Error("Error: No se pudo identificar el profesional. Por favor inicie sesión nuevamente.");
+            }
+
+            // Preparar los datos para enviar al backend
+            const datosFormateados = {
+                id_cliente,
+                id_servicio,
+                id_profesional, // Usar el ID del profesional logueado
+                fecha: formulario.fecha,
+                hora: formulario.hora,
+                estado: 'Solicitado',
+                precio: parseFloat(formulario.precio) || 0,
+                comentarios: formulario.comentarios || '',
+                // Añadimos también los nombres para compatibilidad con el backend original
+                profesional: profesional?.nombre,
+                cliente: formulario.cliente_nombre,
+                servicio: formulario.servicio
+            };
+
+            console.log("Datos a enviar al backend:", datosFormateados);
+
+            // Crear nuevo turno
+            const response = await fetch('https://spabackend-production-e093.up.railway.app/api/turnosAdmin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datosFormateados)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Error al crear el turno");
+            }
+
+            showPopup({
+                type: 'success',
+                title: "Éxito",
+                message: "Turno creado correctamente",
+            });
+
+            // Recargar los turnos
+            await fetchTurnos();
+
+            // Cerrar el modal y limpiar la selección
+            setMostrarModal(false);
+            setTurnoSeleccionado(null);
+
+        } catch (error) {
+            console.error("Error al guardar el turno:", error);
+            setError(`Error al guardar el turno: ${error.message}`);
+            showPopup({
+                type: 'error',
+                title: "Error",
+                message: `Error al guardar el turno: ${error.message}`,
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // NUEVA FUNCIONALIDAD: Manejo de categoría
+    const handleCategoriaChange = (categoriaId) => {
+        setFormulario({
+            ...formulario,
+            categoria: categoriaId,
+            servicio: "",
+            servicio_id: "",
+            precio: "",
+        });
+        setServicioIdSeleccionado(null);
+    }
+
+    // NUEVA FUNCIONALIDAD: Manejo de servicio
+    const handleServicioChange = (servicioId, servicioNombre) => {
+        console.log("Servicio seleccionado - ID:", servicioId, "Nombre:", servicioNombre);
+
+        let idServicio = null;
+
+        if (servicioId && !isNaN(parseInt(servicioId, 10))) {
+            idServicio = parseInt(servicioId, 10);
+
+            // Encontrar el servicio completo para obtener el precio
+            const servicioEncontrado = servicios.find(s => s.id == idServicio);
+
+            if (servicioEncontrado) {
+                setServicioIdSeleccionado(idServicio);
+
+                setFormulario({
+                    ...formulario,
+                    servicio: servicioNombre || servicioEncontrado.nombre,
+                    servicio_id: idServicio.toString(),
+                    precio: servicioEncontrado.precio
+                });
+
+                console.log("Servicio encontrado con precio:", servicioEncontrado.precio);
+            } else {
+                console.log("No se encontró el servicio con ID", idServicio);
+                handleServicioNotFound(servicioId, servicioNombre);
+            }
+        } else {
+            handleServicioNotFound(servicioId, servicioNombre);
+        }
+    }
+
+    // Función auxiliar para manejar el caso cuando no se encuentra el servicio por ID
+    const handleServicioNotFound = (servicioId, servicioNombre) => {
+        if (servicioNombre) {
+            const servicioEncontrado = servicios.find(s => s.nombre === servicioNombre);
+
+            if (servicioEncontrado) {
+                setServicioIdSeleccionado(parseInt(servicioEncontrado.id, 10));
+
+                setFormulario({
+                    ...formulario,
+                    servicio: servicioNombre,
+                    servicio_id: servicioEncontrado.id.toString(),
+                    precio: servicioEncontrado.precio
+                });
+            } else {
+                setServicioIdSeleccionado(null);
+                setFormulario({
+                    ...formulario,
+                    servicio: servicioNombre,
+                    servicio_id: "",
+                    precio: ""
+                });
+            }
+        } else {
+            setServicioIdSeleccionado(null);
+            setFormulario({
+                ...formulario,
+                servicio: servicioId || "",
+                servicio_id: "",
+                precio: ""
+            });
+        }
+    }
+
+    // NUEVA FUNCIONALIDAD: Manejo de cliente
+    const handleClienteChange = (clienteId, nombreCompleto) => {
+        console.log("Cliente seleccionado - ID:", clienteId, "Nombre:", nombreCompleto);
+
+        setFormulario({
+            ...formulario,
+            cliente_id: clienteId,
+            cliente_nombre: nombreCompleto
+        });
+    }
+
     // Función para generar e imprimir PDF con los turnos de la fecha seleccionada
     const handleImprimirTurnos = () => {
         if (!fechaParaImprimir) {
@@ -169,17 +404,6 @@ const ProfTurnosSection = () => {
         console.log("Nombre profesional:", nombreProfesional);
         console.log("ID profesional:", profesionalId);
         console.log("Turnos filtrados para impresión:", turnosDia);
-        console.log("Total turnos disponibles:", turnos);
-        console.log("Detalles de filtrado:", turnos.map(t => ({
-            id: t.id,
-            fecha: t.fecha.split('T')[0],
-            estado: t.estado,
-            profesional: t.profesional,
-            id_profesional: t.id_profesional,
-            coincideFecha: t.fecha.split('T')[0] === fechaParaImprimir,
-            coincideEstado: t.estado === 'Solicitado',
-            coincideProfesional: t.profesional === nombreProfesional || Number(t.id_profesional) === Number(profesionalId)
-        })));
 
         if (turnosDia.length === 0) {
             showPopup({
@@ -289,6 +513,11 @@ const ProfTurnosSection = () => {
 
             <div className="turnos-header-flex">
                 <div className="btns-izquierda">
+                    {/* NUEVO: Botón para agregar turno */}
+                    <button className="btn-agregar" onClick={handleAgregar} disabled={isLoading}>
+                        Agregar Turno
+                    </button>
+                    
                     <div className="imprimir-turnos-section">
                         <div className="fecha-selector">
                             <label htmlFor="fechaImprimir">Fecha para imprimir:</label>
@@ -323,6 +552,11 @@ const ProfTurnosSection = () => {
                 </div>
             </div>
 
+            {/* Mostrar información de filtros activos */}
+            <div className="filtros-info">
+                <p>Mostrando {turnosFiltrados.length} de {turnos.length} turnos</p>
+            </div>
+
             {isLoading ? (
                 <p>Cargando...</p>
             ) : (
@@ -343,7 +577,7 @@ const ProfTurnosSection = () => {
                             {turnosFiltrados.length === 0 ? (
                                 <tr>
                                     <td colSpan="7" style={{ textAlign: "center" }}>
-                                        No hay turnos disponibles
+                                        {turnos.length === 0 ? "No hay turnos disponibles" : "No hay turnos que coincidan con los filtros aplicados"}
                                     </td>
                                 </tr>
                             ) : (
@@ -370,6 +604,78 @@ const ProfTurnosSection = () => {
                     </table>
                 </div>
             )}
+
+            {/* NUEVO: Modal para agregar turnos */}
+            <ModalForm
+                isOpen={mostrarModal}
+                onClose={() => setMostrarModal(false)}
+                title="Agregar Turno"
+                onSave={handleGuardar}
+            >
+                <div className="form-group">
+                    <label htmlFor="fecha">Fecha:</label>
+                    <input
+                        id="fecha"
+                        type="date"
+                        value={formulario.fecha}
+                        onChange={e => setFormulario({ ...formulario, fecha: e.target.value })}
+                        disabled={isLoading}
+                        required
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="hora">Hora:</label>
+                    <select
+                        id="hora"
+                        value={formulario.hora}
+                        onChange={(e) => setFormulario({ ...formulario, hora: e.target.value })}
+                        disabled={isLoading}
+                        required
+                        className="border p-2 rounded w-full mb-4">
+                        <option value="">Seleccione una hora</option>
+                        {horasDisponibles.map((hora) => (
+                            <option key={hora} value={hora}>{hora}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <DropdownCategorias
+                    value={formulario.categoria}
+                    onChange={handleCategoriaChange}
+                />
+
+                <DropdownServicios
+                    categoriaId={formulario.categoria}
+                    value={formulario.servicio_id}
+                    onChange={(servicioId, servicioNombre) => handleServicioChange(servicioId, servicioNombre)}
+                />
+
+                <DropdownClientes
+                    value={formulario.cliente_id}
+                    onChange={handleClienteChange}
+                />
+
+                {/* Campo para comentarios */}
+                <div className="form-group">
+                    <label htmlFor="comentarios">Comentarios:</label>
+                    <textarea
+                        id="comentarios"
+                        value={formulario.comentarios || ''}
+                        onChange={e => setFormulario({ ...formulario, comentarios: e.target.value })}
+                        placeholder="Agregar comentarios (opcional)"
+                        rows="3"
+                    />
+                </div>
+
+                {/* Mostrar precio del servicio seleccionado */}
+                {formulario.precio && (
+                    <div className="form-group">
+                        <label>Precio del servicio:</label>
+                        <p style={{ fontWeight: 'bold', color: '#28a745' }}>${formulario.precio}</p>
+                    </div>
+                )}
+            </ModalForm>
         </div>
     );
 };
