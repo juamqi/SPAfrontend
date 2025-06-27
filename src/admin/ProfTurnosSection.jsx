@@ -462,6 +462,13 @@ const ProfTurnosSection = () => {
                     </button>
 
                     <div className="imprimir-turnos-section">
+                        <button
+                            className="btn-agregar"
+                            onClick={handleImprimirTurnos}
+                            disabled={isLoading || !fechaParaImprimir}
+                        >
+                            Imprimir Turnos
+                        </button>
                         <div className="fecha-selector">
                             <label htmlFor="fechaImprimir">Fecha para imprimir:</label>
                             <input
@@ -473,13 +480,6 @@ const ProfTurnosSection = () => {
                                 className="input-fecha"
                             />
                         </div>
-                        <button
-                            className="btn-agregar"
-                            onClick={handleImprimirTurnos}
-                            disabled={isLoading || !fechaParaImprimir}
-                        >
-                            IMPRIMIR TURNOS
-                        </button>
                     </div>
                 </div>
                 <div className="btns-derecha">
