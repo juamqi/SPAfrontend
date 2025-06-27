@@ -451,10 +451,10 @@ const ModalReserva = ({
             </button>
           </div>
           {error && (
-            <div className="error-mensaje">
-              {error}
-              <button onClick={() => setError(null)}>Cerrar</button>
-            </div>
+          <div className="error-mensaje">
+            {error}
+            <button onClick={() => setError(null)}>Cerrar</button>
+          </div>
           )}
           <div className="modal-body">
             {/* Imagen y resumen */}

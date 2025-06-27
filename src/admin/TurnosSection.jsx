@@ -105,6 +105,59 @@ const TurnosSection = () => {
         setTurnosFiltrados(filteredData);
     };
 
+    // Función para verificar si una hora ya pasó para el día actual
+    const horaYaPaso = (fecha, hora) => {
+        // Crear fechas usando el formato local para evitar problemas de zona horaria
+        const [año, mes, dia] = fecha.split('-').map(Number);
+        const fechaSeleccionada = new Date(año, mes - 1, dia); // mes es 0-indexado
+        const fechaHoy = new Date();
+        fechaHoy.setHours(0, 0, 0, 0); // Normalizar a medianoche
+        
+        // Verificar si la fecha es hoy
+        const fechaHoyNormalizada = new Date(fechaHoy.getFullYear(), fechaHoy.getMonth(), fechaHoy.getDate());
+        const esHoy = fechaSeleccionada.getTime() === fechaHoyNormalizada.getTime();
+        
+        if (!esHoy) {
+            return false; // Si no es hoy, la hora no ha pasado
+        }
+        
+        // Si es hoy, comparar las horas con la hora actual real
+        const [horaSeleccionada, minutosSeleccionados] = hora.split(':').map(Number);
+        const fechaActual = new Date(); // Usar la fecha actual sin modificar
+        const horaActual = fechaActual.getHours();
+        const minutosActuales = fechaActual.getMinutes();
+        
+        // Convertir a minutos para comparar más fácilmente
+        const minutosSeleccionadosTotal = horaSeleccionada * 60 + minutosSeleccionados;
+        const minutosActualesTotal = horaActual * 60 + minutosActuales;
+        
+        return minutosSeleccionadosTotal <= minutosActualesTotal;
+    };
+
+    // Función para obtener las horas disponibles según la fecha seleccionada
+    const getHorasDisponiblesParaFecha = (fecha) => {
+        if (!fecha) return horasDisponibles;
+        
+        // Crear fechas usando el formato local para evitar problemas de zona horaria
+        const [año, mes, dia] = fecha.split('-').map(Number);
+        const fechaSeleccionada = new Date(año, mes - 1, dia);
+        const fechaHoy = new Date();
+        
+        // Normalizar fechas para comparación
+        const fechaSeleccionadaNormalizada = new Date(fechaSeleccionada.getFullYear(), fechaSeleccionada.getMonth(), fechaSeleccionada.getDate());
+        const fechaHoyNormalizada = new Date(fechaHoy.getFullYear(), fechaHoy.getMonth(), fechaHoy.getDate());
+        
+        // Si la fecha es hoy, filtrar las horas que ya pasaron
+        const esHoy = fechaSeleccionadaNormalizada.getTime() === fechaHoyNormalizada.getTime();
+        
+        if (esHoy) {
+            return horasDisponibles.filter(hora => !horaYaPaso(fecha, hora));
+        }
+        
+        // Si es una fecha futura, mostrar todas las horas
+        return horasDisponibles;
+    };
+
     const handleAgregar = () => {
         setModo("crear");
         const fechaHoy = new Date().toISOString().substring(0, 10); // Formato YYYY-MM-DD
@@ -183,7 +236,7 @@ const TurnosSection = () => {
                     type: 'success',
                     title: 'Turno cancelado',
                     message: 'El turno ha sido cancelado correctamente.',
-                     
+
                 });
 
                 await fetchTurnos();
@@ -197,7 +250,7 @@ const TurnosSection = () => {
                     type: 'error',
                     title: 'Error al cancelar',
                     message: `No se pudo cancelar el turno: ${error.message}`,
-                      
+
                 });
             } finally {
                 setIsLoading(false);
@@ -228,16 +281,25 @@ const TurnosSection = () => {
             throw new Error("El formato de fecha no es válido. Utilice YYYY-MM-DD");
         }
 
-        // NUEVA VALIDACIÓN: Verificar que la fecha no sea anterior a hoy
-        const fechaSeleccionada = new Date(formulario.fecha);
+        // VALIDACIÓN MEJORADA: Verificar fecha y hora
+        const [año, mes, dia] = formulario.fecha.split('-').map(Number);
+        const fechaSeleccionada = new Date(año, mes - 1, dia); // mes es 0-indexado
         const fechaHoy = new Date();
+        
+        // Normalizar fechas para comparación (sin problemas de zona horaria)
+        const fechaSeleccionadaNormalizada = new Date(fechaSeleccionada.getFullYear(), fechaSeleccionada.getMonth(), fechaSeleccionada.getDate());
+        const fechaHoyNormalizada = new Date(fechaHoy.getFullYear(), fechaHoy.getMonth(), fechaHoy.getDate());
 
-        // Establecer la hora a 00:00:00 para comparar solo las fechas
-        fechaHoy.setHours(0, 0, 0, 0);
-        fechaSeleccionada.setHours(0, 0, 0, 0);
-
-        if (fechaSeleccionada < fechaHoy) {
+        // Si la fecha es anterior a hoy, bloquear completamente
+        if (fechaSeleccionadaNormalizada < fechaHoyNormalizada) {
             throw new Error("No se puede agendar un turno en una fecha que ya pasó");
+        }
+
+        // Si la fecha es hoy, validar que la hora no haya pasado
+        if (fechaSeleccionadaNormalizada.getTime() === fechaHoyNormalizada.getTime()) {
+            if (horaYaPaso(formulario.fecha, formulario.hora)) {
+                throw new Error("No se puede agendar un turno en una hora que ya pasó");
+            }
         }
 
         // Validar formato de hora
@@ -312,9 +374,21 @@ const TurnosSection = () => {
                     type: 'success',
                     title: "Éxito",
                     message: "Turno creado correctamente",
-                     
+
                 });
-                imprimirComprobanteTurno(formulario);
+
+                const datosParaImprimir = {
+                    cliente_nombre: formulario.cliente_nombre,
+                    profesional_nombre: formulario.profesional_nombre,
+                    servicio: formulario.servicio,
+                    fecha: formulario.fecha,
+                    hora: formulario.hora,
+                    precio: formulario.precio,
+                    comentarios: formulario.comentarios
+                };
+
+                console.log("Datos preparados para impresión:", datosParaImprimir);
+                imprimirComprobanteTurno(datosParaImprimir);
             } else {
                 // Editar turno existente
                 const id = parseInt(formulario.id, 10);
@@ -344,7 +418,7 @@ const TurnosSection = () => {
                     type: 'success',
                     title: "Éxito",
                     message: "Turno actualizado correctamente",
-                     
+
                 });
             }
 
@@ -362,7 +436,7 @@ const TurnosSection = () => {
                 type: 'error',
                 title: "Error",
                 message: `Error al guardar el turno: ${error.message}`,
-                 
+
             });
         } finally {
             setIsLoading(false);
@@ -375,7 +449,7 @@ const TurnosSection = () => {
             categoria: categoriaId,
             servicio: "", // Resetear servicio al cambiar categoría
             servicio_id: "", // ← Ya tienes esto, perfecto
-            profesional_id: "", 
+            profesional_id: "",
             profesional_nombre: ""
         });
         setServicioIdSeleccionado(null);
@@ -492,7 +566,7 @@ const TurnosSection = () => {
             type: 'info',
             title: "Generando reporte",
             message: "Generando reporte de turnos...",
-             
+
         });
     };
 
@@ -510,7 +584,7 @@ const TurnosSection = () => {
         }
     };
 
-        const imprimirComprobanteTurno = (formulario) => {
+    const imprimirComprobanteTurno = (formulario) => {
         const ventanaImpresion = window.open('', '_blank');
         const fechaActual = new Date().toLocaleDateString('es-AR');
         const horaActual = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
@@ -589,7 +663,7 @@ const TurnosSection = () => {
                     <div class="seccion">
                         <h3>Datos del Turno</h3>
                         <div class="info-item"><span class="info-label">Cliente:</span><span class="info-value">${formulario.cliente_nombre}</span></div>
-                        <div class="info-item"><span class="info-label">Profesional:</span><span class="info-value">${formulario.profesional_nombre || formulario.profesional}</span></div>
+                        <div class="info-item"><span class="info-label">Profesional:</span><span class="info-value">${formulario.profesional_nombre}</span></div>
                         <div class="info-item"><span class="info-label">Servicio:</span><span class="info-value">${formulario.servicio}</span></div>
                         <div class="info-item"><span class="info-label">Fecha:</span><span class="info-value">${formulario.fecha}</span></div>
                         <div class="info-item"><span class="info-label">Hora:</span><span class="info-value">${formulario.hora}</span></div>
@@ -729,7 +803,9 @@ const TurnosSection = () => {
                         id="fecha"
                         type="date"
                         value={formulario.fecha}
-                        onChange={e => setFormulario({ ...formulario, fecha: e.target.value })}
+                        onChange={e => {
+                            setFormulario({ ...formulario, fecha: e.target.value, hora: "" });
+                        }}
                         disabled={isLoading}
                         required
                     />
@@ -745,7 +821,7 @@ const TurnosSection = () => {
                         required
                         className="border p-2 rounded w-full mb-4">
                         <option value="">Seleccione una hora</option>
-                        {horasDisponibles.map((hora) => (
+                        {getHorasDisponiblesParaFecha(formulario.fecha).map((hora) => (
                             <option key={hora} value={hora}>{hora}</option>
                         ))}
                     </select>

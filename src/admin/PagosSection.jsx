@@ -78,25 +78,83 @@ const PagosSection = () => {
         fetchProfesionales();
     }, []);
 
+    // Función para formatear fecha para input
+    const formatearFechaParaInput = (fecha) => {
+        if (!fecha) return "";
+        // Si la fecha ya está en formato YYYY-MM-DD, la devolvemos tal como está
+        if (typeof fecha === 'string' && fecha.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return fecha;
+        }
+        // Si es un objeto Date, la convertimos
+        if (fecha instanceof Date) {
+            return fecha.toISOString().split('T')[0];
+        }
+        return fecha;
+    };
+
+    // Función para ajustar fecha sumando un día (para compensar zona horaria)
+    const ajustarFechaParaServidor = (fechaString) => {
+        if (!fechaString) return fechaString;
+        
+        const fecha = new Date(fechaString + 'T00:00:00');
+        fecha.setDate(fecha.getDate() + 1);
+        
+        const year = fecha.getFullYear();
+        const month = String(fecha.getMonth() + 1).padStart(2, '0');
+        const day = String(fecha.getDate()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}`;
+    };
+
     // Función para aplicar filtros usando el backend cuando hay fechas
     const aplicarFiltros = async () => {
         let pagosFiltradosTemp = [];
 
         // Si hay filtro de fechas, usar el endpoint del backend
         if (filtros.fechaInicio && filtros.fechaFin) {
+            // Validación de formato antes de enviar
+            const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!fechaRegex.test(filtros.fechaInicio) || !fechaRegex.test(filtros.fechaFin)) {
+                console.error('Formato de fecha inválido:', {
+                    fechaInicio: filtros.fechaInicio,
+                    fechaFin: filtros.fechaFin
+                });
+                setError('Formato de fecha inválido');
+                return;
+            }
+
+            // Validar que fechaInicio no sea mayor que fechaFin
+            if (filtros.fechaInicio > filtros.fechaFin) {
+                setError('La fecha de inicio no puede ser mayor que la fecha de fin');
+                return;
+            }
+
             try {
                 setIsLoading(true);
-                const response = await fetch(
-                    `https://spabackend-production-e093.up.railway.app/api/pagosAdm/fechas?fechaInicio=${filtros.fechaInicio}&fechaFin=${filtros.fechaFin}`
-                );
+                setError(null);
+                
+                // Ajustar fechas sumando un día para compensar zona horaria
+                const fechaInicioAjustada = ajustarFechaParaServidor(filtros.fechaInicio);
+                const fechaFinAjustada = ajustarFechaParaServidor(filtros.fechaFin);
+                
+                const url = `https://spabackend-production-e093.up.railway.app/api/pagosAdm/fechas?fechaInicio=${fechaInicioAjustada}&fechaFin=${fechaFinAjustada}`;
+                console.log('Fechas originales:', filtros.fechaInicio, '-', filtros.fechaFin);
+                console.log('Fechas ajustadas:', fechaInicioAjustada, '-', fechaFinAjustada);
+                console.log('URL de fetch:', url);
+                
+                const response = await fetch(url);
                 if (response.ok) {
                     pagosFiltradosTemp = await response.json();
                 } else {
+                    const errorData = await response.text();
+                    console.error('Error del servidor:', errorData);
+                    setError('Error al filtrar por fechas');
                     pagosFiltradosTemp = [...pagos];
                 }
                 setIsLoading(false);
             } catch (error) {
                 console.error("Error al filtrar por fechas:", error);
+                setError('Error de conexión al filtrar por fechas');
                 pagosFiltradosTemp = [...pagos];
                 setIsLoading(false);
             }
@@ -130,6 +188,7 @@ const PagosSection = () => {
 
     // Aplicar filtros cada vez que cambien
     useEffect(() => {
+        console.log('Filtros cambiaron:', filtros); // Debug temporal
         aplicarFiltros();
     }, [filtros, pagos, servicios, profesionales]);
 
@@ -141,10 +200,23 @@ const PagosSection = () => {
             fechaInicio: "",
             fechaFin: ""
         });
+        setError(null);
     };
 
-    // Función para manejar cambios en los filtros
+    // Función para manejar cambios en los filtros - CORREGIDA
     const handleFiltroChange = (campo, valor) => {
+        console.log(`Cambiando filtro ${campo} a:`, valor); // Debug temporal
+        
+        // Validación específica para fechas
+        if (campo === 'fechaInicio' || campo === 'fechaFin') {
+            // Verificar que el formato sea correcto
+            const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (valor && !fechaRegex.test(valor)) {
+                console.error(`Formato de fecha inválido para ${campo}:`, valor);
+                return;
+            }
+        }
+        
         setFiltros(prev => ({
             ...prev,
             [campo]: valor
@@ -224,7 +296,7 @@ const PagosSection = () => {
                         <input
                             id="filtro-fecha-inicio"
                             type="date"
-                            value={filtros.fechaInicio}
+                            value={formatearFechaParaInput(filtros.fechaInicio)}
                             onChange={(e) => handleFiltroChange('fechaInicio', e.target.value)}
                             className="filtro-input"
                         />
@@ -235,7 +307,7 @@ const PagosSection = () => {
                         <input
                             id="filtro-fecha-fin"
                             type="date"
-                            value={filtros.fechaFin}
+                            value={formatearFechaParaInput(filtros.fechaFin)}
                             onChange={(e) => handleFiltroChange('fechaFin', e.target.value)}
                             className="filtro-input"
                         />
