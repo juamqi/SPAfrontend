@@ -314,7 +314,7 @@ const TurnosSection = () => {
                     message: "Turno creado correctamente",
                      
                 });
-                imprimirComprobanteTurno(formulario);
+                imprimirComprobanteTurno(datosFormateados);
             } else {
                 // Editar turno existente
                 const id = parseInt(formulario.id, 10);
@@ -589,7 +589,7 @@ const TurnosSection = () => {
                     <div class="seccion">
                         <h3>Datos del Turno</h3>
                         <div class="info-item"><span class="info-label">Cliente:</span><span class="info-value">${formulario.cliente_nombre}</span></div>
-                        <div class="info-item"><span class="info-label">Profesional:</span><span class="info-value">${formulario.profesional_nombre || formulario.profesional}</span></div>
+                        <div class="info-item"><span class="info-label">Profesional:</span><span class="info-value">${formulario.profesional_nombre}</span></div>
                         <div class="info-item"><span class="info-label">Servicio:</span><span class="info-value">${formulario.servicio}</span></div>
                         <div class="info-item"><span class="info-label">Fecha:</span><span class="info-value">${formulario.fecha}</span></div>
                         <div class="info-item"><span class="info-label">Hora:</span><span class="info-value">${formulario.hora}</span></div>
