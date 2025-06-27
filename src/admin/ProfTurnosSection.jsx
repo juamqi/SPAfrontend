@@ -3,7 +3,7 @@ import ModalForm from "./ModalForm.jsx";
 import DropdownCategorias from "./dropDownCat.jsx";
 import DropdownServicios from "./dropDownServicios.jsx";
 import DropdownClientes from "./DropdownClientes.jsx";
-import DropdownProfesionalesPorServicio from "./DropdownProfesionalesPorServicio.jsx";
+import DropdownProfesionalesPorServicio from "./DropDownProfesionalesPorServicio.jsx";
 import FilterComponent from "./FilterComponent.jsx";
 
 const ProfTurnosSection = () => {
