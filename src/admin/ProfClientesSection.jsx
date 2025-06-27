@@ -67,83 +67,37 @@ const ProfClientesSection = () => {
                 setLoading(true);
                 setError(null);
                 
-                // Si no hay profesional del contexto, no cargar nada
-                if (!profesional?.nombre) {
-                    console.log("No hay nombre de profesional en el contexto");
+                // Si no hay profesionalId del contexto, no cargar nada
+                if (!profesionalId) {
+                    console.log("No hay profesionalId en el contexto");
                     setClientes([]);
                     setClientesOriginales([]);
                     return;
                 }
 
-                console.log("Cargando clientes para profesional:", profesional.nombre);
+                console.log("Cargando clientes para profesional ID:", profesionalId);
 
-                // 1. Obtener todos los turnos del endpoint de turnos admin
-                const turnosResponse = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
-                if (!turnosResponse.ok) throw new Error("Error al obtener los turnos");
-                
-                const todosTurnos = await turnosResponse.json();
-                console.log("Total de turnos obtenidos:", todosTurnos.length);
-                console.log("Ejemplo de turno:", todosTurnos[0]);
-                
-                // 2. Filtrar turnos del profesional actual por NOMBRE
-                const turnosDelProfesional = todosTurnos.filter(turno => {
-                    const coincide = turno.profesional === profesional.nombre;
-                    if (coincide) {
-                        console.log(`✓ Turno ${turno.id} del profesional - Cliente: ${turno.cliente}`);
-                    }
-                    return coincide;
-                });
-
-                console.log("Turnos del profesional encontrados:", turnosDelProfesional.length);
-                
-                // 3. Extraer nombres únicos de clientes de esos turnos
-                const nombresClientesUnicos = [...new Set(
-                    turnosDelProfesional
-                        .map(turno => turno.cliente)
-                        .filter(nombre => nombre && nombre.trim() !== '')
-                )];
-                
-                console.log("Nombres de clientes únicos extraídos:", nombresClientesUnicos);
-
-                if (nombresClientesUnicos.length === 0) {
-                    console.log("No se encontraron nombres de clientes en los turnos");
-                    setClientes([]);
-                    setClientesOriginales([]);
-                    return;
+                // Usar el nuevo endpoint específico
+                const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnosAdmin/clientes/${profesionalId}`);
+                if (!response.ok) {
+                    throw new Error("Error al obtener los clientes del profesional");
                 }
-
-                // 4. Obtener todos los clientes del endpoint de admin
-                const clientesResponse = await fetch("https://spabackend-production-e093.up.railway.app/api/clientesAdm");
-                if (!clientesResponse.ok) throw new Error("Error al obtener los clientes");
-
-                const todosLosClientes = await clientesResponse.json();
-                console.log("Total de clientes en BD:", todosLosClientes.length);
                 
-                // 5. Filtrar clientes que coincidan por nombre completo
-                const clientesDelProfesional = todosLosClientes.filter(cliente => {
-                    const nombreCompleto = `${cliente.nombre} ${cliente.apellido}`.trim();
-                    const tieneturno = nombresClientesUnicos.includes(nombreCompleto);
-                    
-                    if (tieneturno) {
-                        console.log(`✓ Cliente ${cliente.id_cliente || cliente.id} (${nombreCompleto}) tiene turnos con este profesional`);
-                    }
-                    
-                    return tieneturno;
-                }).map(cliente => ({
+                const clientesDelProfesional = await response.json();
+                console.log("Clientes obtenidos del backend:", clientesDelProfesional.length);
+
+                // Normalizar los datos
+                const clientesNormalizados = clientesDelProfesional.map(cliente => ({
                     ...cliente,
-                    id: cliente.id_cliente || cliente.id, // Normalizar el ID
-                    nombreCompleto: `${cliente.nombre} ${cliente.apellido}`.trim()
+                    id: cliente.id || cliente.id_cliente
                 }));
 
-                console.log("Clientes finales del profesional:", clientesDelProfesional.length);
-
-                // 6. Guardar los resultados
-                setClientes(clientesDelProfesional);
-                setClientesOriginales(clientesDelProfesional);
+                setClientes(clientesNormalizados);
+                setClientesOriginales(clientesNormalizados);
                 
                 // Debug final
-                clientesDelProfesional.forEach(cliente => {
-                    console.log(`Cliente final: ID=${cliente.id}, Nombre=${cliente.nombreCompleto}`);
+                clientesNormalizados.forEach(cliente => {
+                    console.log(`Cliente: ID=${cliente.id}, Nombre=${cliente.nombre} ${cliente.apellido}`);
                 });
                 
             } catch (error) {
@@ -155,44 +109,28 @@ const ProfClientesSection = () => {
         };
 
         // Solo ejecutar si hay profesional en el contexto
-        if (profesional?.nombre) {
+        if (profesional?.id_profesional) {
             fetchClientesDelProfesional();
         }
-    }, [profesional]);
+    }, [profesionalId, profesional]);
 
     // Función para obtener el historial de turnos del cliente CON ESTE PROFESIONAL
     const fetchHistorialCliente = async (clienteId) => {
         try {
             setLoadingHistorial(true);
             
-            console.log("Cargando historial para cliente ID:", clienteId, "profesional:", profesional.nombre);
+            console.log("Cargando historial para cliente ID:", clienteId, "profesional ID:", profesionalId);
             
-            // Obtener el cliente para saber su nombre completo
-            const clienteSeleccionadoNombre = clienteSeleccionado?.nombreCompleto || 
-                                            `${clienteSeleccionado?.nombre} ${clienteSeleccionado?.apellido}`.trim();
+            // Usar el nuevo endpoint específico para historial
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnosAdmin/historial/${clienteId}/${profesionalId}`);
+            if (!response.ok) {
+                throw new Error("Error al obtener el historial");
+            }
             
-            console.log("Nombre completo del cliente:", clienteSeleccionadoNombre);
+            const historial = await response.json();
+            console.log("Historial obtenido del backend:", historial.length);
             
-            // Obtener todos los turnos y filtrar por nombre del cliente y profesional
-            const response = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
-            if (!response.ok) throw new Error("Error al obtener los turnos");
-            
-            const todosTurnos = await response.json();
-            
-            // Filtrar turnos del cliente con este profesional específico (por nombres)
-            const turnosFiltrados = todosTurnos.filter(turno => {
-                const esCliente = turno.cliente === clienteSeleccionadoNombre;
-                const esProfesional = turno.profesional === profesional.nombre;
-                
-                if (esCliente && esProfesional) {
-                    console.log(`✓ Turno encontrado: ${turno.id} - ${turno.fecha} ${turno.hora} - ${turno.estado}`);
-                }
-                
-                return esCliente && esProfesional;
-            });
-
-            console.log("Turnos del cliente con este profesional:", turnosFiltrados.length);
-            setHistorialTurnos(turnosFiltrados);
+            setHistorialTurnos(historial);
             
         } catch (error) {
             console.error("Error al cargar el historial:", error);
