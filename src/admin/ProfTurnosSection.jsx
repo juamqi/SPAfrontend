@@ -86,7 +86,9 @@ const ProfTurnosSection = () => {
             setIsLoading(true);
             setError(null);
             
-            // Obtener todos los turnos y filtrar por profesional y estado
+            console.log("ID del profesional logueado:", profesionalId);
+            
+            // Obtener todos los turnos y filtrar estrictamente por ID del profesional
             const response = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
             if (!response.ok) {
                 throw new Error("Error al obtener los turnos");
@@ -95,18 +97,35 @@ const ProfTurnosSection = () => {
             const todosTurnos = await response.json();
             console.log("Todos los turnos recibidos:", todosTurnos.length);
             
-            // Filtrar turnos del profesional actual
-            const turnosDelProfesional = todosTurnos.filter(turno => 
-                Number(turno.id_profesional) === Number(profesionalId) ||
-                turno.profesional === profesional?.nombre
-            );
+            // Filtrar ÚNICAMENTE por ID del profesional (conversión estricta)
+            const turnosDelProfesional = todosTurnos.filter(turno => {
+                const turnoIdProfesional = Number(turno.id_profesional);
+                const profesionalLogueadoId = Number(profesionalId);
+                
+                const coincide = turnoIdProfesional === profesionalLogueadoId;
+                
+                // Log para debug
+                if (coincide) {
+                    console.log(`✓ Turno ${turno.id} coincide - ID profesional: ${turnoIdProfesional}`);
+                }
+                
+                return coincide;
+            });
 
-            console.log("Turnos del profesional:", turnosDelProfesional.length);
+            console.log(`Turnos filtrados por ID profesional ${profesionalId}:`, turnosDelProfesional.length);
 
             // Filtrar solo estados permitidos: Solicitado o Cancelado
-            const turnosEstadosPermitidos = turnosDelProfesional.filter(turno => 
-                turno.estado === 'Solicitado' || turno.estado === 'Cancelado'
-            );
+            const turnosEstadosPermitidos = turnosDelProfesional.filter(turno => {
+                const estadoValido = turno.estado === 'Solicitado' || turno.estado === 'Cancelado';
+                
+                if (estadoValido) {
+                    console.log(`✓ Turno ${turno.id} tiene estado válido: ${turno.estado}`);
+                } else {
+                    console.log(`✗ Turno ${turno.id} estado no válido: ${turno.estado}`);
+                }
+                
+                return estadoValido;
+            });
 
             console.log("Turnos con estados permitidos:", turnosEstadosPermitidos.length);
 
@@ -122,12 +141,21 @@ const ProfTurnosSection = () => {
                 const fechaTurno = turno.fecha?.split('T')[0];
                 const esFechaValida = fechaTurno >= fechaHoyStr;
                 
-                console.log(`Turno ID ${turno.id}: fecha=${fechaTurno}, válida=${esFechaValida}`);
+                if (esFechaValida) {
+                    console.log(`✓ Turno ${turno.id} fecha válida: ${fechaTurno} >= ${fechaHoyStr}`);
+                } else {
+                    console.log(`✗ Turno ${turno.id} fecha no válida: ${fechaTurno} < ${fechaHoyStr}`);
+                }
                 
                 return esFechaValida;
             });
 
-            console.log("Turnos desde hoy en adelante:", turnosDesdehoy.length);
+            console.log("Turnos finales desde hoy en adelante:", turnosDesdehoy.length);
+
+            // Mostrar resumen de turnos finales
+            turnosDesdehoy.forEach(turno => {
+                console.log(`Turno final: ID=${turno.id}, Fecha=${turno.fecha}, Cliente=${turno.cliente}, Estado=${turno.estado}, ID_Profesional=${turno.id_profesional}`);
+            });
 
             // Ordenar por fecha ascendente (más próximos primero)
             turnosDesdehoy.sort((a, b) => {
