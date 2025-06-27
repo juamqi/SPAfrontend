@@ -386,8 +386,6 @@ const ProfTurnosSection = () => {
                         <tr>
                             <th>Hora</th>
                             <th>Cliente</th>
-                            <th>Precio</th>
-                            <th>Comentarios</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -395,8 +393,6 @@ const ProfTurnosSection = () => {
                             <tr>
                                 <td>${turno.hora}</td>
                                 <td>${turno.cliente}</td>
-                                <td>$${turno.precio}</td>
-                                <td>${turno.comentarios || '-'}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -513,7 +509,6 @@ const ProfTurnosSection = () => {
                                 <th>Hora</th>
                                 <th>Cliente</th>
                                 <th>Servicio</th>
-                                <th>Precio</th>
                                 <th>Estado</th>
                             </tr>
                         </thead>
@@ -539,7 +534,6 @@ const ProfTurnosSection = () => {
                                         <td>{t.hora}</td>
                                         <td>{t.cliente}</td>
                                         <td>{t.servicio}</td>
-                                        <td>${t.precio}</td>
                                         <td className={getEstadoClass(t.estado)}>{t.estado}</td>
                                     </tr>
                                 ))
