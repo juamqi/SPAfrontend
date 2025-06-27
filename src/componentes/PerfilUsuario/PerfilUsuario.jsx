@@ -36,7 +36,7 @@ const PerfilUsuario = () => {
   const { showPopup } = usePopupContext();
 
   useEffect(() => {
-    if (loadingAuth) return;  // todavía estamos cargando el contexto
+    if (loadingAuth) return;
 
     console.log("Estado del contexto auth:", { user, loadingAuth });
 
@@ -52,14 +52,53 @@ const PerfilUsuario = () => {
       return setErrorTurnos('No se encontró ID de cliente');
     }
 
-    // Hay usuario con ID: traemos sus turnos
     console.log("Cargando turnos para el cliente ID:", user.id_cliente);
     cargarTurnos();
-    // Y cargamos sus datos completos
     cargarDatosUsuario();
   }, [loadingAuth, user]);
 
-  // Función para cargar los turnos del usuario
+  // Función corregida para ajustar zona horaria (+3 horas para Argentina)
+  const ajustarZonaHoraria = (fechaHoraString) => {
+    if (!fechaHoraString) return { fecha: '', hora: '' };
+
+    // Crear fecha UTC y sumar 3 horas para Argentina
+    const fechaUTC = new Date(fechaHoraString);
+    const fechaArgentina = new Date(fechaUTC.getTime() + (3 * 60 * 60 * 1000));
+
+    const fechaAjustada = `${fechaArgentina.getFullYear()}-${String(fechaArgentina.getMonth() + 1).padStart(2, '0')}-${String(fechaArgentina.getDate()).padStart(2, '0')}`;
+    const horaAjustada = `${String(fechaArgentina.getHours()).padStart(2, '0')}:${String(fechaArgentina.getMinutes()).padStart(2, '0')}`;
+
+    return { fecha: fechaAjustada, hora: horaAjustada };
+  };
+
+  // Función para verificar si faltan menos de 48 horas para un turno
+  const esDentroDeVentana48Horas = (fechaHoraTurno) => {
+    if (!fechaHoraTurno) return false;
+
+    const fechaUTC = new Date(fechaHoraTurno);
+    const fechaArgentinaTurno = new Date(fechaUTC.getTime() + (3 * 60 * 60 * 1000));
+    const ahora = new Date();
+    
+    const diferenciaMs = fechaArgentinaTurno.getTime() - ahora.getTime();
+    const diferencia48Horas = 48 * 60 * 60 * 1000; // 48 horas en millisegundos
+    
+    console.log('Verificando ventana 48hs:', {
+      fechaTurno: fechaArgentinaTurno,
+      ahora: ahora,
+      diferenciaHoras: diferenciaMs / (60 * 60 * 1000),
+      esDentroVentana: diferenciaMs < diferencia48Horas
+    });
+    
+    return diferenciaMs < diferencia48Horas;
+  };
+
+  // Función para calcular la fecha mínima de reprogramación (48hs desde ahora)
+  const getFechaMinReprogramacion = () => {
+    const ahora = new Date();
+    const fecha48HorasDesdeAhora = new Date(ahora.getTime() + (48 * 60 * 60 * 1000));
+    return fecha48HorasDesdeAhora;
+  };
+
   const cargarTurnos = () => {
     if (!user || !user.id_cliente) return;
 
@@ -73,19 +112,13 @@ const PerfilUsuario = () => {
       .then(res => {
         console.log("Turnos recibidos:", res.data);
 
-        // Filtrar para mostrar solo los turnos no cancelados
         const turnosActivos = res.data.filter(turno => turno.estado !== 'Cancelado');
         console.log("Turnos activos filtrados:", turnosActivos);
 
-        // Aquí procesamos las fechas para el calendario
         const turnosProcesados = turnosActivos.map(turno => {
-          // Creamos una copia para no mutar el objeto original
           const turnoProcesado = { ...turno };
-
-          // Guardamos también la fecha/hora ajustada como propiedad adicional para el calendario
           const { fecha } = ajustarZonaHoraria(turno.fecha_hora);
           turnoProcesado.fechaAjustada = fecha;
-
           return turnoProcesado;
         });
 
@@ -102,22 +135,6 @@ const PerfilUsuario = () => {
       });
   };
 
-  //funcion para corregir zona horaria en el read
-  const ajustarZonaHoraria = (fechaHoraString) => {
-    if (!fechaHoraString) return { fecha: '', hora: '' };
-
-    // Crear un objeto Date a partir del string de fecha y hora
-    const fecha = new Date(fechaHoraString);
-
-
-    // Formatear localmente -- Esto me dejo ciego -- firma el principe mestizo
-    const fechaAjustada = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
-    const horaAjustada = `${String(fecha.getHours()).padStart(2, '0')}:${String(fecha.getMinutes()).padStart(2, '0')}`;
-
-    return { fecha: fechaAjustada, hora: horaAjustada };
-  };
-
-  // Nueva función para cargar los datos completos del usuario
   const cargarDatosUsuario = () => {
     if (!user || !user.id_cliente) return;
 
@@ -143,7 +160,6 @@ const PerfilUsuario = () => {
         console.error('Detalles del error:', err.response?.data || 'No hay detalles adicionales');
         setErrorUserData('No se pudieron cargar los datos del usuario: ' + (err.response?.data?.error || err.message));
 
-        // Si fallamos, al menos intentamos usar lo que teníamos del contexto auth
         if (user && user.nombre) {
           setDatosUsuario(prev => ({
             ...prev,
@@ -156,11 +172,9 @@ const PerfilUsuario = () => {
       });
   };
 
-  // Handlers
   const handleDateChange = date => setFechaSeleccionada(date);
+  
   const handleTurnoClick = (fecha) => {
-    // Encontrar todos los turnos para la fecha seleccionada
-    // Necesitamos comparar con las fechas ajustadas
     const turnosDelDia = fechasConTurno.filter(t => {
       const { fecha: fechaAjustada } = ajustarZonaHoraria(t.fecha_hora);
       return fechaAjustada === fecha;
@@ -168,15 +182,14 @@ const PerfilUsuario = () => {
 
     if (turnosDelDia.length > 0) {
       if (turnosDelDia.length === 1) {
-        // Si hay un solo turno, mostrarlo directamente
         setTurnoSeleccionado(turnosDelDia[0]);
       } else {
-        // Si hay múltiples turnos, mostrar popup de selección
         setMultiplesTurnos(turnosDelDia);
         setMostrarSeleccionTurnos(true);
       }
     }
   };
+
   const SeleccionTurnosPopup = ({ turnos, onSeleccionar, onCancelar }) => {
     return (
       <div className="modal-turno">
@@ -210,7 +223,6 @@ const PerfilUsuario = () => {
     );
   };
 
-  // Add these new handler functions
   const handleSeleccionarTurno = (turno) => {
     setTurnoSeleccionado(turno);
     setMostrarSeleccionTurnos(false);
@@ -220,8 +232,25 @@ const PerfilUsuario = () => {
     setMostrarSeleccionTurnos(false);
   };
 
-  // Manejadores para la reprogramación de turno
+  // Validar si se puede reprogramar (no dentro de ventana de 48hs)
+  const puedeReprogramar = (turno) => {
+    return !esDentroDeVentana48Horas(turno.fecha_hora);
+  };
+
+  // Validar si se puede cancelar (no dentro de ventana de 48hs)
+  const puedeCancelar = (turno) => {
+    return !esDentroDeVentana48Horas(turno.fecha_hora);
+  };
+
   const handleReprogramar = () => {
+    if (!puedeReprogramar(turnoSeleccionado)) {
+      showPopup({
+        type: 'warning',
+        title: 'No se puede reprogramar',
+        message: 'No puedes reprogramar un turno con menos de 48 horas de anticipación.',
+      });
+      return;
+    }
     setMostrarReprogramacion(true);
   };
 
@@ -229,6 +258,19 @@ const PerfilUsuario = () => {
     if (!turnoSeleccionado || !turnoSeleccionado.id_turno) {
       console.error('No hay turno seleccionado para reprogramar');
       setMostrarReprogramacion(false);
+      return;
+    }
+
+    // Validar que la nueva fecha no sea dentro de las próximas 48 horas
+    const fechaMinima = getFechaMinReprogramacion();
+    const nuevaFecha = new Date(nuevosDatos.fechaCompleta);
+    
+    if (nuevaFecha < fechaMinima) {
+      showPopup({
+        type: 'warning',
+        title: 'Fecha no válida',
+        message: 'No puedes reprogramar para una fecha dentro de las próximas 48 horas.',
+      });
       return;
     }
 
@@ -240,18 +282,14 @@ const PerfilUsuario = () => {
       .then(response => {
         console.log('Reprogramación exitosa:', response.data);
 
-        // Actualizamos el estado local de manera más segura
         cargarTurnos();
 
-        // Mostrar mensaje de éxito
         showPopup({
           type: 'success',
           title: 'Turno reprogramado',
           message: 'El turno ha sido reprogramado exitosamente',
-           
         });
 
-        // Cerrar el popup y la ventana de detalles
         setMostrarReprogramacion(false);
         setTurnoSeleccionado(null);
       })
@@ -263,9 +301,7 @@ const PerfilUsuario = () => {
           type: 'error',
           title: 'Error al reprogramar',
           message: errorMsg,
-            
         });
-
       })
       .finally(() => {
         setReprogramando(false);
@@ -276,8 +312,15 @@ const PerfilUsuario = () => {
     setMostrarReprogramacion(false);
   };
 
-  // Manejadores para la cancelación de turno
   const handleCancelar = () => {
+    if (!puedeCancelar(turnoSeleccionado)) {
+      showPopup({
+        type: 'warning',
+        title: 'No se puede cancelar',
+        message: 'No puedes cancelar un turno con menos de 48 horas de anticipación.',
+      });
+      return;
+    }
     setMostrarConfirmacion(true);
   };
 
@@ -294,20 +337,16 @@ const PerfilUsuario = () => {
       .then(response => {
         console.log('Respuesta exitosa:', response.data);
 
-        // Quitar el turno cancelado del estado local de fechasConTurno
         setFechasConTurno(prevTurnos =>
           prevTurnos.filter(turno => turno.id_turno !== turnoSeleccionado.id_turno)
         );
 
-        // Mostrar mensaje de éxito
         showPopup({
           type: 'success',
           title: 'Turno cancelado',
           message: 'El turno ha sido cancelado exitosamente',
-           
         });
 
-        // Cerrar el popup y la ventana de detalles
         setMostrarConfirmacion(false);
         setTurnoSeleccionado(null);
       })
@@ -317,7 +356,6 @@ const PerfilUsuario = () => {
           type: 'error',
           title: 'Error al cancelar',
           message: 'No se pudo cancelar el turno. Intente nuevamente más tarde.',
-           
         });
       })
       .finally(() => {
@@ -331,11 +369,9 @@ const PerfilUsuario = () => {
 
   const handleEditar = () => setEditando(v => !v);
 
-  // Actualizar el manejador para guardar los datos del usuario
   const handleGuardar = () => {
     if (!user || !user.id_cliente) return;
 
-    // Deshabilitar la edición mientras guardamos
     setEditando(false);
 
     axios.put(`https://spabackend-production-e093.up.railway.app/api/clientes/actualizar/${user.id_cliente}`, datosUsuario)
@@ -345,7 +381,6 @@ const PerfilUsuario = () => {
           type: 'success',
           title: 'Datos actualizados',
           message: 'Los datos se han actualizado correctamente.',
-           
         });
       })
       .catch(error => {
@@ -354,7 +389,6 @@ const PerfilUsuario = () => {
           type: 'error',
           title: 'Error al actualizar',
           message: 'No se pudieron actualizar los datos. Intente nuevamente.',
-           
         });
       });
   };
@@ -364,7 +398,6 @@ const PerfilUsuario = () => {
     setDatosUsuario(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🚦 Renders según estado
   if (loadingAuth) {
     return <div className="perfil-container">Cargando información de usuario…</div>;
   }
@@ -372,6 +405,10 @@ const PerfilUsuario = () => {
   if (errorTurnos && !user) {
     return <div className="perfil-container">{errorTurnos}</div>;
   }
+
+  // Calcular si los botones deben estar deshabilitados
+  const reprogramarDeshabilitado = turnoSeleccionado ? !puedeReprogramar(turnoSeleccionado) : false;
+  const cancelarDeshabilitado = turnoSeleccionado ? !puedeCancelar(turnoSeleccionado) : false;
 
   return (
     <div className="perfil-container">
@@ -381,12 +418,27 @@ const PerfilUsuario = () => {
             <h3>Detalle del turno</h3>
             {(() => {
               const { fecha, hora } = ajustarZonaHoraria(turnoSeleccionado.fecha_hora);
+              const dentroVentana48hs = esDentroDeVentana48Horas(turnoSeleccionado.fecha_hora);
+              
               return (
                 <>
                   <p><strong>Fecha:</strong> {fecha}</p>
                   <p><strong>Hora:</strong> {hora}</p>
                   <p><strong>Servicio:</strong> {turnoSeleccionado.nombre_servicio || 'N/A'}</p>
                   <p><strong>Profesional:</strong> {turnoSeleccionado.nombre_profesional || 'N/A'}</p>
+                  
+                  {dentroVentana48hs && (
+                    <div style={{
+                      backgroundColor: '#fff3cd',
+                      color: '#856404',
+                      padding: '10px',
+                      borderRadius: '5px',
+                      margin: '10px 0',
+                      border: '1px solid #ffeaa7'
+                    }}>
+                      <strong>⚠️ Aviso:</strong> Este turno no se puede modificar o cancelar porque faltan menos de 48 horas.
+                    </div>
+                  )}
                 </>
               );
             })()}
@@ -394,16 +446,16 @@ const PerfilUsuario = () => {
               <Boton
                 text={reprogramando ? "Reprogramando..." : "Reprogramar"}
                 onClick={handleReprogramar}
-                backgroundColor="#1565c0"
-                hoverBackgroundColor="#0d47a1"
-                disabled={reprogramando}
+                backgroundColor={reprogramarDeshabilitado ? "#cccccc" : "#1565c0"}
+                hoverBackgroundColor={reprogramarDeshabilitado ? "#cccccc" : "#0d47a1"}
+                disabled={reprogramando || reprogramarDeshabilitado}
               />
               <Boton
                 text={cancelando ? "Cancelando..." : "Cancelar"}
                 onClick={handleCancelar}
-                backgroundColor="#c62828"
-                hoverBackgroundColor="#b71c1c"
-                disabled={cancelando}
+                backgroundColor={cancelarDeshabilitado ? "#cccccc" : "#c62828"}
+                hoverBackgroundColor={cancelarDeshabilitado ? "#cccccc" : "#b71c1c"}
+                disabled={cancelando || cancelarDeshabilitado}
               />
               <button className="boton-cerrar" onClick={() => setTurnoSeleccionado(null)}>Cerrar</button>
             </div>
@@ -411,7 +463,6 @@ const PerfilUsuario = () => {
         </div>
       )}
 
-      {/* Popup de confirmación para la cancelación */}
       {mostrarConfirmacion && turnoSeleccionado && (() => {
         const { fecha, hora } = ajustarZonaHoraria(turnoSeleccionado.fecha_hora);
         return (
@@ -431,7 +482,6 @@ const PerfilUsuario = () => {
         );
       })()}
 
-      {/* Popup de reprogramación */}
       {mostrarReprogramacion && turnoSeleccionado && (
         <PopupReprogramacion
           titulo="Reprogramar Turno"
@@ -445,8 +495,10 @@ const PerfilUsuario = () => {
           hoverColorConfirmar="#0d47a1"
           colorCancelar="#757575"
           hoverColorCancelar="#616161"
+          fechaMinima={getFechaMinReprogramacion()} // Pasar la fecha mínima al popup
         />
       )}
+
       {mostrarSeleccionTurnos && (
         <SeleccionTurnosPopup
           turnos={multiplesTurnos}
