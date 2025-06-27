@@ -4,6 +4,7 @@ import TurnosSection from "./TurnosSection.jsx";
 import ServiciosSection from "./ServiciosSection.jsx";
 import ProfesionalesSection from "./ProfesionalesSection.jsx"; 
 import ClientesSection from "./ClientesSection.jsx";
+import PagosSection from "./PagosSection.jsx";
 
 const AppAdmin = () => {
   const [activeSection, setActiveSection] = useState("turnos");
@@ -42,19 +43,25 @@ const AppAdmin = () => {
               Clientes
             </a>
           </li>
+          <li className={activeSection === "pagos" ? "active" : ""}>
+            <a href="#pagos" onClick={() => scrollToSection("pagos")}>
+              Pagos
+            </a>
+          </li>
         </ul>
       </header>
 
       <div className="admin-content">
         <div className="admin-header-simple">
           <h1>Panel de Administración</h1>
-          <p>Gestión de turnos, servicios y profesionales</p>
+          <p>Gestión de turnos, servicios, profesionales y pagos</p>
         </div>
 
         <TurnosSection />
         <ServiciosSection />
         <ProfesionalesSection />
         <ClientesSection />
+        <PagosSection />
       </div>
     </div>
   );
