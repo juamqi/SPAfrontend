@@ -95,21 +95,22 @@ const ProfTurnosSection = () => {
                 t.profesional === profesional?.nombre
             );
 
-            // Obtener fecha de ayer para compensar posible diferencia de zona horaria
-            const ayer = new Date();
-            ayer.setDate(ayer.getDate() - 1);
-            const fechaAyer = ayer.toISOString().split('T')[0]; // YYYY-MM-DD
+            // Obtener fecha de hace 2 días para asegurar que incluya todos los turnos actuales
+            // (compensando la diferencia de zona horaria UTC vs Buenos Aires)
+            const fechaFiltro = new Date();
+            fechaFiltro.setDate(fechaFiltro.getDate() - 2);
+            const fechaFiltroStr = fechaFiltro.toISOString().split('T')[0]; // YYYY-MM-DD
 
-            console.log("Fecha de ayer para filtrar:", fechaAyer);
+            console.log("Fecha límite para filtrar:", fechaFiltroStr);
             console.log("Total turnos del profesional:", turnosDelProfesional.length);
 
-            // Filtrar turnos desde ayer en adelante (para compensar zona horaria)
+            // Filtrar turnos desde hace 2 días en adelante (para asegurar que incluya hoy)
             const turnosFiltradosPorFecha = turnosDelProfesional.filter(turno => {
                 const fechaTurno = turno.fecha.split('T')[0]; // Extraer solo la fecha YYYY-MM-DD
-                return fechaTurno >= fechaAyer;
+                return fechaTurno >= fechaFiltroStr;
             });
 
-            console.log("Turnos desde ayer en adelante:", turnosFiltradosPorFecha.length);
+            console.log("Turnos filtrados por fecha:", turnosFiltradosPorFecha.length);
 
             // Ordenar por fecha ascendente (más antiguos primero)
             turnosFiltradosPorFecha.sort((a, b) => {
@@ -435,6 +436,20 @@ const ProfTurnosSection = () => {
             <h2>Mis Turnos</h2>
 
             {error && <div className="error-message">{error}</div>}
+
+            {/* Mostrar información del servicio del profesional */}
+            {servicioDelProfesional && (
+                <div className="servicio-info-card" style={{
+                    background: '#f8f9fa',
+                    padding: '10px',
+                    borderRadius: '5px',
+                    marginBottom: '20px',
+                    border: '1px solid #dee2e6'
+                }}>
+                    <strong>Mi servicio:</strong> {servicioDelProfesional.nombre} - <span style={{color: '#28a745', fontWeight: 'bold'}}>${servicioDelProfesional.precio}</span>
+                </div>
+            )}
+
             <div className="turnos-header-flex">
                 <div className="btns-izquierda">
                     <button className="btn-agregar" onClick={handleAgregar} disabled={isLoading || !servicioDelProfesional}>
@@ -535,6 +550,18 @@ const ProfTurnosSection = () => {
                 title="Agregar Turno"
                 onSave={handleGuardar}
             >
+                {/* Mostrar información del servicio */}
+                {servicioDelProfesional && (
+                    <div className="form-group" style={{
+                        background: '#e8f5e8',
+                        padding: '10px',
+                        borderRadius: '5px',
+                        marginBottom: '15px'
+                    }}>
+                        <strong>Servicio:</strong> {servicioDelProfesional.nombre}<br/>
+                        <strong>Precio:</strong> <span style={{color: '#28a745', fontWeight: 'bold'}}>${servicioDelProfesional.precio}</span>
+                    </div>
+                )}
 
                 <div className="form-group">
                     <label htmlFor="fecha">Fecha:</label>
