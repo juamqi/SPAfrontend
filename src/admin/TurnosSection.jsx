@@ -105,6 +105,48 @@ const TurnosSection = () => {
         setTurnosFiltrados(filteredData);
     };
 
+    // Función para verificar si una hora ya pasó para el día actual
+    const horaYaPaso = (fecha, hora) => {
+        const fechaSeleccionada = new Date(fecha);
+        const fechaHoy = new Date();
+        
+        // Verificar si la fecha es hoy
+        const esHoy = fechaSeleccionada.toDateString() === fechaHoy.toDateString();
+        
+        if (!esHoy) {
+            return false; // Si no es hoy, la hora no ha pasado
+        }
+        
+        // Si es hoy, comparar las horas
+        const [horaSeleccionada, minutosSeleccionados] = hora.split(':').map(Number);
+        const horaActual = fechaHoy.getHours();
+        const minutosActuales = fechaHoy.getMinutes();
+        
+        // Convertir a minutos para comparar más fácilmente
+        const minutosSeleccionadosTotal = horaSeleccionada * 60 + minutosSeleccionados;
+        const minutosActualesTotal = horaActual * 60 + minutosActuales;
+        
+        return minutosSeleccionadosTotal <= minutosActualesTotal;
+    };
+
+    // Función para obtener las horas disponibles según la fecha seleccionada
+    const getHorasDisponiblesParaFecha = (fecha) => {
+        if (!fecha) return horasDisponibles;
+        
+        const fechaSeleccionada = new Date(fecha);
+        const fechaHoy = new Date();
+        
+        // Si la fecha es hoy, filtrar las horas que ya pasaron
+        const esHoy = fechaSeleccionada.toDateString() === fechaHoy.toDateString();
+        
+        if (esHoy) {
+            return horasDisponibles.filter(hora => !horaYaPaso(fecha, hora));
+        }
+        
+        // Si es una fecha futura, mostrar todas las horas
+        return horasDisponibles;
+    };
+
     const handleAgregar = () => {
         setModo("crear");
         const fechaHoy = new Date().toISOString().substring(0, 10); // Formato YYYY-MM-DD
@@ -228,7 +270,7 @@ const TurnosSection = () => {
             throw new Error("El formato de fecha no es válido. Utilice YYYY-MM-DD");
         }
 
-        // NUEVA VALIDACIÓN: Verificar que la fecha no sea anterior a hoy
+        // VALIDACIÓN MEJORADA: Verificar fecha y hora
         const fechaSeleccionada = new Date(formulario.fecha);
         const fechaHoy = new Date();
 
@@ -236,8 +278,16 @@ const TurnosSection = () => {
         fechaHoy.setHours(0, 0, 0, 0);
         fechaSeleccionada.setHours(0, 0, 0, 0);
 
+        // Si la fecha es anterior a hoy, bloquear completamente
         if (fechaSeleccionada < fechaHoy) {
             throw new Error("No se puede agendar un turno en una fecha que ya pasó");
+        }
+
+        // Si la fecha es hoy, validar que la hora no haya pasado
+        if (fechaSeleccionada.getTime() === fechaHoy.getTime()) {
+            if (horaYaPaso(formulario.fecha, formulario.hora)) {
+                throw new Error("No se puede agendar un turno en una hora que ya pasó");
+            }
         }
 
         // Validar formato de hora
@@ -741,7 +791,9 @@ const TurnosSection = () => {
                         id="fecha"
                         type="date"
                         value={formulario.fecha}
-                        onChange={e => setFormulario({ ...formulario, fecha: e.target.value })}
+                        onChange={e => {
+                            setFormulario({ ...formulario, fecha: e.target.value, hora: "" });
+                        }}
                         disabled={isLoading}
                         required
                     />
@@ -757,7 +809,7 @@ const TurnosSection = () => {
                         required
                         className="border p-2 rounded w-full mb-4">
                         <option value="">Seleccione una hora</option>
-                        {horasDisponibles.map((hora) => (
+                        {getHorasDisponiblesParaFecha(formulario.fecha).map((hora) => (
                             <option key={hora} value={hora}>{hora}</option>
                         ))}
                     </select>
