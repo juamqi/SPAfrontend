@@ -90,12 +90,38 @@ const ProfTurnosSection = () => {
             }
             const data = await response.json();
 
-            // Filtrar turnos del profesional logueado por NOMBRE
-            const turnosDelProfesional = data.filter(t =>
-                t.profesional === profesional?.nombre
-            );
+            console.log("Todos los turnos obtenidos:", data.length);
+            console.log("Profesional logueado - Nombre:", profesional?.nombre, "ID:", profesional?.id_profesional);
 
-            console.log("Turnos filtrados del profesional:", turnosDelProfesional);
+            // Filtrar turnos del profesional logueado
+            const turnosDelProfesional = data.filter(t => {
+                const coincidePorNombre = t.profesional === profesional?.nombre;
+                const coincidePorId = Number(t.id_profesional) === Number(profesional?.id_profesional);
+                
+                console.log(`Turno ID ${t.id}: profesional="${t.profesional}", id_profesional=${t.id_profesional}, coincide=${coincidePorNombre || coincidePorId}`);
+                
+                return coincidePorNombre || coincidePorId;
+            });
+
+            console.log("Turnos filtrados del profesional:", turnosDelProfesional.length);
+            
+            // Mostrar algunos ejemplos de turnos para debug
+            if (turnosDelProfesional.length > 0) {
+                console.log("Primeros 3 turnos:", turnosDelProfesional.slice(0, 3).map(t => ({
+                    id: t.id,
+                    fecha: t.fecha,
+                    cliente: t.cliente,
+                    profesional: t.profesional
+                })));
+            }
+
+            // Ordenar por fecha (más recientes primero)
+            turnosDelProfesional.sort((a, b) => {
+                const fechaA = new Date(a.fecha);
+                const fechaB = new Date(b.fecha);
+                return fechaB - fechaA; // Orden descendente
+            });
+
             setTurnos(turnosDelProfesional);
             setTurnosFiltrados(turnosDelProfesional);
         } catch (error) {
