@@ -8,10 +8,8 @@ const ProfPagosSection = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     
-    // Estados para filtros (sin profesional ya que está implícito)
-    const [servicios, setServicios] = useState([]);
+    // Estados para filtros (solo fechas, sin servicio ni profesional)
     const [filtros, setFiltros] = useState({
-        servicio: "",
         fechaInicio: "",
         fechaFin: ""
     });
@@ -50,31 +48,35 @@ const ProfPagosSection = () => {
     };
 
     // Función para obtener servicios para el filtro
-    const fetchServicios = async () => {
-        try {
-            const response = await fetch("https://spabackend-production-e093.up.railway.app/api/serviciosAdm");
-            if (!response.ok) throw new Error("Error al obtener servicios");
-            const data = await response.json();
-            setServicios(data);
-        } catch (error) {
-            console.error("Error al cargar servicios:", error);
-        }
-    };
+    // REMOVIDA - No es necesaria
 
     // Cargar datos cuando se identifica al profesional
     useEffect(() => {
         if (profesional?.id_profesional) {
             fetchPagosProfesional();
-            fetchServicios();
         }
     }, [profesional]);
 
-    // Función para sumar un día a la fecha (solo para compensar zona horaria)
+    // Función para sumar días a la fecha (para compensar zona horaria)
     const sumarUnDia = (fechaString) => {
         if (!fechaString) return fechaString;
         
-        const fecha = new Date(fechaString + 'T12:00:00'); // Usar mediodía para evitar problemas de zona horaria
+        const fecha = new Date(fechaString + 'T12:00:00');
         fecha.setDate(fecha.getDate() + 1);
+        
+        const year = fecha.getFullYear();
+        const month = String(fecha.getMonth() + 1).padStart(2, '0');
+        const day = String(fecha.getDate()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}`;
+    };
+
+    // Función para sumar 2 días a la fecha fin (para incluir el día completo)
+    const sumarDosDias = (fechaString) => {
+        if (!fechaString) return fechaString;
+        
+        const fecha = new Date(fechaString + 'T12:00:00');
+        fecha.setDate(fecha.getDate() + 2);
         
         const year = fecha.getFullYear();
         const month = String(fecha.getMonth() + 1).padStart(2, '0');
@@ -87,26 +89,16 @@ const ProfPagosSection = () => {
     const aplicarFiltros = () => {
         let pagosFiltradosTemp = [...pagos];
 
-        // Filtro por servicio
-        if (filtros.servicio) {
-            const servicioSeleccionado = servicios.find(s => s.id == filtros.servicio);
-            if (servicioSeleccionado) {
-                pagosFiltradosTemp = pagosFiltradosTemp.filter(pago => 
-                    pago.servicio === servicioSeleccionado.nombre
-                );
-            }
-        }
-
-        // Filtro por rango de fechas - sumando 1 día a ambas fechas para compensar zona horaria
+        // Filtro por rango de fechas - ajuste diferenciado para inicio y fin
         if (filtros.fechaInicio && filtros.fechaFin) {
             const fechaInicioAjustada = sumarUnDia(filtros.fechaInicio);
-            const fechaFinAjustada = sumarUnDia(filtros.fechaFin);
+            const fechaFinAjustada = sumarDosDias(filtros.fechaFin);
             
             console.log('Fechas originales:', filtros.fechaInicio, '-', filtros.fechaFin);
             console.log('Fechas ajustadas:', fechaInicioAjustada, '-', fechaFinAjustada);
             
             pagosFiltradosTemp = pagosFiltradosTemp.filter(pago => {
-                return pago.fecha_pago >= fechaInicioAjustada && pago.fecha_pago <= fechaFinAjustada;
+                return pago.fecha_pago >= fechaInicioAjustada && pago.fecha_pago < fechaFinAjustada;
             });
         } else if (filtros.fechaInicio) {
             const fechaInicioAjustada = sumarUnDia(filtros.fechaInicio);
@@ -114,9 +106,9 @@ const ProfPagosSection = () => {
                 return pago.fecha_pago >= fechaInicioAjustada;
             });
         } else if (filtros.fechaFin) {
-            const fechaFinAjustada = sumarUnDia(filtros.fechaFin);
+            const fechaFinAjustada = sumarDosDias(filtros.fechaFin);
             pagosFiltradosTemp = pagosFiltradosTemp.filter(pago => {
-                return pago.fecha_pago <= fechaFinAjustada;
+                return pago.fecha_pago < fechaFinAjustada;
             });
         }
 
@@ -126,12 +118,11 @@ const ProfPagosSection = () => {
     // Aplicar filtros cada vez que cambien
     useEffect(() => {
         aplicarFiltros();
-    }, [filtros, pagos, servicios]);
+    }, [filtros, pagos]);
 
     // Función para limpiar filtros
     const limpiarFiltros = () => {
         setFiltros({
-            servicio: "",
             fechaInicio: "",
             fechaFin: ""
         });
@@ -190,23 +181,6 @@ const ProfPagosSection = () => {
             {/* Filtros */}
             <div className="filtros-pagos">
                 <div className="filtros-row">
-                    <div className="filtro-grupo">
-                        <label htmlFor="filtro-servicio">Servicio:</label>
-                        <select
-                            id="filtro-servicio"
-                            value={filtros.servicio}
-                            onChange={(e) => handleFiltroChange('servicio', e.target.value)}
-                            className="filtro-select"
-                        >
-                            <option value="">Todos mis servicios</option>
-                            {servicios.map(servicio => (
-                                <option key={servicio.id} value={servicio.id}>
-                                    {servicio.nombre}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
                     <div className="filtro-grupo">
                         <label htmlFor="filtro-fecha-inicio">Fecha inicio:</label>
                         <input
