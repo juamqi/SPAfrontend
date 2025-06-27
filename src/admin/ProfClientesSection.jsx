@@ -77,14 +77,20 @@ const ProfClientesSection = () => {
 
                 console.log("Cargando clientes para profesional ID:", profesionalId);
 
-                // Usar el nuevo endpoint específico
+                // Usar el nuevo endpoint específico que creamos
                 const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnosAdmin/clientes/${profesionalId}`);
                 if (!response.ok) {
-                    throw new Error("Error al obtener los clientes del profesional");
+                    if (response.status === 404) {
+                        console.log("Endpoint no encontrado, usando método alternativo...");
+                        // Si el endpoint no existe, usar método anterior como fallback
+                        await fetchClientesMetodoAnterior();
+                        return;
+                    }
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
                 }
                 
                 const clientesDelProfesional = await response.json();
-                console.log("Clientes obtenidos del backend:", clientesDelProfesional.length);
+                console.log("Clientes obtenidos del nuevo endpoint:", clientesDelProfesional.length);
 
                 // Normalizar los datos
                 const clientesNormalizados = clientesDelProfesional.map(cliente => ({
@@ -108,6 +114,84 @@ const ProfClientesSection = () => {
             }
         };
 
+        // Método anterior como fallback si el nuevo endpoint no funciona
+        const fetchClientesMetodoAnterior = async () => {
+            console.log("Usando método anterior para obtener clientes...");
+            
+            // Obtener todos los turnos del endpoint de turnos admin
+            const turnosResponse = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
+            if (!turnosResponse.ok) throw new Error("Error al obtener los turnos");
+            
+            const todosTurnos = await turnosResponse.json();
+            console.log("Total de turnos obtenidos:", todosTurnos.length);
+            
+            // Filtrar turnos del profesional actual por NOMBRE
+            const turnosDelProfesional = todosTurnos.filter(turno => {
+                const coincide = turno.profesional === profesional.nombre;
+                if (coincide) {
+                    console.log(`✓ Turno ${turno.id} del profesional - Cliente: "${turno.cliente}"`);
+                }
+                return coincide;
+            });
+
+            console.log("Turnos del profesional encontrados:", turnosDelProfesional.length);
+            
+            // Extraer nombres únicos de clientes de esos turnos
+            const nombresClientesUnicos = [...new Set(
+                turnosDelProfesional
+                    .map(turno => turno.cliente)
+                    .filter(nombre => nombre && nombre.trim() !== '')
+            )];
+            
+            console.log("Nombres de clientes únicos extraídos:", nombresClientesUnicos);
+
+            // Obtener todos los clientes del endpoint de admin
+            const clientesResponse = await fetch("https://spabackend-production-e093.up.railway.app/api/clientesAdm");
+            if (!clientesResponse.ok) throw new Error("Error al obtener los clientes");
+
+            const todosLosClientes = await clientesResponse.json();
+            console.log("Total de clientes en BD:", todosLosClientes.length);
+            
+            // Probar múltiples formas de coincidencia
+            const clientesDelProfesional = todosLosClientes.filter(cliente => {
+                const nombreCompleto = `${cliente.nombre} ${cliente.apellido}`.trim();
+                const soloNombre = cliente.nombre.trim();
+                
+                // Probar diferentes formas de coincidencia
+                const coincideCompleto = nombresClientesUnicos.includes(nombreCompleto);
+                const coincideSoloNombre = nombresClientesUnicos.includes(soloNombre);
+                const coincideInvertido = nombresClientesUnicos.includes(`${cliente.apellido} ${cliente.nombre}`.trim());
+                
+                const tieneturno = coincideCompleto || coincideSoloNombre || coincideInvertido;
+                
+                if (tieneturno) {
+                    console.log(`✓ Cliente ${cliente.id_cliente || cliente.id} coincide:`, {
+                        nombreBD: nombreCompleto,
+                        soloNombre: soloNombre,
+                        nombresTurnos: nombresClientesUnicos,
+                        coincideCompleto,
+                        coincideSoloNombre,
+                        coincideInvertido
+                    });
+                } else {
+                    console.log(`✗ Cliente ${cliente.id_cliente || cliente.id} NO coincide:`, {
+                        nombreBD: nombreCompleto,
+                        nombresTurnos: nombresClientesUnicos
+                    });
+                }
+                
+                return tieneturno;
+            }).map(cliente => ({
+                ...cliente,
+                id: cliente.id_cliente || cliente.id
+            }));
+
+            console.log("Clientes finales del profesional:", clientesDelProfesional.length);
+
+            setClientes(clientesDelProfesional);
+            setClientesOriginales(clientesDelProfesional);
+        };
+
         // Solo ejecutar si hay profesional en el contexto
         if (profesional?.id_profesional) {
             fetchClientesDelProfesional();
@@ -121,16 +205,38 @@ const ProfClientesSection = () => {
             
             console.log("Cargando historial para cliente ID:", clienteId, "profesional ID:", profesionalId);
             
-            // Usar el nuevo endpoint específico para historial
+            // Intentar usar el nuevo endpoint específico
             const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnosAdmin/historial/${clienteId}/${profesionalId}`);
-            if (!response.ok) {
-                throw new Error("Error al obtener el historial");
+            
+            if (response.ok) {
+                const historial = await response.json();
+                console.log("Historial obtenido del nuevo endpoint:", historial.length);
+                setHistorialTurnos(historial);
+            } else if (response.status === 404) {
+                console.log("Nuevo endpoint no disponible, usando método anterior...");
+                
+                // Fallback al método anterior
+                const turnosResponse = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
+                if (!turnosResponse.ok) throw new Error("Error al obtener los turnos");
+                
+                const todosTurnos = await turnosResponse.json();
+                
+                // Filtrar turnos del cliente con este profesional específico (por nombres)
+                const clienteSeleccionadoNombre = `${clienteSeleccionado?.nombre} ${clienteSeleccionado?.apellido}`.trim();
+                
+                const turnosFiltrados = todosTurnos.filter(turno => {
+                    const esCliente = turno.cliente === clienteSeleccionadoNombre || 
+                                    turno.cliente === clienteSeleccionado?.nombre;
+                    const esProfesional = turno.profesional === profesional.nombre;
+                    
+                    return esCliente && esProfesional;
+                });
+
+                console.log("Historial obtenido con método anterior:", turnosFiltrados.length);
+                setHistorialTurnos(turnosFiltrados);
+            } else {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
-            
-            const historial = await response.json();
-            console.log("Historial obtenido del backend:", historial.length);
-            
-            setHistorialTurnos(historial);
             
         } catch (error) {
             console.error("Error al cargar el historial:", error);
