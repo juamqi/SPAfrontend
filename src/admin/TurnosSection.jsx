@@ -183,7 +183,7 @@ const TurnosSection = () => {
                     type: 'success',
                     title: 'Turno cancelado',
                     message: 'El turno ha sido cancelado correctamente.',
-                     
+
                 });
 
                 await fetchTurnos();
@@ -197,7 +197,7 @@ const TurnosSection = () => {
                     type: 'error',
                     title: 'Error al cancelar',
                     message: `No se pudo cancelar el turno: ${error.message}`,
-                      
+
                 });
             } finally {
                 setIsLoading(false);
@@ -312,9 +312,21 @@ const TurnosSection = () => {
                     type: 'success',
                     title: "Éxito",
                     message: "Turno creado correctamente",
-                     
+
                 });
-                imprimirComprobanteTurno(formulario);
+
+                const datosParaImprimir = {
+                    cliente_nombre: formulario.cliente_nombre,
+                    profesional_nombre: formulario.profesional_nombre,
+                    servicio: formulario.servicio,
+                    fecha: formulario.fecha,
+                    hora: formulario.hora,
+                    precio: formulario.precio,
+                    comentarios: formulario.comentarios
+                };
+
+                console.log("Datos preparados para impresión:", datosParaImprimir);
+                imprimirComprobanteTurno(datosParaImprimir);
             } else {
                 // Editar turno existente
                 const id = parseInt(formulario.id, 10);
@@ -344,7 +356,7 @@ const TurnosSection = () => {
                     type: 'success',
                     title: "Éxito",
                     message: "Turno actualizado correctamente",
-                     
+
                 });
             }
 
@@ -362,7 +374,7 @@ const TurnosSection = () => {
                 type: 'error',
                 title: "Error",
                 message: `Error al guardar el turno: ${error.message}`,
-                 
+
             });
         } finally {
             setIsLoading(false);
@@ -375,7 +387,7 @@ const TurnosSection = () => {
             categoria: categoriaId,
             servicio: "", // Resetear servicio al cambiar categoría
             servicio_id: "", // ← Ya tienes esto, perfecto
-            profesional_id: "", 
+            profesional_id: "",
             profesional_nombre: ""
         });
         setServicioIdSeleccionado(null);
@@ -492,7 +504,7 @@ const TurnosSection = () => {
             type: 'info',
             title: "Generando reporte",
             message: "Generando reporte de turnos...",
-             
+
         });
     };
 
@@ -510,7 +522,7 @@ const TurnosSection = () => {
         }
     };
 
-        const imprimirComprobanteTurno = (formulario) => {
+    const imprimirComprobanteTurno = (formulario) => {
         const ventanaImpresion = window.open('', '_blank');
         const fechaActual = new Date().toLocaleDateString('es-AR');
         const horaActual = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
