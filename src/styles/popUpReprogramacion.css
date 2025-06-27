@@ -1,10 +1,10 @@
 :root {
   --font-body: 'Quicksand', sans-serif;
-  --color-primary: #4A3D3D;    /* Marrón oscuro */
-  --color-secondary: #F4F8E6;  /* Verde claro */
+  --color-pri: #4A3D3D;    /* Marrón oscuro */
+  --color-sec: #F4F8E6;  /* Verde claro */
   --color-white: #FFFFFF;      /* Blanco */
   --color-accent: #FF6161;     /* Rojo coral */
-  --color-neutral: #D8DEC3;    /* Verde grisáceo */
+  --color-neu: #D8DEC3;    /* Verde grisáceo */
 }
 
 .popup-reprogramacion {
@@ -24,7 +24,7 @@
 }
 
 .popup-reprogramacion .popup-contenido {
-  background: var(--color-secondary);
+  background: var(--color-sec);
   padding: 20px;
   border-radius: 12px;
   width: 100%;
@@ -32,8 +32,8 @@
   max-height: calc(100vh - 100px); 
   overflow-y: auto; 
   box-shadow: 0 10px 25px rgba(74, 61, 61, 0.3);
-  border: 2px solid var(--color-neutral);
-  color: var(--color-primary);
+  border: 2px solid var(--color-neu);
+  color: var(--color-pri);
 }
 
 .popup-reprogramacion h3 {
@@ -42,14 +42,14 @@
   color: var(--color-accent);
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 2px solid var(--color-neutral);
+  border-bottom: 2px solid var(--color-neu);
 }
 
 .popup-reprogramacion p {
   margin-bottom: 12px;
   line-height: 1.5;
   font-family: 'Montserrat', sans-serif;
-  color: var(--color-primary);
+  color: var(--color-pri);
 }
 
 .turno-actual {
@@ -63,7 +63,7 @@
 
 .turno-actual p {
   margin: 0;
-  color: var(--color-primary);
+  color: var(--color-pri);
 }
 
 .reprogramar-seleccion {
@@ -83,20 +83,20 @@
 .reprogramar-seleccion h4 {
   font-family: 'Montserrat', sans-serif;
   font-weight: 500;
-  color: var(--color-primary);
+  color: var(--color-pri);
   margin-bottom: 10px;
 }
 
 .mini-calendario {
   width: 100%;
   background-color: var(--color-white) !important;
-  border: 2px solid var(--color-neutral) !important;
+  border: 2px solid var(--color-neu) !important;
   border-radius: 8px !important;
   font-family: 'Montserrat', sans-serif !important;
 }
 
 .mini-calendario .react-calendar__navigation {
-  background-color: var(--color-primary) !important;
+  background-color: var(--color-pri) !important;
   border-radius: 8px 8px 0 0 !important;
   padding: 5px !important;
 }
@@ -111,21 +111,21 @@
 }
 
 .mini-calendario .react-calendar__month-view__weekdays {
-  background-color: var(--color-neutral) !important;
+  background-color: var(--color-neu) !important;
 }
 
 .mini-calendario .react-calendar__month-view__weekdays__weekday {
-  color: var(--color-primary) !important;
+  color: var(--color-pri) !important;
 }
 
 .mini-calendario .react-calendar__tile {
-  color: var(--color-primary) !important;
+  color: var(--color-pri) !important;
   padding: 6px 4px !important;
   background-color: var(--color-white) !important;
 }
 
 .mini-calendario .react-calendar__tile:hover {
-  background-color: var(--color-secondary) !important;
+  background-color: var(--color-sec) !important;
 }
 
 .mini-calendario .react-calendar__tile--active {
@@ -142,31 +142,31 @@
   padding: 5px;
   border-radius: 8px;
   background-color: var(--color-white);
-  border: 2px solid var(--color-neutral);
+  border: 2px solid var(--color-neu);
 }
 
 .hora-item {
-  background-color: var(--color-secondary);
+  background-color: var(--color-sec);
   padding: 8px 4px;
   border-radius: 6px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: var(--color-primary);
+  color: var(--color-pri);
   font-family: 'Montserrat', sans-serif;
   font-size: 13px;
-  border: 1px solid var(--color-neutral);
+  border: 1px solid var(--color-neu);
 }
 
 .hora-item:hover {
-  background-color: var(--color-neutral);
+  background-color: var(--color-neu);
   transform: translateY(-2px);
   border-color: var(--color-accent);
 }
 
 .hora-seleccionada {
   background-color: var(--color-accent) !important;
-  border: 2px solid var(--color-primary) !important;
+  border: 2px solid var(--color-pri) !important;
   color: var(--color-white) !important;
   font-weight: 600;
   box-shadow: 0 4px 8px rgba(255, 97, 97, 0.3);
@@ -183,7 +183,7 @@
 .popup-botones button {
   padding: 10px 20px;
   border-radius: 6px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -203,12 +203,12 @@
 
 .popup-botones .btn-secondary {
   background-color: var(--color-white);
-  color: var(--color-primary);
-  border-color: var(--color-neutral);
+  color: var(--color-pri);
+  border-color: var(--color-neu);
 }
 
 .popup-botones .btn-secondary:hover {
-  background-color: var(--color-neutral);
+  background-color: var(--color-neu);
 }
 
 @media screen and (max-width: 768px) {

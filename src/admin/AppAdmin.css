@@ -347,18 +347,18 @@ h2 {
 }
 
 .btn-eliminar {
-  background-color: var(--color-primary);
-  color: var(--color-text-light);
+  background-color: var(--color-primary) !important;
+  color: var(--color-text-light) !important;
 }
 
 .btn-eliminar:hover {
-  background-color: #5a3a22;
+  background-color: #5a3a22 !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(75, 56, 50, 0.15);
 }
 
 .btn-eliminar:disabled {
-  background-color: #8d6e55;
+  background-color: #8d6e55 !important;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
