@@ -633,28 +633,152 @@ const CarritoCompleto = forwardRef(({ isOpen, onClose, idCliente, forceRefresh }
         handleInputChange('expiryDate', formatted);
     };
 
+    const obtenerDatosCliente = async (idCliente) => {
+    try {
+        console.log(`🔍 Obteniendo datos del cliente ID: ${idCliente}`);
+        
+        const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/clientes/${idCliente}`);
+        
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const cliente = await response.json();
+        console.log('📋 Datos del cliente recibidos:', cliente);
+        
+        return cliente;
+    } catch (error) {
+        console.error('❌ Error al obtener datos del cliente:', error);
+        throw error;
+    }
+};
+
+// ✅ MODIFICACIÓN en handleSubmit - Reemplaza la sección del email
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
             console.log('Procesando pago...', formData);
             console.log('Carrito seleccionado:', carritoSeleccionado);
-            console.log('Fecha seleccionada para el pago:', fechaSeleccionada);
-            console.log('Descuento aplicado:', aplicaDescuento);
+            console.log('ID Cliente:', idCliente);
 
-            // Aquí simularías el procesamiento del pago
-            // Por ahora, asumimos que el pago fue exitoso
+            // ✅ NUEVO: Obtener datos del cliente antes de procesar el pago
+            const datosCliente = await obtenerDatosCliente(idCliente);
+            console.log('Cliente obtenido:', datosCliente);
 
-            // Actualizar el estado del carrito a "Pagado"
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/carritos/${carritoSeleccionado.id}/turnos`);
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    setServicios([]);
+                    return;
+                }
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+
+            const turnos = await response.json();
+            console.log('📋 Turnos recibidos del backend:', turnos);
+
+            // Formatear servicios
+            const serviciosFormateados = turnos.map(turno => {
+                console.log(`\n🔄 Procesando turno ${turno.id_turno}:`);
+                console.log(`   fecha_hora raw: ${turno.fecha_hora}`);
+                
+                const fechaFormateada = formatearFecha(turno.fecha_hora);
+                const horaFormateada = formatearHora(turno.fecha_hora);
+                
+                console.log(`   Fecha formateada: ${fechaFormateada}`);
+                console.log(`   Hora formateada: ${horaFormateada}`);
+                
+                return {
+                    id: turno.id_turno,
+                    tipo: turno.servicio_nombre,
+                    fecha: fechaFormateada,
+                    hora: horaFormateada,
+                    profesional: turno.profesional_nombre,
+                    precio: turno.servicio_precio || 0,
+                    duracion: turno.duracion_minutos,
+                    estado: turno.estado,
+                    comentarios: turno.comentarios
+                };
+            });
+
+            // Función para formatear email (sin cambios)
+            const formatearServiciosParaEmail = (servicios, cliente) => {
+                let texto = "=== CONFIRMACIÓN DE TURNOS ===\n\n";
+                
+                const total = servicios.reduce((sum, servicio) => sum + servicio.precio, 0);
+                
+                // ✅ NUEVO: Incluir datos del cliente en el email
+                texto += `👤 Cliente: ${cliente.nombre || 'Sin nombre'} ${cliente.apellido || ''}\n`;
+                texto += `📧 Email: ${cliente.email || 'Sin email'}\n`;
+                if (cliente.telefono) {
+                    texto += `📞 Teléfono: ${cliente.telefono}\n`;
+                }
+                texto += `🆔 ID Cliente: ${cliente.id}\n\n`;
+                
+                texto += `📅 Fecha de pago: ${new Date().toLocaleDateString('es-AR')}\n`;
+                texto += `💳 Estado del pago: PAGADO\n\n`;
+                texto += "--- DETALLE DE SERVICIOS ---\n\n";
+                
+                servicios.forEach((servicio, index) => {
+                    texto += `${index + 1}. ${servicio.tipo}\n`;
+                    texto += `   👤 Profesional: ${servicio.profesional}\n`;
+                    texto += `   📅 Fecha: ${servicio.fecha}\n`;
+                    texto += `   🕐 Hora: ${servicio.hora}\n`;
+                    texto += `   ⏱️ Duración: ${servicio.duracion} minutos\n`;
+                    texto += `   💰 Precio: $${servicio.precio.toLocaleString('es-AR')}\n`;
+                    texto += `   📝 Estado: ${servicio.estado}\n`;
+                    if (servicio.comentarios) {
+                        texto += `   💬 Comentarios: ${servicio.comentarios}\n`;
+                    }
+                    texto += "\n";
+                });
+                
+                texto += "--- RESUMEN ---\n";
+                texto += `Total de servicios: ${servicios.length}\n`;
+                texto += `Monto total: $${total.toLocaleString('es-AR')}\n\n`;
+                
+                if (aplicaDescuento) {
+                    texto += `💸 Descuento del 15% aplicado\n\n`;
+                }
+                
+                texto += "¡Gracias por confiar en nosotros!\n";
+                texto += "Para cualquier consulta o modificación, no dudes en contactarnos.";
+                
+                return texto;
+            };
+
+            // Actualizar estado del carrito
             if (carritoSeleccionado && carritoSeleccionado.id) {
                 await actualizarEstadoCarrito(carritoSeleccionado.id, 'Pagado');
                 console.log('Estado del carrito actualizado a "Pagado"');
+                
+                // ✅ MODIFICADO: Usar el email del cliente obtenido
+                let datosFormulario = {
+                    to: datosCliente.email || "email@default.com", // ✅ Usar email del cliente
+                    subject: `Confirmación de Pago - Turnos Reservados - ${datosCliente.nombre || 'Cliente'}`,
+                    text: formatearServiciosParaEmail(serviciosFormateados, datosCliente) // ✅ Pasar datos del cliente
+                }
 
-                // ✅ Mostrar mensaje de éxito SIN cerrar el modal principal aún
+                console.log('Enviando email a:', datosFormulario.to);
+                console.log('Enviando email con datos:', datosFormulario);
+
+                const email = await fetch("https://spabackend-production-e093.up.railway.app/api/email/email-send", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datosFormulario)
+                });
+
+                if (!email.ok) {
+                    throw new Error('Error al enviar el email de confirmación');
+                }
+
+                console.log('Email enviado exitosamente a:', datosCliente.email);
+
+                // Mostrar mensaje de éxito
                 setMostrarModalExito(true);
 
-                // Opcional: Recargar los carritos para actualizar la vista
-                // obtenerCarritosPorFecha();
             } else {
                 throw new Error('No se pudo identificar el carrito para actualizar');
             }
@@ -664,7 +788,9 @@ const CarritoCompleto = forwardRef(({ isOpen, onClose, idCliente, forceRefresh }
             showPopup({
                 type: 'error',
                 title: 'Error al procesar el pago',
-                message: 'Por favor, intenta nuevamente.',
+                message: error.message.includes('cliente') 
+                    ? 'No se pudieron obtener los datos del cliente. Por favor, intenta nuevamente.'
+                    : 'Por favor, intenta nuevamente.',
             });
         }
     };
