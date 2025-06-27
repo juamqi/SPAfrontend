@@ -1,33 +1,12 @@
 import React, { useEffect, useState } from "react";
 import ModalForm from "./ModalForm.jsx";
 import ClienteFilterComponent from "./ClienteFilterComponent.jsx";
+import { useProfAuth } from '../context/ProfAuthContext.jsx'; // Importar el contexto
 
-const ProfClientesSection = ({ profesionalId }) => { // Recibir profesionalId como prop
-    // Opción 1: Obtener profesionalId del localStorage/sessionStorage
-    const getProfesionalId = () => {
-        if (profesionalId) return profesionalId;
-        
-        // Intentar obtener desde localStorage
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            const user = JSON.parse(storedUser);
-            return user.id || user.profesional_id || user.id_profesional;
-        }
-        
-        // Intentar obtener desde sessionStorage
-        const sessionUser = sessionStorage.getItem('user');
-        if (sessionUser) {
-            const user = JSON.parse(sessionUser);
-            return user.id || user.profesional_id || user.id_profesional;
-        }
-        
-        // Como última opción, intentar obtener desde alguna variable global
-        // return window.currentProfessional?.id;
-        
-        return null;
-    };
+const ProfClientesSection = () => {
+    const { profesional } = useProfAuth(); // Usar el contexto
+    const profesionalId = profesional?.id_profesional; // Obtener ID del contexto
     
-    const currentProfesionalId = getProfesionalId();
     const [clientes, setClientes] = useState([]);
     const [modo, setModo] = useState("crear");
     const [mostrarModal, setMostrarModal] = useState(false);
@@ -87,22 +66,34 @@ const ProfClientesSection = ({ profesionalId }) => { // Recibir profesionalId co
             try {
                 setLoading(true);
                 
-                // Si no hay profesionalId, no cargar nada
-                if (!currentProfesionalId) {
+                // Si no hay profesionalId del contexto, no cargar nada
+                if (!profesionalId) {
+                    console.log("No hay profesionalId en el contexto");
                     setClientes([]);
                     setClientesOriginales([]);
                     return;
                 }
 
-                // Primero obtener todos los turnos del profesional
-                const turnosResponse = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnos/profesional/${currentProfesionalId}`);
-                if (!turnosResponse.ok) throw new Error("Error al obtener los turnos del profesional");
+                console.log("Cargando clientes para profesional ID:", profesionalId);
+
+                // Primero obtener todos los turnos para filtrar por profesional
+                const turnosResponse = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
+                if (!turnosResponse.ok) throw new Error("Error al obtener los turnos");
                 
-                const turnosData = await turnosResponse.json();
+                const todosTurnos = await turnosResponse.json();
+                
+                // Filtrar turnos del profesional actual
+                const turnosDelProfesional = todosTurnos.filter(turno => 
+                    Number(turno.id_profesional) === Number(profesionalId)
+                );
+
+                console.log("Turnos del profesional encontrados:", turnosDelProfesional.length);
                 
                 // Extraer IDs únicos de clientes que tienen turnos con este profesional
-                const clienteIdsUnicos = [...new Set(turnosData.map(turno => turno.id_cliente).filter(id => id))];
+                const clienteIdsUnicos = [...new Set(turnosDelProfesional.map(turno => turno.id_cliente).filter(id => id))];
                 
+                console.log("IDs de clientes únicos:", clienteIdsUnicos);
+
                 if (clienteIdsUnicos.length === 0) {
                     setClientes([]);
                     setClientesOriginales([]);
@@ -123,6 +114,8 @@ const ProfClientesSection = ({ profesionalId }) => { // Recibir profesionalId co
                     id: cliente.id || cliente.id_cliente
                 }));
 
+                console.log("Clientes del profesional filtrados:", clientesDelProfesional.length);
+
                 // Guardar tanto los originales como los actuales
                 setClientes(clientesDelProfesional);
                 setClientesOriginales(clientesDelProfesional);
@@ -135,34 +128,34 @@ const ProfClientesSection = ({ profesionalId }) => { // Recibir profesionalId co
             }
         };
 
-        fetchClientesDelProfesional();
-    }, [currentProfesionalId]); // Dependencia del profesionalId
+        // Solo ejecutar si hay profesional en el contexto
+        if (profesional?.id_profesional) {
+            fetchClientesDelProfesional();
+        }
+    }, [profesionalId, profesional]); // Dependencias del contexto
 
     // Función para obtener el historial de turnos del cliente CON ESTE PROFESIONAL
     const fetchHistorialCliente = async (clienteId) => {
         try {
             setLoadingHistorial(true);
             
-            // Modificar la URL para obtener solo los turnos del cliente con este profesional específico
-            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnos/cliente/${clienteId}/profesional/${currentProfesionalId}`);
-            if (!response.ok) {
-                // Si el endpoint específico no existe, usar el general y filtrar
-                const responseGeneral = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnos/pro/${clienteId}`);
-                if (!responseGeneral.ok) throw new Error("Error al obtener el historial");
-                
-                const dataGeneral = await responseGeneral.json();
-                // Filtrar solo los turnos con este profesional
-                const turnosFiltrados = dataGeneral.filter(turno => 
-                    turno.id_profesional === currentProfesionalId || 
-                    turno.profesional_id === currentProfesionalId
-                );
-                setHistorialTurnos(turnosFiltrados);
-                return;
-            }
+            console.log("Cargando historial para cliente:", clienteId, "profesional:", profesionalId);
+            
+            // Obtener todos los turnos y filtrar
+            const response = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
+            if (!response.ok) throw new Error("Error al obtener los turnos");
+            
+            const todosTurnos = await response.json();
+            
+            // Filtrar turnos del cliente con este profesional específico
+            const turnosFiltrados = todosTurnos.filter(turno => 
+                (Number(turno.id_cliente) === Number(clienteId)) && 
+                (Number(turno.id_profesional) === Number(profesionalId))
+            );
 
-            const data = await response.json();
-            console.log('Datos del historial filtrado:', data); // Para debug
-            setHistorialTurnos(data);
+            console.log("Turnos del cliente con este profesional:", turnosFiltrados.length);
+            setHistorialTurnos(turnosFiltrados);
+            
         } catch (error) {
             console.error("Error al cargar el historial:", error);
             setError("No se pudo cargar el historial del cliente.");
@@ -203,14 +196,14 @@ const ProfClientesSection = ({ profesionalId }) => { // Recibir profesionalId co
         }
     };
 
-    // Mostrar mensaje si no hay profesionalId
-    if (!currentProfesionalId) {
+    // Mostrar mensaje si no hay profesional en el contexto
+    if (!profesional?.id_profesional) {
         return (
             <div id="clientes">
                 <h2>Clientes</h2>
                 <div className="no-profesional">
                     <p>No se pudo identificar al profesional actual.</p>
-                    <p><small>Verifica que hayas iniciado sesión correctamente.</small></p>
+                    <p><small>Por favor, inicia sesión nuevamente.</small></p>
                 </div>
             </div>
         );
