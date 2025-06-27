@@ -75,12 +75,12 @@ const ProfTurnosSection = () => {
 
             // Obtener el nombre del profesional desde localStorage
             const nombreProfesional = profesional?.nombre;
-            
+
             console.log("Nombre del profesional logueado:", nombreProfesional);
             console.log("Todos los nombres de profesionales en turnos:", [...new Set(data.map(t => t.profesional))]);
 
             // Filtrar turnos del profesional logueado por NOMBRE
-            const turnosDelProfesional = data.filter(t => 
+            const turnosDelProfesional = data.filter(t =>
                 t.profesional === nombreProfesional
             );
 
@@ -113,7 +113,7 @@ const ProfTurnosSection = () => {
         fetchCategorias();
         fetchServicios();
         fetchTurnos();
-        
+
         // Establecer la fecha de mañana como valor por defecto
         const mañana = new Date();
         mañana.setDate(mañana.getDate() + 1);
@@ -127,14 +127,14 @@ const ProfTurnosSection = () => {
 
     // Función para obtener la fecha de mañana en formato YYYY-MM-DD
     const getFechaMañana = () => {
-        const mañana = new Date();
-        mañana.setDate(mañana.getDate() + 1);
-        return mañana.toISOString().split('T')[0];
-    };
+    const mañana = new Date();
+    mañana.setDate(mañana.getDate() + 1);
+    return mañana.toLocaleDateString('en-CA'); // YYYY-MM-DD local
+};
 
     // Función para obtener la fecha de hoy en formato YYYY-MM-DD
     const getFechaHoy = () => {
-        return new Date().toISOString().split('T')[0];
+        return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD en zona local
     };
 
     // NUEVA FUNCIONALIDAD: Agregar turno
@@ -385,18 +385,18 @@ const ProfTurnosSection = () => {
 
         // Usar el mismo filtro que en fetchTurnos - por nombre del profesional
         const nombreProfesional = profesional?.nombre;
-        
+
         const turnosDia = turnos.filter(turno => {
             const fechaTurno = turno.fecha.split('T')[0];
             const esFechaCorrecta = fechaTurno === fechaParaImprimir;
             const esEstadoCorrecto = turno.estado === 'Solicitado';
-            
+
             // Probar ambos métodos de identificación del profesional
-            const esProfesionalCorrecto = 
-                turno.profesional === nombreProfesional || 
+            const esProfesionalCorrecto =
+                turno.profesional === nombreProfesional ||
                 Number(turno.id_profesional) === Number(profesionalId) ||
                 String(turno.id_profesional) === String(profesionalId);
-            
+
             return esFechaCorrecta && esEstadoCorrecto && esProfesionalCorrecto;
         });
 
@@ -416,11 +416,11 @@ const ProfTurnosSection = () => {
 
         turnosDia.sort((a, b) => a.hora.localeCompare(b.hora));
 
-        const fechaFormateada = new Date(fechaParaImprimir + 'T12:00:00').toLocaleDateString('es-AR', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        const fechaFormateada = new Date(fechaParaImprimir + 'T12:00:00').toLocaleDateString('es-AR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
 
         const contenidoHTML = `
@@ -517,7 +517,7 @@ const ProfTurnosSection = () => {
                     <button className="btn-agregar" onClick={handleAgregar} disabled={isLoading}>
                         Agregar Turno
                     </button>
-                    
+
                     <div className="imprimir-turnos-section">
                         <div className="fecha-selector">
                             <label htmlFor="fechaImprimir">Fecha para imprimir:</label>
@@ -530,9 +530,9 @@ const ProfTurnosSection = () => {
                                 className="input-fecha"
                             />
                         </div>
-                        <button 
-                            className="btn-agregar" 
-                            onClick={handleImprimirTurnos} 
+                        <button
+                            className="btn-agregar"
+                            onClick={handleImprimirTurnos}
                             disabled={isLoading || !fechaParaImprimir}
                         >
                             IMPRIMIR TURNOS
@@ -615,13 +615,14 @@ const ProfTurnosSection = () => {
                 <div className="form-group">
                     <label htmlFor="fecha">Fecha:</label>
                     <input
-                        id="fecha"
-                        type="date"
-                        value={formulario.fecha}
-                        onChange={e => setFormulario({ ...formulario, fecha: e.target.value })}
-                        disabled={isLoading}
-                        required
-                    />
+    id="fecha"
+    type="date"
+    value={formulario.fecha}
+    onChange={e => setFormulario({ ...formulario, fecha: e.target.value })}
+    disabled={isLoading}
+    required
+    min={getFechaHoy()} // 🔒 Esto impide seleccionar días pasados, pero permite hoy
+/>
                 </div>
 
                 <div className="form-group">
