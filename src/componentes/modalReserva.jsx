@@ -453,7 +453,6 @@ const ModalReserva = ({
           {error && (
           <div className="error-mensaje">
             {error}
-            El profesional tiene ocupado el horario, intente con otro
             <button onClick={() => setError(null)}>Cerrar</button>
           </div>
           )}
