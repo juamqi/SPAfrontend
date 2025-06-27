@@ -90,40 +90,36 @@ const ProfTurnosSection = () => {
             }
             const data = await response.json();
 
-            console.log("Todos los turnos obtenidos:", data.length);
-            console.log("Profesional logueado - Nombre:", profesional?.nombre, "ID:", profesional?.id_profesional);
+            // Filtrar turnos del profesional logueado por NOMBRE
+            const turnosDelProfesional = data.filter(t =>
+                t.profesional === profesional?.nombre
+            );
 
-            // Filtrar turnos del profesional logueado
-            const turnosDelProfesional = data.filter(t => {
-                const coincidePorNombre = t.profesional === profesional?.nombre;
-                const coincidePorId = Number(t.id_profesional) === Number(profesional?.id_profesional);
-                
-                console.log(`Turno ID ${t.id}: profesional="${t.profesional}", id_profesional=${t.id_profesional}, coincide=${coincidePorNombre || coincidePorId}`);
-                
-                return coincidePorNombre || coincidePorId;
+            // Obtener fecha de ayer para compensar posible diferencia de zona horaria
+            const ayer = new Date();
+            ayer.setDate(ayer.getDate() - 1);
+            const fechaAyer = ayer.toISOString().split('T')[0]; // YYYY-MM-DD
+
+            console.log("Fecha de ayer para filtrar:", fechaAyer);
+            console.log("Total turnos del profesional:", turnosDelProfesional.length);
+
+            // Filtrar turnos desde ayer en adelante (para compensar zona horaria)
+            const turnosFiltradosPorFecha = turnosDelProfesional.filter(turno => {
+                const fechaTurno = turno.fecha.split('T')[0]; // Extraer solo la fecha YYYY-MM-DD
+                return fechaTurno >= fechaAyer;
             });
 
-            console.log("Turnos filtrados del profesional:", turnosDelProfesional.length);
-            
-            // Mostrar algunos ejemplos de turnos para debug
-            if (turnosDelProfesional.length > 0) {
-                console.log("Primeros 3 turnos:", turnosDelProfesional.slice(0, 3).map(t => ({
-                    id: t.id,
-                    fecha: t.fecha,
-                    cliente: t.cliente,
-                    profesional: t.profesional
-                })));
-            }
+            console.log("Turnos desde ayer en adelante:", turnosFiltradosPorFecha.length);
 
-            // Ordenar por fecha (más recientes primero)
-            turnosDelProfesional.sort((a, b) => {
+            // Ordenar por fecha ascendente (más antiguos primero)
+            turnosFiltradosPorFecha.sort((a, b) => {
                 const fechaA = new Date(a.fecha);
                 const fechaB = new Date(b.fecha);
-                return fechaB - fechaA; // Orden descendente
+                return fechaA - fechaB; // Orden ascendente
             });
 
-            setTurnos(turnosDelProfesional);
-            setTurnosFiltrados(turnosDelProfesional);
+            setTurnos(turnosFiltradosPorFecha);
+            setTurnosFiltrados(turnosFiltradosPorFecha);
         } catch (error) {
             console.error("Error al cargar los turnos:", error);
             setError("No se pudieron cargar los turnos. Intenta nuevamente.");
@@ -439,20 +435,6 @@ const ProfTurnosSection = () => {
             <h2>Mis Turnos</h2>
 
             {error && <div className="error-message">{error}</div>}
-
-            {/* Mostrar información del servicio del profesional */}
-            {servicioDelProfesional && (
-                <div className="servicio-info-card" style={{
-                    background: '#f8f9fa',
-                    padding: '10px',
-                    borderRadius: '5px',
-                    marginBottom: '20px',
-                    border: '1px solid #dee2e6'
-                }}>
-                    <strong>Mi servicio:</strong> {servicioDelProfesional.nombre} - <span style={{color: '#28a745', fontWeight: 'bold'}}>${servicioDelProfesional.precio}</span>
-                </div>
-            )}
-
             <div className="turnos-header-flex">
                 <div className="btns-izquierda">
                     <button className="btn-agregar" onClick={handleAgregar} disabled={isLoading || !servicioDelProfesional}>
@@ -553,18 +535,6 @@ const ProfTurnosSection = () => {
                 title="Agregar Turno"
                 onSave={handleGuardar}
             >
-                {/* Mostrar información del servicio */}
-                {servicioDelProfesional && (
-                    <div className="form-group" style={{
-                        background: '#e8f5e8',
-                        padding: '10px',
-                        borderRadius: '5px',
-                        marginBottom: '15px'
-                    }}>
-                        <strong>Servicio:</strong> {servicioDelProfesional.nombre}<br/>
-                        <strong>Precio:</strong> <span style={{color: '#28a745', fontWeight: 'bold'}}>${servicioDelProfesional.precio}</span>
-                    </div>
-                )}
 
                 <div className="form-group">
                     <label htmlFor="fecha">Fecha:</label>
