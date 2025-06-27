@@ -58,7 +58,7 @@ const ProfTurnosSection = () => {
     // Estados de turnos disponibles para filtrar
     const estadosTurnos = ['Solicitado', 'Cancelado'];
 
-    // Obtener el servicio del profesional logueado
+    // Obtener el servicio del profesional logueado usando la función del backend que creamos
     const fetchServicioDelProfesional = async () => {
         if (!profesionalId) return;
         
@@ -78,47 +78,78 @@ const ProfTurnosSection = () => {
         }
     };
 
+    // Obtener SOLO los turnos del profesional logueado usando el endpoint específico
     const fetchTurnos = async () => {
+        if (!profesionalId) return;
+        
         try {
             setIsLoading(true);
             setError(null);
-            const response = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
+            
+            // Usar el endpoint específico para turnos del profesional
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/pagosAdm/profesional/${profesionalId}`);
             if (!response.ok) {
-                throw new Error("Error al obtener los turnos");
+                throw new Error("Error al obtener los turnos del profesional");
             }
-            const data = await response.json();
+            
+            const turnosData = await response.json();
+            console.log("Turnos del profesional recibidos:", turnosData);
 
-            // Filtrar turnos del profesional logueado por NOMBRE
-            const turnosDelProfesional = data.filter(t =>
-                t.profesional === profesional?.nombre
-            );
+            // Convertir los datos de pagos a formato de turnos para mostrar en la tabla
+            const turnosFormateados = turnosData.map(pago => ({
+                id: pago.id,
+                fecha: pago.fecha_turno,
+                hora: pago.hora || 'N/A', // Asumiendo que el backend puede no tener hora separada
+                cliente: pago.cliente,
+                servicio: pago.servicio,
+                precio: pago.precio_pagado,
+                estado: 'Realizado', // Los pagos ya están realizados
+                profesional: pago.profesional,
+                comentarios: pago.comentarios || ''
+            }));
 
-            // Obtener fecha de hace 2 días para asegurar que incluya todos los turnos actuales
-            // (compensando la diferencia de zona horaria UTC vs Buenos Aires)
-            const fechaFiltro = new Date();
-            fechaFiltro.setDate(fechaFiltro.getDate() - 2);
-            const fechaFiltroStr = fechaFiltro.toISOString().split('T')[0]; // YYYY-MM-DD
+            // Si necesitamos también turnos pendientes/solicitados, hacer una llamada adicional
+            // al endpoint de turnos general filtrando por profesional
+            const turnosResponse = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
+            if (turnosResponse.ok) {
+                const todosTurnos = await turnosResponse.json();
+                
+                // Filtrar turnos del profesional actual
+                const turnosDelProfesional = todosTurnos.filter(turno => 
+                    Number(turno.id_profesional) === Number(profesionalId) ||
+                    turno.profesional === profesional?.nombre
+                );
 
-            console.log("Fecha límite para filtrar:", fechaFiltroStr);
-            console.log("Total turnos del profesional:", turnosDelProfesional.length);
+                console.log("Turnos adicionales del profesional:", turnosDelProfesional);
 
-            // Filtrar turnos desde hace 2 días en adelante (para asegurar que incluya hoy)
-            const turnosFiltradosPorFecha = turnosDelProfesional.filter(turno => {
-                const fechaTurno = turno.fecha.split('T')[0]; // Extraer solo la fecha YYYY-MM-DD
-                return fechaTurno >= fechaFiltroStr;
-            });
+                // Combinar turnos realizados (de pagos) con turnos pendientes
+                const todosTurnosCompletos = [...turnosFormateados, ...turnosDelProfesional];
 
-            console.log("Turnos filtrados por fecha:", turnosFiltradosPorFecha.length);
+                // Filtrar turnos desde hace 2 días para incluir turnos recientes
+                const fechaFiltro = new Date();
+                fechaFiltro.setDate(fechaFiltro.getDate() - 2);
+                const fechaFiltroStr = fechaFiltro.toISOString().split('T')[0];
 
-            // Ordenar por fecha ascendente (más antiguos primero)
-            turnosFiltradosPorFecha.sort((a, b) => {
-                const fechaA = new Date(a.fecha);
-                const fechaB = new Date(b.fecha);
-                return fechaA - fechaB; // Orden ascendente
-            });
+                const turnosFiltradosPorFecha = todosTurnosCompletos.filter(turno => {
+                    const fechaTurno = turno.fecha?.split('T')[0] || turno.fecha_turno?.split('T')[0];
+                    return fechaTurno >= fechaFiltroStr;
+                });
 
-            setTurnos(turnosFiltradosPorFecha);
-            setTurnosFiltrados(turnosFiltradosPorFecha);
+                // Ordenar por fecha ascendente
+                turnosFiltradosPorFecha.sort((a, b) => {
+                    const fechaA = new Date(a.fecha || a.fecha_turno);
+                    const fechaB = new Date(b.fecha || b.fecha_turno);
+                    return fechaA - fechaB;
+                });
+
+                setTurnos(turnosFiltradosPorFecha);
+                setTurnosFiltrados(turnosFiltradosPorFecha);
+            } else {
+                // Si falla la llamada adicional, usar solo los turnos de pagos
+                setTurnos(turnosFormateados);
+                setTurnosFiltrados(turnosFormateados);
+            }
+
         } catch (error) {
             console.error("Error al cargar los turnos:", error);
             setError("No se pudieron cargar los turnos. Intenta nuevamente.");
@@ -132,7 +163,7 @@ const ProfTurnosSection = () => {
             fetchServicioDelProfesional();
             fetchTurnos();
 
-            // Establecer la fecha de mañana como valor por defecto
+            // Establecer la fecha de mañana como valor por defecto para impresión
             const mañana = new Date();
             mañana.setDate(mañana.getDate() + 1);
             setFechaParaImprimir(mañana.toISOString().split('T')[0]);
@@ -149,7 +180,7 @@ const ProfTurnosSection = () => {
         return new Date().toLocaleDateString('en-CA');
     };
 
-    // Agregar turno - SIMPLIFICADO
+    // Agregar turno - SIMPLIFICADO (sin categoría ni servicio)
     const handleAgregar = () => {
         const fechaHoy = new Date().toLocaleDateString('en-CA');
         setFormulario({
@@ -207,7 +238,7 @@ const ProfTurnosSection = () => {
         return true;
     };
 
-    // Guardar turno - SIMPLIFICADO
+    // Guardar turno - Automáticamente usa el servicio del profesional
     const handleGuardar = async () => {
         try {
             setIsLoading(true);
@@ -216,7 +247,7 @@ const ProfTurnosSection = () => {
             // Validar el formulario
             validarFormulario();
 
-            // Conversión explícita y segura de IDs a enteros
+            // Usar automáticamente el servicio del profesional logueado
             const id_servicio = parseInt(servicioDelProfesional.id, 10);
             const id_cliente = parseInt(formulario.cliente_id, 10);
             const id_profesional = parseInt(profesionalId, 10);
@@ -237,14 +268,14 @@ const ProfTurnosSection = () => {
             // Preparar los datos para enviar al backend
             const datosFormateados = {
                 id_cliente,
-                id_servicio,
-                id_profesional,
+                id_servicio, // Automáticamente del profesional
+                id_profesional, // Automáticamente del profesional logueado
                 fecha: formulario.fecha,
                 hora: formulario.hora,
                 estado: 'Solicitado',
                 precio: parseFloat(servicioDelProfesional.precio) || 0,
                 comentarios: formulario.comentarios || '',
-                // Añadimos también los nombres para compatibilidad
+                // Nombres para compatibilidad
                 profesional: profesional?.nombre,
                 cliente: formulario.cliente_nombre,
                 servicio: servicioDelProfesional.nombre
@@ -312,7 +343,7 @@ const ProfTurnosSection = () => {
         }
 
         const turnosDia = turnos.filter(turno => {
-            const fechaTurno = turno.fecha.split('T')[0];
+            const fechaTurno = (turno.fecha || turno.fecha_turno)?.split('T')[0];
             const esFechaCorrecta = fechaTurno === fechaParaImprimir;
             const esEstadoCorrecto = turno.estado === 'Solicitado';
             return esFechaCorrecta && esEstadoCorrecto;
@@ -527,7 +558,7 @@ const ProfTurnosSection = () => {
                                         }}
                                     >
                                         <td>{t.id}</td>
-                                        <td>{t.fecha}</td>
+                                        <td>{t.fecha || t.fecha_turno}</td>
                                         <td>{t.hora}</td>
                                         <td>{t.cliente}</td>
                                         <td>{t.servicio}</td>
@@ -541,14 +572,14 @@ const ProfTurnosSection = () => {
                 </div>
             )}
 
-            {/* Modal para agregar turnos - SIMPLIFICADO */}
+            {/* Modal para agregar turnos - SIN categoría ni servicio */}
             <ModalForm
                 isOpen={mostrarModal}
                 onClose={() => setMostrarModal(false)}
                 title="Agregar Turno"
                 onSave={handleGuardar}
             >
-                {/* Mostrar información del servicio */}
+                {/* Mostrar información del servicio (solo informativo) */}
                 {servicioDelProfesional && (
                     <div className="form-group" style={{
                         background: '#e8f5e8',
@@ -558,6 +589,7 @@ const ProfTurnosSection = () => {
                     }}>
                         <strong>Servicio:</strong> {servicioDelProfesional.nombre}<br/>
                         <strong>Precio:</strong> <span style={{color: '#28a745', fontWeight: 'bold'}}>${servicioDelProfesional.precio}</span>
+                        <br/><small style={{color: '#666'}}>Este servicio se asignará automáticamente al turno</small>
                     </div>
                 )}
 
