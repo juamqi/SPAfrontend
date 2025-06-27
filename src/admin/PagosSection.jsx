@@ -78,11 +78,34 @@ const PagosSection = () => {
         fetchProfesionales();
     }, []);
 
-    // Función para aplicar filtros
-    const aplicarFiltros = () => {
-        let pagosFiltradosTemp = [...pagos];
+    // Función para aplicar filtros usando el backend cuando hay fechas
+    const aplicarFiltros = async () => {
+        let pagosFiltradosTemp = [];
 
-        // Filtro por servicio
+        // Si hay filtro de fechas, usar el endpoint del backend
+        if (filtros.fechaInicio && filtros.fechaFin) {
+            try {
+                setIsLoading(true);
+                const response = await fetch(
+                    `https://spabackend-production-e093.up.railway.app/api/pagosAdm/fechas?fechaInicio=${filtros.fechaInicio}&fechaFin=${filtros.fechaFin}`
+                );
+                if (response.ok) {
+                    pagosFiltradosTemp = await response.json();
+                } else {
+                    pagosFiltradosTemp = [...pagos];
+                }
+                setIsLoading(false);
+            } catch (error) {
+                console.error("Error al filtrar por fechas:", error);
+                pagosFiltradosTemp = [...pagos];
+                setIsLoading(false);
+            }
+        } else {
+            // Sin filtro de fechas, usar datos locales
+            pagosFiltradosTemp = [...pagos];
+        }
+
+        // Aplicar filtros de servicio y profesional localmente
         if (filtros.servicio) {
             const servicioSeleccionado = servicios.find(s => s.id == filtros.servicio);
             if (servicioSeleccionado) {
@@ -92,7 +115,6 @@ const PagosSection = () => {
             }
         }
 
-        // Filtro por profesional
         if (filtros.profesional) {
             const profesionalSeleccionado = profesionales.find(p => p.id == filtros.profesional);
             if (profesionalSeleccionado) {
@@ -103,29 +125,13 @@ const PagosSection = () => {
             }
         }
 
-        // Filtro por rango de fechas - CORREGIDO para comparación de strings
-        if (filtros.fechaInicio && filtros.fechaFin) {
-            pagosFiltradosTemp = pagosFiltradosTemp.filter(pago => {
-                // Comparar directamente como strings en formato YYYY-MM-DD
-                return pago.fecha_pago >= filtros.fechaInicio && pago.fecha_pago <= filtros.fechaFin;
-            });
-        } else if (filtros.fechaInicio) {
-            pagosFiltradosTemp = pagosFiltradosTemp.filter(pago => {
-                return pago.fecha_pago >= filtros.fechaInicio;
-            });
-        } else if (filtros.fechaFin) {
-            pagosFiltradosTemp = pagosFiltradosTemp.filter(pago => {
-                return pago.fecha_pago <= filtros.fechaFin;
-            });
-        }
-
         setPagosFiltrados(pagosFiltradosTemp);
     };
 
     // Aplicar filtros cada vez que cambien
     useEffect(() => {
         aplicarFiltros();
-    }, [filtros, pagos]);
+    }, [filtros, pagos, servicios, profesionales]);
 
     // Función para limpiar filtros
     const limpiarFiltros = () => {
