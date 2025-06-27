@@ -451,10 +451,11 @@ const ModalReserva = ({
             </button>
           </div>
           {error && (
-            <div className="error-mensaje">
-              {error}
-              <button onClick={() => setError(null)}>Cerrar</button>
-            </div>
+          <div className="error-mensaje">
+            {error}
+            El profesional tiene ocupado el horario, intente con otro
+            <button onClick={() => setError(null)}>Cerrar</button>
+          </div>
           )}
           <div className="modal-body">
             {/* Imagen y resumen */}
