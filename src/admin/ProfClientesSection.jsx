@@ -27,6 +27,9 @@ const ProfClientesSection = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [filtroTexto, setFiltroTexto] = useState("");
+    const [editandoComentario, setEditandoComentario] = useState(null);
+    const [comentarioTemporal, setComentarioTemporal] = useState("");
+    const [guardandoComentario, setGuardandoComentario] = useState(false);
 
     // Estados para el modal de historial
     const [mostrarHistorial, setMostrarHistorial] = useState(false);
@@ -261,6 +264,56 @@ const ProfClientesSection = () => {
         setHistorialTurnos([]);
         setClienteSeleccionado(null);
     };
+    const iniciarEdicionComentario = (turnoId, comentarioActual) => {
+    setEditandoComentario(turnoId);
+    setComentarioTemporal(comentarioActual || "");
+    };
+
+    const cancelarEdicionComentario = () => {
+        setEditandoComentario(null);
+        setComentarioTemporal("");
+    };
+
+    const guardarComentario = async (turnoId) => {
+        try {
+            setGuardandoComentario(true);
+            
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnosAdmin/comentario/${turnoId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    comentarios: comentarioTemporal
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+
+            // Actualizar el historial para reflejar el cambio
+            setHistorialTurnos(prevHistorial => 
+                prevHistorial.map(turno => 
+                    turno.id === turnoId 
+                        ? { ...turno, comentarios: comentarioTemporal }
+                        : turno
+                )
+            );
+
+            setEditandoComentario(null);
+            setComentarioTemporal("");
+            
+            console.log(`Comentario guardado para turno ${turnoId}`);
+            
+        } catch (error) {
+            console.error("Error al guardar comentario:", error);
+            setError("No se pudo guardar el comentario. Intenta nuevamente.");
+        } finally {
+            setGuardandoComentario(false);
+        }
+    };
+
 
     // Función para dar estilo al estado según su valor
     const getEstadoClass = (estado) => {
@@ -375,8 +428,7 @@ const ProfClientesSection = () => {
                                                     <th>Fecha</th>
                                                     <th>Hora</th>
                                                     <th>Servicio</th>
-                                                    <th>Precio</th>
-                                                    <th>Estado</th>
+                                                    <th>Comentario</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -385,10 +437,49 @@ const ProfClientesSection = () => {
                                                         <td>{formatearFecha(turno.fecha)}</td>
                                                         <td>{formatearHora(turno.hora)}</td>
                                                         <td>{turno.servicio || 'Sin servicio'}</td>
-                                                        <td>{formatearPrecio(turno.precio)}</td>
-                                                        <td className={getEstadoClass(turno.estado)}>
-                                                            {turno.estado || 'Sin estado'}
-                                                        </td>
+                                                        <td className="comentario-cell">
+                                                        {editandoComentario === turno.id ? (
+                                                            <div className="comentario-edit">
+                                                                <textarea
+                                                                    value={comentarioTemporal}
+                                                                    onChange={(e) => setComentarioTemporal(e.target.value)}
+                                                                    placeholder="Escribir comentario..."
+                                                                    rows="2"
+                                                                    disabled={guardandoComentario}
+                                                                />
+                                                                <div className="comentario-actions">
+                                                                    <button 
+                                                                        className="btn-guardar-comentario"
+                                                                        onClick={() => guardarComentario(turno.id)}
+                                                                        disabled={guardandoComentario}
+                                                                    >
+                                                                        {guardandoComentario ? "..." : "✓"}
+                                                                    </button>
+                                                                    <button 
+                                                                        className="btn-cancelar-comentario"
+                                                                        onClick={cancelarEdicionComentario}
+                                                                        disabled={guardandoComentario}
+                                                                    >
+                                                                        ✕
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="comentario-display">
+                                                                <span className="comentario-texto">
+                                                                    {turno.comentarios || "Sin comentarios"}
+                                                                </span>
+                                                                <button 
+                                                                    className="btn-editar-comentario"
+                                                                    onClick={() => iniciarEdicionComentario(turno.id, turno.comentarios)}
+                                                                    title="Editar comentario"
+                                                                >
+                                                                    ✏️
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                        
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -595,6 +686,16 @@ const ProfClientesSection = () => {
     border-radius: 4px;
     margin-bottom: 1rem;
   }
+    .comentario-cell {
+    min-width: 200px;
+    max-width: 300px;
+}
+
+.comentario-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 `}</style>
 
         </div>
