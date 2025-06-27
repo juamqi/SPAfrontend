@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import ModalForm from "./ModalForm.jsx";
-import DropdownCategorias from "./dropDownCat.jsx";
-import DropdownServicios from "./dropDownServicios.jsx";
+import DropdownCategorias from "./DropdownCat.jsx";
+import DropdownServicios from "./DropdownServicios.jsx";
 import DropdownClientes from "./DropdownClientes.jsx";
-import DropdownProfesionalesPorServicio from "./DropDownProfesionalesPorServicio.jsx";
+import DropdownProfesionalesPorServicio from "./DropdownProfesionalesPorServicio.jsx";
 import FilterComponent from "./FilterComponent.jsx";
-import { usePopupContext } from "../componentes/popupcontext.jsx";
 
 const TurnosSection = () => {
     const [turnos, setTurnos] = useState([]);
@@ -28,13 +27,12 @@ const TurnosSection = () => {
         profesional_nombre: "",
         cliente_id: "",
         cliente_nombre: "",
-        precio: "",
         comentarios: "",
     });
     const [categorias, setCategorias] = useState([]);
     const horasDisponibles = Array.from({ length: 14 }, (_, i) => `${(8 + i).toString().padStart(2, '0')}:00`);
-    const { showPopup } = usePopupContext();
 
+    // Estados de turnos disponibles para filtrar
     const estadosTurnos = ['Solicitado', 'Cancelado'];
 
     const fetchServicios = async () => {
@@ -105,59 +103,6 @@ const TurnosSection = () => {
         setTurnosFiltrados(filteredData);
     };
 
-    // Función para verificar si una hora ya pasó para el día actual
-    const horaYaPaso = (fecha, hora) => {
-        // Crear fechas usando el formato local para evitar problemas de zona horaria
-        const [año, mes, dia] = fecha.split('-').map(Number);
-        const fechaSeleccionada = new Date(año, mes - 1, dia); // mes es 0-indexado
-        const fechaHoy = new Date();
-        fechaHoy.setHours(0, 0, 0, 0); // Normalizar a medianoche
-        
-        // Verificar si la fecha es hoy
-        const fechaHoyNormalizada = new Date(fechaHoy.getFullYear(), fechaHoy.getMonth(), fechaHoy.getDate());
-        const esHoy = fechaSeleccionada.getTime() === fechaHoyNormalizada.getTime();
-        
-        if (!esHoy) {
-            return false; // Si no es hoy, la hora no ha pasado
-        }
-        
-        // Si es hoy, comparar las horas con la hora actual real
-        const [horaSeleccionada, minutosSeleccionados] = hora.split(':').map(Number);
-        const fechaActual = new Date(); // Usar la fecha actual sin modificar
-        const horaActual = fechaActual.getHours();
-        const minutosActuales = fechaActual.getMinutes();
-        
-        // Convertir a minutos para comparar más fácilmente
-        const minutosSeleccionadosTotal = horaSeleccionada * 60 + minutosSeleccionados;
-        const minutosActualesTotal = horaActual * 60 + minutosActuales;
-        
-        return minutosSeleccionadosTotal <= minutosActualesTotal;
-    };
-
-    // Función para obtener las horas disponibles según la fecha seleccionada
-    const getHorasDisponiblesParaFecha = (fecha) => {
-        if (!fecha) return horasDisponibles;
-        
-        // Crear fechas usando el formato local para evitar problemas de zona horaria
-        const [año, mes, dia] = fecha.split('-').map(Number);
-        const fechaSeleccionada = new Date(año, mes - 1, dia);
-        const fechaHoy = new Date();
-        
-        // Normalizar fechas para comparación
-        const fechaSeleccionadaNormalizada = new Date(fechaSeleccionada.getFullYear(), fechaSeleccionada.getMonth(), fechaSeleccionada.getDate());
-        const fechaHoyNormalizada = new Date(fechaHoy.getFullYear(), fechaHoy.getMonth(), fechaHoy.getDate());
-        
-        // Si la fecha es hoy, filtrar las horas que ya pasaron
-        const esHoy = fechaSeleccionadaNormalizada.getTime() === fechaHoyNormalizada.getTime();
-        
-        if (esHoy) {
-            return horasDisponibles.filter(hora => !horaYaPaso(fecha, hora));
-        }
-        
-        // Si es una fecha futura, mostrar todas las horas
-        return horasDisponibles;
-    };
-
     const handleAgregar = () => {
         setModo("crear");
         const fechaHoy = new Date().toISOString().substring(0, 10); // Formato YYYY-MM-DD
@@ -171,7 +116,6 @@ const TurnosSection = () => {
             profesional_nombre: "",
             cliente_id: "",
             cliente_nombre: "",
-            precio: "",
             comentarios: "",
         });
         setServicioIdSeleccionado(null); // Limpiar ID de servicio seleccionado
@@ -200,8 +144,7 @@ const TurnosSection = () => {
                 cliente_nombre: turnoSeleccionado.cliente || "",
                 profesional_id: turnoSeleccionado.profesional_id ? turnoSeleccionado.profesional_id.toString() : "",
                 profesional_nombre: turnoSeleccionado.profesional || "",
-                comentarios: turnoSeleccionado.comentarios || "",
-                precio: turnoSeleccionado.precio ? turnoSeleccionado.precio.toString() : "0"
+                comentarios: turnoSeleccionado.comentarios || ""
             });
 
             setMostrarModal(true);
@@ -232,13 +175,10 @@ const TurnosSection = () => {
                     throw new Error(errorData.error || "Error al cancelar el turno");
                 }
 
-                showPopup({
-                    type: 'success',
-                    title: 'Turno cancelado',
-                    message: 'El turno ha sido cancelado correctamente.',
+                // Mostrar mensaje de éxito
+                alert("Turno cancelado correctamente");
 
-                });
-
+                // Recargar los turnos
                 await fetchTurnos();
 
                 // Limpiar la selección
@@ -246,12 +186,7 @@ const TurnosSection = () => {
             } catch (error) {
                 console.error("Error al cancelar el turno:", error);
                 setError(`No se pudo cancelar el turno: ${error.message}`);
-                showPopup({
-                    type: 'error',
-                    title: 'Error al cancelar',
-                    message: `No se pudo cancelar el turno: ${error.message}`,
-
-                });
+                alert(`No se pudo cancelar el turno: ${error.message}`);
             } finally {
                 setIsLoading(false);
             }
@@ -259,57 +194,49 @@ const TurnosSection = () => {
     };
 
     const validarFormulario = () => {
-        const camposRequeridos = ['fecha', 'hora', 'servicio_id', 'profesional_id', 'cliente_id'];
-        const camposFaltantes = camposRequeridos.filter(campo => !formulario[campo]);
+    // Validar que todos los campos estén completos
+    const camposRequeridos = ['fecha', 'hora', 'servicio_id', 'profesional_id', 'cliente_id'];
+    const camposFaltantes = camposRequeridos.filter(campo => !formulario[campo]);
 
-        if (camposFaltantes.length > 0) {
-            const mensajesCampos = {
-                'fecha': 'Fecha',
-                'hora': 'Hora',
-                'servicio_id': 'Servicio',
-                'profesional_id': 'Profesional',
-                'cliente_id': 'Cliente'
-            };
+    if (camposFaltantes.length > 0) {
+        const mensajesCampos = {
+            'fecha': 'Fecha',
+            'hora': 'Hora',
+            'servicio_id': 'Servicio',
+            'profesional_id': 'Profesional',
+            'cliente_id': 'Cliente'
+        };
 
-            const camposFaltantesNombres = camposFaltantes.map(campo => mensajesCampos[campo]);
-            throw new Error(`Por favor complete todos los campos obligatorios: ${camposFaltantesNombres.join(', ')}`);
-        }
+        const camposFaltantesNombres = camposFaltantes.map(campo => mensajesCampos[campo]);
+        throw new Error(`Por favor complete todos los campos obligatorios: ${camposFaltantesNombres.join(', ')}`);
+    }
 
-        // Validar formato de fecha
-        const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!fechaRegex.test(formulario.fecha)) {
-            throw new Error("El formato de fecha no es válido. Utilice YYYY-MM-DD");
-        }
+    // Validar formato de fecha
+    const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!fechaRegex.test(formulario.fecha)) {
+        throw new Error("El formato de fecha no es válido. Utilice YYYY-MM-DD");
+    }
 
-        // VALIDACIÓN MEJORADA: Verificar fecha y hora
-        const [año, mes, dia] = formulario.fecha.split('-').map(Number);
-        const fechaSeleccionada = new Date(año, mes - 1, dia); // mes es 0-indexado
-        const fechaHoy = new Date();
-        
-        // Normalizar fechas para comparación (sin problemas de zona horaria)
-        const fechaSeleccionadaNormalizada = new Date(fechaSeleccionada.getFullYear(), fechaSeleccionada.getMonth(), fechaSeleccionada.getDate());
-        const fechaHoyNormalizada = new Date(fechaHoy.getFullYear(), fechaHoy.getMonth(), fechaHoy.getDate());
+    // NUEVA VALIDACIÓN: Verificar que la fecha no sea anterior a hoy
+    const fechaSeleccionada = new Date(formulario.fecha);
+    const fechaHoy = new Date();
+    
+    // Establecer la hora a 00:00:00 para comparar solo las fechas
+    fechaHoy.setHours(0, 0, 0, 0);
+    fechaSeleccionada.setHours(0, 0, 0, 0);
+    
+    if (fechaSeleccionada < fechaHoy) {
+        throw new Error("No se puede agendar un turno en una fecha que ya pasó");
+    }
 
-        // Si la fecha es anterior a hoy, bloquear completamente
-        if (fechaSeleccionadaNormalizada < fechaHoyNormalizada) {
-            throw new Error("No se puede agendar un turno en una fecha que ya pasó");
-        }
+    // Validar formato de hora
+    const horaRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!horaRegex.test(formulario.hora)) {
+        throw new Error("El formato de hora no es válido. Utilice HH:MM");
+    }
 
-        // Si la fecha es hoy, validar que la hora no haya pasado
-        if (fechaSeleccionadaNormalizada.getTime() === fechaHoyNormalizada.getTime()) {
-            if (horaYaPaso(formulario.fecha, formulario.hora)) {
-                throw new Error("No se puede agendar un turno en una hora que ya pasó");
-            }
-        }
-
-        // Validar formato de hora
-        const horaRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-        if (!horaRegex.test(formulario.hora)) {
-            throw new Error("El formato de hora no es válido. Utilice HH:MM");
-        }
-
-        return true;
-    };
+    return true;
+};
 
     const handleGuardar = async () => {
         try {
@@ -345,7 +272,6 @@ const TurnosSection = () => {
                 fecha: formulario.fecha,
                 hora: formulario.hora,
                 estado: formulario.estado || 'Solicitado',
-                precio: parseFloat(formulario.precio) || 0,
                 comentarios: formulario.comentarios || '',
                 // Añadimos también los nombres para compatibilidad con el backend original
                 profesional: formulario.profesional_nombre,
@@ -370,25 +296,7 @@ const TurnosSection = () => {
                     throw new Error(errorData.error || "Error al crear el turno");
                 }
 
-                showPopup({
-                    type: 'success',
-                    title: "Éxito",
-                    message: "Turno creado correctamente",
-
-                });
-
-                const datosParaImprimir = {
-                    cliente_nombre: formulario.cliente_nombre,
-                    profesional_nombre: formulario.profesional_nombre,
-                    servicio: formulario.servicio,
-                    fecha: formulario.fecha,
-                    hora: formulario.hora,
-                    precio: formulario.precio,
-                    comentarios: formulario.comentarios
-                };
-
-                console.log("Datos preparados para impresión:", datosParaImprimir);
-                imprimirComprobanteTurno(datosParaImprimir);
+                alert("Turno creado correctamente");
             } else {
                 // Editar turno existente
                 const id = parseInt(formulario.id, 10);
@@ -414,12 +322,7 @@ const TurnosSection = () => {
                     throw new Error(errorData.error || "Error al actualizar el turno");
                 }
 
-                showPopup({
-                    type: 'success',
-                    title: "Éxito",
-                    message: "Turno actualizado correctamente",
-
-                });
+                alert("Turno actualizado correctamente");
             }
 
             // Recargar los turnos
@@ -432,12 +335,7 @@ const TurnosSection = () => {
         } catch (error) {
             console.error("Error al guardar el turno:", error);
             setError(`Error al guardar el turno: ${error.message}`);
-            showPopup({
-                type: 'error',
-                title: "Error",
-                message: `Error al guardar el turno: ${error.message}`,
-
-            });
+            alert(`Error al guardar el turno: ${error.message}`);
         } finally {
             setIsLoading(false);
         }
@@ -448,11 +346,11 @@ const TurnosSection = () => {
             ...formulario,
             categoria: categoriaId,
             servicio: "", // Resetear servicio al cambiar categoría
-            servicio_id: "", // ← Ya tienes esto, perfecto
-            profesional_id: "",
+            servicio_id: "", // Resetear ID del servicio
+            profesional_id: "", // Resetear profesional al cambiar categoría
             profesional_nombre: ""
         });
-        setServicioIdSeleccionado(null);
+        setServicioIdSeleccionado(null); // Resetear ID de servicio
     }
 
     const handleServicioChange = (servicioId, servicioNombre) => {
@@ -464,7 +362,7 @@ const TurnosSection = () => {
         if (servicioId && !isNaN(parseInt(servicioId, 10))) {
             idServicio = parseInt(servicioId, 10);
 
-            // Encontrar el servicio completo para obtener el precio
+            // Encontrar el servicio completo
             const servicioEncontrado = servicios.find(s => s.id == idServicio);
 
             if (servicioEncontrado) {
@@ -476,11 +374,9 @@ const TurnosSection = () => {
                     servicio: servicioNombre || servicioEncontrado.nombre,
                     servicio_id: idServicio.toString(),
                     profesional_id: "",
-                    profesional_nombre: "",
-                    precio: servicioEncontrado.precio // Actualizar el precio automáticamente
+                    profesional_nombre: ""
                 });
 
-                console.log("Servicio encontrado con precio:", servicioEncontrado.precio);
                 console.log("ID de servicio seleccionado:", idServicio);
             } else {
                 console.log("No se encontró el servicio con ID", idServicio, "en la lista");
@@ -506,8 +402,7 @@ const TurnosSection = () => {
                     servicio: servicioNombre,
                     servicio_id: servicioEncontrado.id.toString(),
                     profesional_id: "",
-                    profesional_nombre: "",
-                    precio: servicioEncontrado.precio
+                    profesional_nombre: ""
                 });
 
                 console.log("Servicio encontrado por nombre:", servicioEncontrado.id);
@@ -520,8 +415,7 @@ const TurnosSection = () => {
                     servicio: servicioNombre,
                     servicio_id: "",
                     profesional_id: "",
-                    profesional_nombre: "",
-                    precio: ""
+                    profesional_nombre: ""
                 });
             }
         } else {
@@ -534,8 +428,7 @@ const TurnosSection = () => {
                 servicio: servicioId || "", // Usamos lo que tengamos como nombre
                 servicio_id: "",
                 profesional_id: "",
-                profesional_nombre: "",
-                precio: ""
+                profesional_nombre: ""
             });
         }
     }
@@ -562,12 +455,8 @@ const TurnosSection = () => {
     }
 
     const handleGenerarReporte = () => {
-        showPopup({
-            type: 'info',
-            title: "Generando reporte",
-            message: "Generando reporte de turnos...",
-
-        });
+        alert("Generando reporte de turnos...");
+        // Implementación del reporte de turnos (pendiente)
     };
 
     // Función para dar estilo al estado según su valor
@@ -582,114 +471,6 @@ const TurnosSection = () => {
             default:
                 return '';
         }
-    };
-
-    const imprimirComprobanteTurno = (formulario) => {
-        const ventanaImpresion = window.open('', '_blank');
-        const fechaActual = new Date().toLocaleDateString('es-AR');
-        const horaActual = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-
-        const contenidoComprobante = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Comprobante de Turno</title>
-            <style>
-                body {
-                    font-family: 'Arial', sans-serif;
-                    max-width: 600px;
-                    margin: 0 auto;
-                    padding: 20px;
-                    background-color: #f8f9fa;
-                    color: #333;
-                }
-                .comprobante {
-                    background: white;
-                    border-radius: 12px;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-                    overflow: hidden;
-                }
-                .header {
-                    background: linear-gradient(135deg, #4A3D3D 0%, #6B5B5B 100%);
-                    color: white;
-                    padding: 30px 25px;
-                    text-align: center;
-                }
-                .header h1 {
-                    margin: 0;
-                    font-size: 28px;
-                    font-weight: bold;
-                    letter-spacing: 1px;
-                }
-                .content {
-                    padding: 25px;
-                }
-                .seccion {
-                    margin-bottom: 25px;
-                }
-                .seccion h3 {
-                    color: #4A3D3D;
-                    font-size: 16px;
-                    margin-bottom: 12px;
-                    text-transform: uppercase;
-                }
-                .info-item {
-                    margin-bottom: 10px;
-                }
-                .info-label {
-                    font-weight: bold;
-                    color: #555;
-                }
-                .info-value {
-                    margin-left: 5px;
-                }
-                .footer {
-                    background: #f8f9fa;
-                    padding: 20px;
-                    text-align: center;
-                    color: #666;
-                    font-size: 12px;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="comprobante">
-                <div class="header">
-                    <h1>Comprobante de Turno</h1>
-                    <div>Spa "Sentirse Bien"</div>
-                </div>
-
-                <div class="content">
-                    <div class="seccion">
-                        <h3>Datos del Turno</h3>
-                        <div class="info-item"><span class="info-label">Cliente:</span><span class="info-value">${formulario.cliente_nombre}</span></div>
-                        <div class="info-item"><span class="info-label">Profesional:</span><span class="info-value">${formulario.profesional_nombre}</span></div>
-                        <div class="info-item"><span class="info-label">Servicio:</span><span class="info-value">${formulario.servicio}</span></div>
-                        <div class="info-item"><span class="info-label">Fecha:</span><span class="info-value">${formulario.fecha}</span></div>
-                        <div class="info-item"><span class="info-label">Hora:</span><span class="info-value">${formulario.hora}</span></div>
-                        <div class="info-item"><span class="info-label">Precio:</span><span class="info-value">$${formulario.precio}</span></div>
-                        ${formulario.comentarios ? `<div class="info-item"><span class="info-label">Comentarios:</span><span class="info-value">${formulario.comentarios}</span></div>` : ""}
-                    </div>
-                </div>
-
-                <div class="footer">
-                    <p>Este comprobante es válido como constancia de reserva.</p>
-                    <p>Emitido el ${fechaActual} a las ${horaActual}</p>
-                    <p>Gracias por confiar en nosotros.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        `;
-
-        ventanaImpresion.document.write(contenidoComprobante);
-        ventanaImpresion.document.close();
-
-        ventanaImpresion.onload = function () {
-            setTimeout(() => {
-                ventanaImpresion.print();
-            }, 100);
-        };
     };
 
     return (
@@ -712,7 +493,7 @@ const TurnosSection = () => {
                         placeholder="Buscar por cliente..."
                         title="Filtrar turnos"
                         showStatusFilter={true}
-                        showServiceFilter={true}
+                        showServiceFilter={true} 
                         availableStatuses={estadosTurnos}
                         apiUrl="https://spabackend-production-e093.up.railway.app/api/serviciosAdm"
                     />
@@ -737,14 +518,13 @@ const TurnosSection = () => {
                                 <th>Profesional</th>
                                 <th>Cliente</th>
                                 <th>Servicio</th>
-                                <th>Precio</th>
                                 <th>Estado</th>
                             </tr>
                         </thead>
                         <tbody>
                             {turnosFiltrados.length === 0 ? (
                                 <tr>
-                                    <td colSpan="8" style={{ textAlign: "center" }}>
+                                    <td colSpan="7" style={{ textAlign: "center" }}>
                                         {turnos.length === 0 ? "No hay turnos disponibles" : "No hay turnos que coincidan con los filtros aplicados"}
                                     </td>
                                 </tr>
@@ -764,7 +544,6 @@ const TurnosSection = () => {
                                         <td>{t.profesional}</td>
                                         <td>{t.cliente}</td>
                                         <td>{t.servicio}</td>
-                                        <td>${t.precio}</td>
                                         <td className={getEstadoClass(t.estado)}>{t.estado}</td>
                                     </tr>
                                 ))
@@ -803,9 +582,7 @@ const TurnosSection = () => {
                         id="fecha"
                         type="date"
                         value={formulario.fecha}
-                        onChange={e => {
-                            setFormulario({ ...formulario, fecha: e.target.value, hora: "" });
-                        }}
+                        onChange={e => setFormulario({ ...formulario, fecha: e.target.value })}
                         disabled={isLoading}
                         required
                     />
@@ -821,7 +598,7 @@ const TurnosSection = () => {
                         required
                         className="border p-2 rounded w-full mb-4">
                         <option value="">Seleccione una hora</option>
-                        {getHorasDisponiblesParaFecha(formulario.fecha).map((hora) => (
+                        {horasDisponibles.map((hora) => (
                             <option key={hora} value={hora}>{hora}</option>
                         ))}
                     </select>
@@ -834,7 +611,7 @@ const TurnosSection = () => {
 
                 <DropdownServicios
                     categoriaId={formulario.categoria}
-                    value={formulario.servicio_id}  // ← Solución: pasa el ID
+                    value={formulario.servicio}
                     onChange={(servicioId, servicioNombre) => handleServicioChange(servicioId, servicioNombre)}
                 />
 
