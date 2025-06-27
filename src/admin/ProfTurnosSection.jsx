@@ -33,6 +33,8 @@ const ProfTurnosSection = () => {
     const [categorias, setCategorias] = useState([]);
     const horasDisponibles = Array.from({ length: 14 }, (_, i) => `${(8 + i).toString().padStart(2, '0')}:00`);
     const { showPopup } = usePopupContext();
+    const [fechaSeleccionada, setFechaSeleccionada] = useState("");
+
 
     // Estados de turnos disponibles para filtrar
     const estadosTurnos = ['Solicitado', 'Cancelado'];
@@ -172,138 +174,86 @@ const fetchTurnosAlternativo = async () => {
 
     // Función para generar e imprimir PDF con los turnos de mañana
     const handleAgregar = () => {
-        const fechaMañana = getFechaMañana();
+    const fechaElegida = fechaSeleccionada || getFechaMañana();
 
-        // Filtrar turnos para mañana
-        const turnosMañana = turnos.filter(turno => {
-            // Asumiendo que turno.fecha está en formato YYYY-MM-DD o similar
-            const fechaTurno = turno.fecha.split('T')[0] || turno.fecha;
-            return fechaTurno === fechaMañana && turno.estado === 'Solicitado';
+    const turnosDia = turnos.filter(turno => {
+        const fechaTurno = turno.fecha.split('T')[0];
+        return (
+            fechaTurno === fechaElegida &&
+            turno.estado === 'Solicitado' &&
+            turno.id_profesional === profesionalId
+        );
+    });
+
+    if (turnosDia.length === 0) {
+        showPopup({
+            type: 'info',
+            title: "Atención",
+            message: "No hay turnos programados para esa fecha.",
         });
+        return;
+    }
 
-        if (turnosMañana.length === 0) {
-            showPopup({
-                type: 'info',
-                title: "Atención",
-                message: "No hay turnos programados para mañana.",
-            });
-            return;
-        }
+    turnosDia.sort((a, b) => a.hora.localeCompare(b.hora));
 
-        // Ordenar turnos por hora
-        turnosMañana.sort((a, b) => a.hora.localeCompare(b.hora));
-
-        // Generar contenido HTML para el PDF
-        const contenidoHTML = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Turnos para Mañana</title>
-                <style>
-                    body { 
-                        font-family: Arial, sans-serif; 
-                        margin: 20px;
-                        font-size: 12px;
-                    }
-                    h1 { 
-                        text-align: center; 
-                        color: #333;
-                        margin-bottom: 20px;
-                    }
-                    .fecha-titulo {
-                        text-align: center;
-                        color: #666;
-                        margin-bottom: 30px;
-                        font-size: 14px;
-                    }
-                    table { 
-                        width: 100%; 
-                        border-collapse: collapse; 
-                        margin-top: 20px;
-                    }
-                    th, td { 
-                        border: 1px solid #ddd; 
-                        padding: 8px; 
-                        text-align: left;
-                    }
-                    th { 
-                        background-color: #f2f2f2; 
-                        font-weight: bold;
-                    }
-                    tr:nth-child(even) { 
-                        background-color: #f9f9f9; 
-                    }
-                    .estado-solicitado { 
-                        color: #0066cc; 
-                        font-weight: bold; 
-                    }
-                    .estado-cancelado { 
-                        color: #cc0000; 
-                        font-weight: bold; 
-                    }
-                    .estado-realizado { 
-                        color: #009900; 
-                        font-weight: bold; 
-                    }
-                    .total-turnos {
-                        margin-top: 20px;
-                        text-align: right;
-                        font-weight: bold;
-                    }
-                </style>
-            </head>
-            <body>
-                <h1>TURNOS PROGRAMADOS PARA MAÑANA</h1>
-                <div class="fecha-titulo">
-                    Fecha: ${new Date(fechaMañana + 'T12:00:00').toLocaleDateString('es-AR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        })}
-                </div>
-                <table>
-                    <thead>
+    const contenidoHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Turnos</title>
+            <style>
+                body { font-family: Arial; margin: 20px; font-size: 12px; }
+                h1 { text-align: center; margin-bottom: 20px; }
+                .fecha-titulo { text-align: center; margin-bottom: 30px; font-size: 14px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; }
+                th { background-color: #f2f2f2; }
+                tr:nth-child(even) { background-color: #f9f9f9; }
+                .total-turnos { margin-top: 20px; text-align: right; font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <h1>TURNOS</h1>
+            <div class="fecha-titulo">
+                Fecha: ${new Date(fechaElegida + 'T12:00:00').toLocaleDateString('es-AR', { 
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                })}
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hora</th>
+                        <th>Cliente</th>
+                        <th>Servicio</th>
+                        <th>Precio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${turnosDia.map(turno => `
                         <tr>
-                            <th>Hora</th>
-                            <th>Cliente</th>
-                            <th>Servicio</th>
-                            <th>Precio</th>
+                            <td>${turno.hora}</td>
+                            <td>${turno.cliente}</td>
+                            <td>${turno.servicio}</td>
+                            <td>$${turno.precio}</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        ${turnosMañana.map(turno => `
-                            <tr>
-                                <td>${turno.hora}</td>
-                                <td>${turno.cliente}</td>
-                                <td>${turno.servicio}</td>
-                                <td>$${turno.precio}</td>
-                                
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-                <div class="total-turnos">
-                    Total de turnos: ${turnosMañana.length}
-                </div>
-            </body>
-            </html>
-        `;
+                    `).join('')}
+                </tbody>
+            </table>
+            <div class="total-turnos">Total de turnos: ${turnosDia.length}</div>
+        </body>
+        </html>
+    `;
 
-        // Crear una nueva ventana e imprimir
-        const ventanaImpresion = window.open('', '_blank');
-        ventanaImpresion.document.open();
-        ventanaImpresion.document.write(contenidoHTML);
-        ventanaImpresion.document.close();
+    const ventanaImpresion = window.open('', '_blank');
+    ventanaImpresion.document.open();
+    ventanaImpresion.document.write(contenidoHTML);
+    ventanaImpresion.document.close();
 
-        // Esperar a que se cargue el contenido y luego imprimir
-        ventanaImpresion.onload = () => {
-            ventanaImpresion.focus();
-            ventanaImpresion.print();
-            // Opcional: cerrar la ventana después de imprimir
-            // ventanaImpresion.onafterprint = () => ventanaImpresion.close();
-        };
+    ventanaImpresion.onload = () => {
+        ventanaImpresion.focus();
+        ventanaImpresion.print();
     };
+};
 
     // Función para dar estilo al estado según su valor
     const getEstadoClass = (estado) => {
