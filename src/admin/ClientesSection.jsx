@@ -72,7 +72,7 @@ const ClientesSection = () => {
 
             console.log("Datos para actualizar cliente:", dataToSend);
 
-            const response = await fetch(`https://spabackend-production-e093.up.railway.app/clientesAdm/${clientesEditado.id}`, {
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/clientesAdm/${clientesEditado.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -132,7 +132,7 @@ const ClientesSection = () => {
 
     const eliminarCliente = async (id) => {
         try {
-            const response = await fetch(`https://spabackend-production-e093.up.railway.app/clientesAdm/${id}`, {
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/clientesAdm/${id}`, {
                 method: 'DELETE',
             });
 
