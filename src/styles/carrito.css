@@ -71,37 +71,34 @@
     right: 24px;
     top: 74px;
     display: flex;
-    gap: 12px;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    gap: 6px; /* Espacio entre label y select */
+    align-items: stretch;
 }
 
 .fecha-label {
     font-family: 'Quicksand', sans-serif;
-    font-weight: 500;
-    font-size: 16px;
-    line-height: 24px;
+    font-weight: 600;
+    font-size: 14px;
     color: #4A3D3D;
+    margin: 0;
+    padding: 0;
     text-align: left;
-    display: flex;
 }
 
 .fecha-input-container {
     position: relative;
     display: flex;
     align-items: center;
-    max-width: 155px;
-    display: flex;
-    justify-content: flex-end;
 }
 
 .fecha-input {
     background: #D9D9D9;
     border: none;
-    padding: 4px 24px 4px 8px;
+    padding: 6px 24px 6px 8px;
     font-family: 'Quicksand', sans-serif;
     font-weight: 500;
-    font-size: 16px;
+    font-size: 14px;
     color: #4A3D3D;
     border-radius: 4px;
     width: 100%;

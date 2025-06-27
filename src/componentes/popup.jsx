@@ -134,6 +134,7 @@ const Popup = ({ popup, onClose }) => {
     margin: '0 0 12px 0',
     color: '#111827',
     lineHeight: '1.4',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
   };
 
   const messageStyles = {
@@ -141,6 +142,7 @@ const Popup = ({ popup, onClose }) => {
     margin: '0 0 32px 0',
     color: '#6b7280',
     lineHeight: '1.6',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
   };
 
   const buttonContainerStyles = {
@@ -158,7 +160,7 @@ const Popup = ({ popup, onClose }) => {
     border: 'none',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
-    fontFamily: 'inherit',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     minWidth: '80px',
     backgroundColor: isPrimary ? 
       (popup.type === 'error' ? '#ef4444' :
@@ -188,7 +190,7 @@ const Popup = ({ popup, onClose }) => {
     alignItems: 'center',
     justifyContent: 'center',
     transition: 'all 0.2s ease',
-    fontFamily: 'inherit',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     ':hover': {
       backgroundColor: '#f3f4f6',
       color: '#6b7280',

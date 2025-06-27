@@ -93,9 +93,8 @@ const Formulario = ({ onClose }) => {
           console.log('Cliente logueado:', data.cliente);
           showPopup({
             type: 'success',
-            title: '¡Bienvenido!',
+            title: 'Iniciaste sesión',
             message: `¡Bienvenido, ${data.cliente.nombre}!`,
-             
           });
 
           onClose();
