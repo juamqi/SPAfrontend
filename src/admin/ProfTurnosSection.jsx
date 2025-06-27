@@ -148,14 +148,38 @@ const ProfTurnosSection = () => {
             return;
         }
 
+        // Usar el mismo filtro que en fetchTurnos - por nombre del profesional
+        const nombreProfesional = profesional?.nombre;
+        
         const turnosDia = turnos.filter(turno => {
             const fechaTurno = turno.fecha.split('T')[0];
-            return (
-                fechaTurno === fechaParaImprimir &&
-                turno.estado === 'Solicitado' &&
-                turno.id_profesional === profesionalId
-            );
+            const esFechaCorrecta = fechaTurno === fechaParaImprimir;
+            const esEstadoCorrecto = turno.estado === 'Solicitado';
+            
+            // Probar ambos métodos de identificación del profesional
+            const esProfesionalCorrecto = 
+                turno.profesional === nombreProfesional || 
+                Number(turno.id_profesional) === Number(profesionalId) ||
+                String(turno.id_profesional) === String(profesionalId);
+            
+            return esFechaCorrecta && esEstadoCorrecto && esProfesionalCorrecto;
         });
+
+        console.log("Fecha seleccionada:", fechaParaImprimir);
+        console.log("Nombre profesional:", nombreProfesional);
+        console.log("ID profesional:", profesionalId);
+        console.log("Turnos filtrados para impresión:", turnosDia);
+        console.log("Total turnos disponibles:", turnos);
+        console.log("Detalles de filtrado:", turnos.map(t => ({
+            id: t.id,
+            fecha: t.fecha.split('T')[0],
+            estado: t.estado,
+            profesional: t.profesional,
+            id_profesional: t.id_profesional,
+            coincideFecha: t.fecha.split('T')[0] === fechaParaImprimir,
+            coincideEstado: t.estado === 'Solicitado',
+            coincideProfesional: t.profesional === nombreProfesional || Number(t.id_profesional) === Number(profesionalId)
+        })));
 
         if (turnosDia.length === 0) {
             showPopup({
