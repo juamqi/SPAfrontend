@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ModalForm from "./ModalForm.jsx";
-import DropdownCategorias from "./DropdownCat.jsx";
-import DropdownServicios from "./DropdownServicios.jsx";
+import DropdownCategorias from "./dropDownCat.jsx";
+import DropdownServicios from "./dropDownServicios.jsx";
 import DropdownClientes from "./DropdownClientes.jsx";
 import DropdownProfesionalesPorServicio from "./DropdownProfesionalesPorServicio.jsx";
 import FilterComponent from "./FilterComponent.jsx";
