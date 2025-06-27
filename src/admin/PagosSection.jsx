@@ -92,6 +92,20 @@ const PagosSection = () => {
         return fecha;
     };
 
+    // Función para ajustar fecha sumando un día (para compensar zona horaria)
+    const ajustarFechaParaServidor = (fechaString) => {
+        if (!fechaString) return fechaString;
+        
+        const fecha = new Date(fechaString + 'T00:00:00');
+        fecha.setDate(fecha.getDate() + 1);
+        
+        const year = fecha.getFullYear();
+        const month = String(fecha.getMonth() + 1).padStart(2, '0');
+        const day = String(fecha.getDate()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}`;
+    };
+
     // Función para aplicar filtros usando el backend cuando hay fechas
     const aplicarFiltros = async () => {
         let pagosFiltradosTemp = [];
@@ -118,7 +132,14 @@ const PagosSection = () => {
             try {
                 setIsLoading(true);
                 setError(null);
-                const url = `https://spabackend-production-e093.up.railway.app/api/pagosAdm/fechas?fechaInicio=${filtros.fechaInicio}&fechaFin=${filtros.fechaFin}`;
+                
+                // Ajustar fechas sumando un día para compensar zona horaria
+                const fechaInicioAjustada = ajustarFechaParaServidor(filtros.fechaInicio);
+                const fechaFinAjustada = ajustarFechaParaServidor(filtros.fechaFin);
+                
+                const url = `https://spabackend-production-e093.up.railway.app/api/pagosAdm/fechas?fechaInicio=${fechaInicioAjustada}&fechaFin=${fechaFinAjustada}`;
+                console.log('Fechas originales:', filtros.fechaInicio, '-', filtros.fechaFin);
+                console.log('Fechas ajustadas:', fechaInicioAjustada, '-', fechaFinAjustada);
                 console.log('URL de fetch:', url);
                 
                 const response = await fetch(url);
