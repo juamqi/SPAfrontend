@@ -34,7 +34,7 @@ const ProfTurnosSection = () => {
     const horasDisponibles = Array.from({ length: 14 }, (_, i) => `${(8 + i).toString().padStart(2, '0')}:00`);
     const { showPopup } = usePopupContext();
     const [fechaSeleccionada, setFechaSeleccionada] = useState("");
-
+    const [fechaParaImprimir, setFechaParaImprimir] = useState("");
 
     // Estados de turnos disponibles para filtrar
     const estadosTurnos = ['Solicitado', 'Cancelado'];
@@ -63,85 +63,40 @@ const ProfTurnosSection = () => {
         }
     };
 
-    // Reemplaza tu función fetchTurnos con esta versión corregida:
-
     const fetchTurnos = async () => {
-    try {
-        setIsLoading(true);
-        setError(null);
-        const response = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
-        if (!response.ok) {
-            throw new Error("Error al obtener los turnos");
+        try {
+            setIsLoading(true);
+            setError(null);
+            const response = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
+            if (!response.ok) {
+                throw new Error("Error al obtener los turnos");
+            }
+            const data = await response.json();
+
+            // Obtener el nombre del profesional desde localStorage
+            const nombreProfesional = profesional?.nombre;
+            
+            console.log("Nombre del profesional logueado:", nombreProfesional);
+            console.log("Todos los nombres de profesionales en turnos:", [...new Set(data.map(t => t.profesional))]);
+
+            // Filtrar turnos del profesional logueado por NOMBRE
+            const turnosDelProfesional = data.filter(t => 
+                t.profesional === nombreProfesional
+            );
+
+            console.log("Turnos filtrados del profesional:", turnosDelProfesional);
+            console.log("Cantidad de turnos encontrados:", turnosDelProfesional.length);
+
+            setTurnos(turnosDelProfesional);
+            setTurnosFiltrados(turnosDelProfesional);
+        } catch (error) {
+            console.error("Error al cargar los turnos:", error);
+            setError("No se pudieron cargar los turnos. Intenta nuevamente.");
+        } finally {
+            setIsLoading(false);
         }
-        const data = await response.json();
+    };
 
-        // Obtener el nombre del profesional desde localStorage
-        const nombreProfesional = profesional?.nombre;
-        
-        console.log("Nombre del profesional logueado:", nombreProfesional);
-        console.log("Todos los nombres de profesionales en turnos:", [...new Set(data.map(t => t.profesional))]);
-
-        // Filtrar turnos del profesional logueado por NOMBRE
-        const turnosDelProfesional = data.filter(t => 
-            t.profesional === nombreProfesional
-        );
-
-        console.log("Turnos filtrados del profesional:", turnosDelProfesional);
-        console.log("Cantidad de turnos encontrados:", turnosDelProfesional.length);
-
-        setTurnos(turnosDelProfesional);
-        setTurnosFiltrados(turnosDelProfesional);
-    } catch (error) {
-        console.error("Error al cargar los turnos:", error);
-        setError("No se pudieron cargar los turnos. Intenta nuevamente.");
-    } finally {
-        setIsLoading(false);
-    }
-};
-
-// También asegúrate de que el profesionalId se esté obteniendo correctamente
-// Agrega esto al inicio de tu componente para debug:
-
-useEffect(() => {
-    console.log("Profesional desde localStorage:", profesional);
-    console.log("ID del profesional:", profesionalId);
-    console.log("Tipo de ID del profesional:", typeof profesionalId);
-}, []);
-
-// Si el problema persiste, también podrías probar con esta alternativa más robusta:
-
-const fetchTurnosAlternativo = async () => {
-    try {
-        setIsLoading(true);
-        setError(null);
-        const response = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
-        if (!response.ok) {
-            throw new Error("Error al obtener los turnos");
-        }
-        const data = await response.json();
-
-        // Filtrar turnos del profesional logueado - múltiples comparaciones
-        const turnosDelProfesional = data.filter(t => {
-            // Comparar como números
-            if (Number(t.id_profesional) === Number(profesionalId)) return true;
-            // Comparar como strings
-            if (String(t.id_profesional) === String(profesionalId)) return true;
-            // Comparación directa
-            if (t.id_profesional === profesionalId) return true;
-            return false;
-        });
-
-        console.log("Turnos filtrados:", turnosDelProfesional);
-
-        setTurnos(turnosDelProfesional);
-        setTurnosFiltrados(turnosDelProfesional);
-    } catch (error) {
-        console.error("Error al cargar los turnos:", error);
-        setError("No se pudieron cargar los turnos. Intenta nuevamente.");
-    } finally {
-        setIsLoading(false);
-    }
-};
     const fetchCategorias = async () => {
         try {
             const response = await fetch("https://spabackend-production-e093.up.railway.app/api/categoriasAdm");
@@ -158,6 +113,11 @@ const fetchTurnosAlternativo = async () => {
         fetchCategorias();
         fetchServicios();
         fetchTurnos();
+        
+        // Establecer la fecha de mañana como valor por defecto
+        const mañana = new Date();
+        mañana.setDate(mañana.getDate() + 1);
+        setFechaParaImprimir(mañana.toISOString().split('T')[0]);
     }, []);
 
     // Función para manejar el cambio en el filtro
@@ -172,88 +132,116 @@ const fetchTurnosAlternativo = async () => {
         return mañana.toISOString().split('T')[0];
     };
 
-    // Función para generar e imprimir PDF con los turnos de mañana
-    const handleAgregar = () => {
-    const fechaElegida = fechaSeleccionada || getFechaMañana();
-
-    const turnosDia = turnos.filter(turno => {
-        const fechaTurno = turno.fecha.split('T')[0];
-        return (
-            fechaTurno === fechaElegida &&
-            turno.estado === 'Solicitado' &&
-            turno.id_profesional === profesionalId
-        );
-    });
-
-    if (turnosDia.length === 0) {
-        showPopup({
-            type: 'info',
-            title: "Atención",
-            message: "No hay turnos programados para esa fecha.",
-        });
-        return;
-    }
-
-    turnosDia.sort((a, b) => a.hora.localeCompare(b.hora));
-
-    const contenidoHTML = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Turnos</title>
-            <style>
-                body { font-family: Arial; margin: 20px; font-size: 12px; }
-                h1 { text-align: center; margin-bottom: 20px; }
-                .fecha-titulo { text-align: center; margin-bottom: 30px; font-size: 14px; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th, td { border: 1px solid #ddd; padding: 8px; }
-                th { background-color: #f2f2f2; }
-                tr:nth-child(even) { background-color: #f9f9f9; }
-                .total-turnos { margin-top: 20px; text-align: right; font-weight: bold; }
-            </style>
-        </head>
-        <body>
-            <h1>TURNOS</h1>
-            <div class="fecha-titulo">
-                Fecha: ${new Date(fechaElegida + 'T12:00:00').toLocaleDateString('es-AR', { 
-                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-                })}
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Hora</th>
-                        <th>Cliente</th>
-                        <th>Servicio</th>
-                        <th>Precio</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${turnosDia.map(turno => `
-                        <tr>
-                            <td>${turno.hora}</td>
-                            <td>${turno.cliente}</td>
-                            <td>${turno.servicio}</td>
-                            <td>$${turno.precio}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-            <div class="total-turnos">Total de turnos: ${turnosDia.length}</div>
-        </body>
-        </html>
-    `;
-
-    const ventanaImpresion = window.open('', '_blank');
-    ventanaImpresion.document.open();
-    ventanaImpresion.document.write(contenidoHTML);
-    ventanaImpresion.document.close();
-
-    ventanaImpresion.onload = () => {
-        ventanaImpresion.focus();
-        ventanaImpresion.print();
+    // Función para obtener la fecha de hoy en formato YYYY-MM-DD
+    const getFechaHoy = () => {
+        return new Date().toISOString().split('T')[0];
     };
-};
+
+    // Función para generar e imprimir PDF con los turnos de la fecha seleccionada
+    const handleImprimirTurnos = () => {
+        if (!fechaParaImprimir) {
+            showPopup({
+                type: 'warning',
+                title: "Atención",
+                message: "Por favor selecciona una fecha para imprimir los turnos.",
+            });
+            return;
+        }
+
+        const turnosDia = turnos.filter(turno => {
+            const fechaTurno = turno.fecha.split('T')[0];
+            return (
+                fechaTurno === fechaParaImprimir &&
+                turno.estado === 'Solicitado' &&
+                turno.id_profesional === profesionalId
+            );
+        });
+
+        if (turnosDia.length === 0) {
+            showPopup({
+                type: 'info',
+                title: "Información",
+                message: `No hay turnos programados para el ${new Date(fechaParaImprimir + 'T12:00:00').toLocaleDateString('es-AR')}.`,
+            });
+            return;
+        }
+
+        turnosDia.sort((a, b) => a.hora.localeCompare(b.hora));
+
+        const fechaFormateada = new Date(fechaParaImprimir + 'T12:00:00').toLocaleDateString('es-AR', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+
+        const contenidoHTML = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Turnos - ${fechaFormateada}</title>
+                <style>
+                    body { font-family: Arial; margin: 20px; font-size: 12px; }
+                    h1 { text-align: center; margin-bottom: 20px; color: #333; }
+                    .profesional-info { text-align: center; margin-bottom: 10px; font-size: 14px; font-weight: bold; }
+                    .fecha-titulo { text-align: center; margin-bottom: 30px; font-size: 14px; color: #666; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                    th { background-color: #f2f2f2; font-weight: bold; }
+                    tr:nth-child(even) { background-color: #f9f9f9; }
+                    .total-turnos { margin-top: 20px; text-align: right; font-weight: bold; font-size: 14px; }
+                    .resumen { margin-top: 30px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; }
+                    .resumen h3 { margin-top: 0; color: #495057; }
+                    .total-ingresos { color: #28a745; font-weight: bold; }
+                </style>
+            </head>
+            <body>
+                <h1>TURNOS PROGRAMADOS</h1>
+                <div class="profesional-info">Profesional: ${profesional?.nombre || 'N/A'}</div>
+                <div class="fecha-titulo">
+                    Fecha: ${fechaFormateada}
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Hora</th>
+                            <th>Cliente</th>
+                            <th>Servicio</th>
+                            <th>Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${turnosDia.map(turno => `
+                            <tr>
+                                <td>${turno.hora}</td>
+                                <td>${turno.cliente}</td>
+                                <td>${turno.servicio}</td>
+                                <td>$${turno.precio}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div class="resumen">
+                    <h3>Resumen del día</h3>
+                    <div class="total-turnos">Total de turnos: ${turnosDia.length}</div>
+                    <div class="total-ingresos">
+                        Total estimado: $${turnosDia.reduce((sum, turno) => sum + parseFloat(turno.precio || 0), 0).toLocaleString('es-AR')}
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        const ventanaImpresion = window.open('', '_blank');
+        ventanaImpresion.document.open();
+        ventanaImpresion.document.write(contenidoHTML);
+        ventanaImpresion.document.close();
+
+        ventanaImpresion.onload = () => {
+            ventanaImpresion.focus();
+            ventanaImpresion.print();
+        };
+    };
 
     // Función para dar estilo al estado según su valor
     const getEstadoClass = (estado) => {
@@ -277,9 +265,26 @@ const fetchTurnosAlternativo = async () => {
 
             <div className="turnos-header-flex">
                 <div className="btns-izquierda">
-                    <button className="btn-agregar" onClick={handleAgregar} disabled={isLoading}>
-                        IMPRIMIR TURNOS PARA MAÑANA
-                    </button>
+                    <div className="imprimir-turnos-section">
+                        <div className="fecha-selector">
+                            <label htmlFor="fechaImprimir">Fecha para imprimir:</label>
+                            <input
+                                type="date"
+                                id="fechaImprimir"
+                                value={fechaParaImprimir}
+                                onChange={(e) => setFechaParaImprimir(e.target.value)}
+                                min={getFechaHoy()}
+                                className="input-fecha"
+                            />
+                        </div>
+                        <button 
+                            className="btn-agregar" 
+                            onClick={handleImprimirTurnos} 
+                            disabled={isLoading || !fechaParaImprimir}
+                        >
+                            IMPRIMIR TURNOS
+                        </button>
+                    </div>
                 </div>
                 <div className="btns-derecha">
                     <FilterComponent
@@ -313,7 +318,7 @@ const fetchTurnosAlternativo = async () => {
                         <tbody>
                             {turnosFiltrados.length === 0 ? (
                                 <tr>
-                                    <td colSpan="8" style={{ textAlign: "center" }}>
+                                    <td colSpan="7" style={{ textAlign: "center" }}>
                                         No hay turnos disponibles
                                     </td>
                                 </tr>
@@ -341,7 +346,6 @@ const fetchTurnosAlternativo = async () => {
                     </table>
                 </div>
             )}
-
         </div>
     );
 };
