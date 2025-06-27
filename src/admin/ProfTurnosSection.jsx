@@ -455,32 +455,32 @@ const ProfTurnosSection = () => {
 
             {error && <div className="error-message">{error}</div>}
 
+            
             <div className="turnos-header-flex">
-                <div className="btns-izquierda" style={{ display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'flex-start' }}>
+                <div className="btns-izquierda" style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
                     <button className="btn-agregar" onClick={handleAgregar} disabled={isLoading || !servicioDelProfesional}>
                         Agregar Turno
                     </button>
 
-                    <div className="imprimir-turnos-section" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                        <button
-                            className="btn-agregar"
-                            onClick={handleImprimirTurnos}
-                            disabled={isLoading || !fechaParaImprimir}
-                        >
-                            Imprimir Turnos
-                        </button>
-                        <div className="fecha-selector" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <label htmlFor="fechaImprimir" style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>Fecha para imprimir:</label>
-                            <input
-                                type="date"
-                                id="fechaImprimir"
-                                value={fechaParaImprimir}
-                                onChange={(e) => setFechaParaImprimir(e.target.value)}
-                                min={getFechaHoy()}
-                                className="input-fecha"
-                                style={{ padding: '5px', fontSize: '14px' }}
-                            />
-                        </div>
+                    <button
+                        className="btn-agregar"
+                        onClick={handleImprimirTurnos}
+                        disabled={isLoading || !fechaParaImprimir}
+                    >
+                        Imprimir Turnos
+                    </button>
+
+                    <div className="fecha-selector" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label htmlFor="fechaImprimir" style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>Fecha para imprimir:</label>
+                        <input
+                            type="date"
+                            id="fechaImprimir"
+                            value={fechaParaImprimir}
+                            onChange={(e) => setFechaParaImprimir(e.target.value)}
+                            min={getFechaHoy()}
+                            className="input-fecha"
+                            style={{ padding: '5px', fontSize: '14px' }}
+                        />
                     </div>
                 </div>
                 <div className="btns-derecha">
