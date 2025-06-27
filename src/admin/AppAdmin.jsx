@@ -54,7 +54,7 @@ const AppAdmin = () => {
       <div className="admin-content">
         <div className="admin-header-simple">
           <h1>Panel de Administración</h1>
-          <p>Gestión de turnos, servicios, profesionales y pagos</p>
+          <p>Gestión de turnos, servicios, profesionales, clientes y pagos</p>
         </div>
 
         <TurnosSection />

@@ -291,8 +291,8 @@ h2 {
 .btn-agregar {
   margin-bottom: 1.5rem;
   padding: 0.75rem 1.5rem;
-  background: var(--color-secondary);
-  color: var(--color-text-light);
+  background: var(--color-secondary) !important;
+  color: var(--color-text-light) !important;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -305,7 +305,7 @@ h2 {
 }
 
 .btn-agregar:hover {
-  background: #d34747;
+  background: #d34747 !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(75, 56, 50, 0.15);
 }
@@ -326,7 +326,7 @@ h2 {
   transition: all 0.2s ease-in-out;
   box-shadow: 0 2px 4px rgba(75, 56, 50, 0.1);
   background-color: var(--color-secondary) !important;
-  color: var(--color-background);
+  color: var(--color-background) !important; 
 }
 
 .btn-eliminar:hover {
@@ -335,7 +335,7 @@ h2 {
 }
 
 .btn-eliminar:disabled {
-  background-color: #8d6e55;
+  background-color: #8d6e55 !important;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;

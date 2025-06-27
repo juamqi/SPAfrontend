@@ -1077,7 +1077,7 @@ const CarritoCompleto = forwardRef(({ isOpen, onClose, idCliente, forceRefresh }
                         <div className="modal-exito-botones">
                             <button
                                 className="boton-servicios"
-                                onClick={() => window.location.href = 'http://localhost:5173/perfil'}
+                                onClick={() => window.location.href = 'https://spafrontend-production.up.railway.app/perfil'}
                             >
                                 IR A MIS TURNOS
                             </button>
