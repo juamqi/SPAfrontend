@@ -78,7 +78,7 @@ const ProfTurnosSection = () => {
         }
     };
 
-    // Obtener SOLO los turnos del profesional logueado usando el endpoint específico
+    // Obtener SOLO los turnos del profesional logueado (solicitados o cancelados desde hoy)
     const fetchTurnos = async () => {
         if (!profesionalId) return;
         
@@ -86,69 +86,58 @@ const ProfTurnosSection = () => {
             setIsLoading(true);
             setError(null);
             
-            // Usar el endpoint específico para turnos del profesional
-            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/pagosAdm/profesional/${profesionalId}`);
+            // Obtener todos los turnos y filtrar por profesional y estado
+            const response = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
             if (!response.ok) {
-                throw new Error("Error al obtener los turnos del profesional");
+                throw new Error("Error al obtener los turnos");
             }
             
-            const turnosData = await response.json();
-            console.log("Turnos del profesional recibidos:", turnosData);
+            const todosTurnos = await response.json();
+            console.log("Todos los turnos recibidos:", todosTurnos.length);
+            
+            // Filtrar turnos del profesional actual
+            const turnosDelProfesional = todosTurnos.filter(turno => 
+                Number(turno.id_profesional) === Number(profesionalId) ||
+                turno.profesional === profesional?.nombre
+            );
 
-            // Convertir los datos de pagos a formato de turnos para mostrar en la tabla
-            const turnosFormateados = turnosData.map(pago => ({
-                id: pago.id,
-                fecha: pago.fecha_turno,
-                hora: pago.hora || 'N/A', // Asumiendo que el backend puede no tener hora separada
-                cliente: pago.cliente,
-                servicio: pago.servicio,
-                precio: pago.precio_pagado,
-                estado: 'Realizado', // Los pagos ya están realizados
-                profesional: pago.profesional,
-                comentarios: pago.comentarios || ''
-            }));
+            console.log("Turnos del profesional:", turnosDelProfesional.length);
 
-            // Si necesitamos también turnos pendientes/solicitados, hacer una llamada adicional
-            // al endpoint de turnos general filtrando por profesional
-            const turnosResponse = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
-            if (turnosResponse.ok) {
-                const todosTurnos = await turnosResponse.json();
+            // Filtrar solo estados permitidos: Solicitado o Cancelado
+            const turnosEstadosPermitidos = turnosDelProfesional.filter(turno => 
+                turno.estado === 'Solicitado' || turno.estado === 'Cancelado'
+            );
+
+            console.log("Turnos con estados permitidos:", turnosEstadosPermitidos.length);
+
+            // Obtener fecha de hoy (sin horas)
+            const fechaHoy = new Date();
+            fechaHoy.setHours(0, 0, 0, 0);
+            const fechaHoyStr = fechaHoy.toISOString().split('T')[0]; // YYYY-MM-DD
+
+            console.log("Fecha límite (hoy):", fechaHoyStr);
+
+            // Filtrar turnos desde hoy en adelante
+            const turnosDesdehoy = turnosEstadosPermitidos.filter(turno => {
+                const fechaTurno = turno.fecha?.split('T')[0];
+                const esFechaValida = fechaTurno >= fechaHoyStr;
                 
-                // Filtrar turnos del profesional actual
-                const turnosDelProfesional = todosTurnos.filter(turno => 
-                    Number(turno.id_profesional) === Number(profesionalId) ||
-                    turno.profesional === profesional?.nombre
-                );
+                console.log(`Turno ID ${turno.id}: fecha=${fechaTurno}, válida=${esFechaValida}`);
+                
+                return esFechaValida;
+            });
 
-                console.log("Turnos adicionales del profesional:", turnosDelProfesional);
+            console.log("Turnos desde hoy en adelante:", turnosDesdehoy.length);
 
-                // Combinar turnos realizados (de pagos) con turnos pendientes
-                const todosTurnosCompletos = [...turnosFormateados, ...turnosDelProfesional];
+            // Ordenar por fecha ascendente (más próximos primero)
+            turnosDesdehoy.sort((a, b) => {
+                const fechaA = new Date(a.fecha);
+                const fechaB = new Date(b.fecha);
+                return fechaA - fechaB;
+            });
 
-                // Filtrar turnos desde hace 2 días para incluir turnos recientes
-                const fechaFiltro = new Date();
-                fechaFiltro.setDate(fechaFiltro.getDate() - 2);
-                const fechaFiltroStr = fechaFiltro.toISOString().split('T')[0];
-
-                const turnosFiltradosPorFecha = todosTurnosCompletos.filter(turno => {
-                    const fechaTurno = turno.fecha?.split('T')[0] || turno.fecha_turno?.split('T')[0];
-                    return fechaTurno >= fechaFiltroStr;
-                });
-
-                // Ordenar por fecha ascendente
-                turnosFiltradosPorFecha.sort((a, b) => {
-                    const fechaA = new Date(a.fecha || a.fecha_turno);
-                    const fechaB = new Date(b.fecha || b.fecha_turno);
-                    return fechaA - fechaB;
-                });
-
-                setTurnos(turnosFiltradosPorFecha);
-                setTurnosFiltrados(turnosFiltradosPorFecha);
-            } else {
-                // Si falla la llamada adicional, usar solo los turnos de pagos
-                setTurnos(turnosFormateados);
-                setTurnosFiltrados(turnosFormateados);
-            }
+            setTurnos(turnosDesdehoy);
+            setTurnosFiltrados(turnosDesdehoy);
 
         } catch (error) {
             console.error("Error al cargar los turnos:", error);
@@ -343,7 +332,7 @@ const ProfTurnosSection = () => {
         }
 
         const turnosDia = turnos.filter(turno => {
-            const fechaTurno = (turno.fecha || turno.fecha_turno)?.split('T')[0];
+            const fechaTurno = turno.fecha?.split('T')[0];
             const esFechaCorrecta = fechaTurno === fechaParaImprimir;
             const esEstadoCorrecto = turno.estado === 'Solicitado';
             return esFechaCorrecta && esEstadoCorrecto;
@@ -558,7 +547,7 @@ const ProfTurnosSection = () => {
                                         }}
                                     >
                                         <td>{t.id}</td>
-                                        <td>{t.fecha || t.fecha_turno}</td>
+                                        <td>{t.fecha}</td>
                                         <td>{t.hora}</td>
                                         <td>{t.cliente}</td>
                                         <td>{t.servicio}</td>
