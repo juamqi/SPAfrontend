@@ -22,7 +22,38 @@ const ProfTurnosSection = () => {
         cliente_nombre: "",
         comentarios: "",
     });
-    const horasDisponibles = Array.from({ length: 14 }, (_, i) => `${(8 + i).toString().padStart(2, '0')}:00`);
+    
+    // Función para generar horas disponibles basándose en la fecha seleccionada
+    const getHorasDisponibles = () => {
+        const horasBase = Array.from({ length: 14 }, (_, i) => `${(8 + i).toString().padStart(2, '0')}:00`);
+        
+        // Si no hay fecha seleccionada, mostrar todas las horas
+        if (!formulario.fecha) {
+            return horasBase;
+        }
+        
+        const fechaSeleccionada = new Date(formulario.fecha + 'T00:00:00');
+        const fechaHoy = new Date();
+        fechaHoy.setHours(0, 0, 0, 0);
+        
+        // Si la fecha seleccionada no es hoy, mostrar todas las horas
+        if (fechaSeleccionada.getTime() !== fechaHoy.getTime()) {
+            return horasBase;
+        }
+        
+        // Si es hoy, filtrar las horas que ya pasaron
+        const horaActual = new Date().getHours();
+        const minutosActuales = new Date().getMinutes();
+        
+        return horasBase.filter(hora => {
+            const horaNumero = parseInt(hora.split(':')[0]);
+            // Permitir la hora actual si aún no han pasado 30 minutos (dar margen)
+            // O permitir horas futuras
+            return horaNumero > horaActual || (horaNumero === horaActual && minutosActuales < 30);
+        });
+    };
+    
+    const horasDisponibles = getHorasDisponibles();
     const { showPopup } = usePopupContext();
     const [fechaParaImprimir, setFechaParaImprimir] = useState("");
 
@@ -515,7 +546,13 @@ const ProfTurnosSection = () => {
                         id="fecha"
                         type="date"
                         value={formulario.fecha}
-                        onChange={e => setFormulario({ ...formulario, fecha: e.target.value })}
+                        onChange={e => {
+                            setFormulario({ 
+                                ...formulario, 
+                                fecha: e.target.value,
+                                hora: "" // Limpiar la hora cuando cambie la fecha
+                            });
+                        }}
                         disabled={isLoading}
                         required
                         min={getFechaHoy()}
@@ -528,14 +565,26 @@ const ProfTurnosSection = () => {
                         id="hora"
                         value={formulario.hora}
                         onChange={(e) => setFormulario({ ...formulario, hora: e.target.value })}
-                        disabled={isLoading}
+                        disabled={isLoading || !formulario.fecha}
                         required
                         className="border p-2 rounded w-full mb-4">
-                        <option value="">Seleccione una hora</option>
+                        <option value="">
+                            {!formulario.fecha ? "Primero seleccione una fecha" : "Seleccione una hora"}
+                        </option>
                         {horasDisponibles.map((hora) => (
                             <option key={hora} value={hora}>{hora}</option>
                         ))}
                     </select>
+                    {formulario.fecha && horasDisponibles.length === 0 && (
+                        <p style={{color: 'red', fontSize: '12px', marginTop: '5px'}}>
+                            No hay horas disponibles para esta fecha
+                        </p>
+                    )}
+                    {formulario.fecha && new Date(formulario.fecha + 'T00:00:00').toDateString() === new Date().toDateString() && (
+                        <p style={{color: '#666', fontSize: '12px', marginTop: '5px'}}>
+                            Solo se muestran las horas disponibles para hoy
+                        </p>
+                    )}
                 </div>
 
                 <DropdownClientes
