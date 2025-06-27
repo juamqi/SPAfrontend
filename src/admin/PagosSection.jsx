@@ -103,26 +103,19 @@ const PagosSection = () => {
             }
         }
 
-        // Filtro por rango de fechas
+        // Filtro por rango de fechas - CORREGIDO para comparación de strings
         if (filtros.fechaInicio && filtros.fechaFin) {
             pagosFiltradosTemp = pagosFiltradosTemp.filter(pago => {
-                const fechaPago = new Date(pago.fecha_pago);
-                const fechaInicio = new Date(filtros.fechaInicio);
-                const fechaFin = new Date(filtros.fechaFin);
-                
-                return fechaPago >= fechaInicio && fechaPago <= fechaFin;
+                // Comparar directamente como strings en formato YYYY-MM-DD
+                return pago.fecha_pago >= filtros.fechaInicio && pago.fecha_pago <= filtros.fechaFin;
             });
         } else if (filtros.fechaInicio) {
             pagosFiltradosTemp = pagosFiltradosTemp.filter(pago => {
-                const fechaPago = new Date(pago.fecha_pago);
-                const fechaInicio = new Date(filtros.fechaInicio);
-                return fechaPago >= fechaInicio;
+                return pago.fecha_pago >= filtros.fechaInicio;
             });
         } else if (filtros.fechaFin) {
             pagosFiltradosTemp = pagosFiltradosTemp.filter(pago => {
-                const fechaPago = new Date(pago.fecha_pago);
-                const fechaFin = new Date(filtros.fechaFin);
-                return fechaPago <= fechaFin;
+                return pago.fecha_pago <= filtros.fechaFin;
             });
         }
 
