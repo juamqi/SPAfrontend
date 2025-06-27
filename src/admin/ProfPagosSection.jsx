@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { usePopupContext } from "../componentes/popupcontext.jsx";
-import { useProfAuth } from '../context/ProfAuthContext'; // Importar el contexto
+import { useProfAuth } from '../context/ProfAuthContext';
 
 const ProfPagosSection = () => {
     const [pagos, setPagos] = useState([]);
@@ -17,7 +17,7 @@ const ProfPagosSection = () => {
     });
 
     const { showPopup } = usePopupContext();
-    const { profesional } = useProfAuth(); // Usar el contexto en lugar de localStorage
+    const { profesional } = useProfAuth();
 
     // Función para obtener pagos del profesional
     const fetchPagosProfesional = async () => {
@@ -69,38 +69,12 @@ const ProfPagosSection = () => {
         }
     }, [profesional]);
 
-    // Función para formatear fecha para input
-    const formatearFechaParaInput = (fecha) => {
-        if (!fecha) return "";
-        if (typeof fecha === 'string' && fecha.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            return fecha;
-        }
-        if (fecha instanceof Date) {
-            return fecha.toISOString().split('T')[0];
-        }
-        return fecha;
-    };
-
-    // Función para ajustar fecha de inicio (suma 1 día para compensar zona horaria)
-    const ajustarFechaInicio = (fechaString) => {
+    // Función para sumar un día a la fecha (solo para compensar zona horaria)
+    const sumarUnDia = (fechaString) => {
         if (!fechaString) return fechaString;
         
-        const fecha = new Date(fechaString + 'T00:00:00');
+        const fecha = new Date(fechaString + 'T12:00:00'); // Usar mediodía para evitar problemas de zona horaria
         fecha.setDate(fecha.getDate() + 1);
-        
-        const year = fecha.getFullYear();
-        const month = String(fecha.getMonth() + 1).padStart(2, '0');
-        const day = String(fecha.getDate()).padStart(2, '0');
-        
-        return `${year}-${month}-${day}`;
-    };
-
-    // Función para ajustar fecha fin (mantiene la fecha original)
-    const ajustarFechaFin = (fechaString) => {
-        if (!fechaString) return fechaString;
-        
-        // Para fecha fin, no sumamos días - queremos incluir hasta ese día
-        const fecha = new Date(fechaString + 'T23:59:59');
         
         const year = fecha.getFullYear();
         const month = String(fecha.getMonth() + 1).padStart(2, '0');
@@ -123,24 +97,24 @@ const ProfPagosSection = () => {
             }
         }
 
-        // Filtro por rango de fechas con ajuste de zona horaria
+        // Filtro por rango de fechas - sumando 1 día a ambas fechas para compensar zona horaria
         if (filtros.fechaInicio && filtros.fechaFin) {
-            const fechaInicioAjustada = ajustarFechaInicio(filtros.fechaInicio);
-            const fechaFinAjustada = ajustarFechaFin(filtros.fechaFin);
+            const fechaInicioAjustada = sumarUnDia(filtros.fechaInicio);
+            const fechaFinAjustada = sumarUnDia(filtros.fechaFin);
             
-            console.log('Filtros de fecha - Original:', filtros.fechaInicio, '-', filtros.fechaFin);
-            console.log('Filtros de fecha - Ajustados:', fechaInicioAjustada, '-', fechaFinAjustada);
+            console.log('Fechas originales:', filtros.fechaInicio, '-', filtros.fechaFin);
+            console.log('Fechas ajustadas:', fechaInicioAjustada, '-', fechaFinAjustada);
             
             pagosFiltradosTemp = pagosFiltradosTemp.filter(pago => {
                 return pago.fecha_pago >= fechaInicioAjustada && pago.fecha_pago <= fechaFinAjustada;
             });
         } else if (filtros.fechaInicio) {
-            const fechaInicioAjustada = ajustarFechaInicio(filtros.fechaInicio);
+            const fechaInicioAjustada = sumarUnDia(filtros.fechaInicio);
             pagosFiltradosTemp = pagosFiltradosTemp.filter(pago => {
                 return pago.fecha_pago >= fechaInicioAjustada;
             });
         } else if (filtros.fechaFin) {
-            const fechaFinAjustada = ajustarFechaFin(filtros.fechaFin);
+            const fechaFinAjustada = sumarUnDia(filtros.fechaFin);
             pagosFiltradosTemp = pagosFiltradosTemp.filter(pago => {
                 return pago.fecha_pago <= fechaFinAjustada;
             });
@@ -151,7 +125,6 @@ const ProfPagosSection = () => {
 
     // Aplicar filtros cada vez que cambien
     useEffect(() => {
-        console.log('Filtros cambiaron:', filtros);
         aplicarFiltros();
     }, [filtros, pagos, servicios]);
 
@@ -165,29 +138,8 @@ const ProfPagosSection = () => {
         setError(null);
     };
 
-    // Función para manejar cambios en los filtros - MEJORADA
+    // Función para manejar cambios en los filtros - SIMPLE
     const handleFiltroChange = (campo, valor) => {
-        console.log(`Cambiando filtro ${campo} a:`, valor);
-        
-        // Validación específica para fechas
-        if (campo === 'fechaInicio' || campo === 'fechaFin') {
-            // Verificar que el formato sea correcto
-            const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
-            if (valor && !fechaRegex.test(valor)) {
-                console.error(`Formato de fecha inválido para ${campo}:`, valor);
-                return;
-            }
-            
-            // Prevenir fechas corruptas - verificar que el año sea razonable
-            if (valor) {
-                const year = parseInt(valor.substring(0, 4));
-                if (year < 2020 || year > 2030) {
-                    console.error(`Año de fecha inválido para ${campo}:`, valor, 'Año:', year);
-                    return;
-                }
-            }
-        }
-        
         setFiltros(prev => ({
             ...prev,
             [campo]: valor
@@ -260,7 +212,7 @@ const ProfPagosSection = () => {
                         <input
                             id="filtro-fecha-inicio"
                             type="date"
-                            value={formatearFechaParaInput(filtros.fechaInicio)}
+                            value={filtros.fechaInicio}
                             onChange={(e) => handleFiltroChange('fechaInicio', e.target.value)}
                             className="filtro-input"
                         />
@@ -271,7 +223,7 @@ const ProfPagosSection = () => {
                         <input
                             id="filtro-fecha-fin"
                             type="date"
-                            value={formatearFechaParaInput(filtros.fechaFin)}
+                            value={filtros.fechaFin}
                             onChange={(e) => handleFiltroChange('fechaFin', e.target.value)}
                             className="filtro-input"
                         />
