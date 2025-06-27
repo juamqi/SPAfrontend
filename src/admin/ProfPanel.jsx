@@ -41,7 +41,7 @@ const ProfPanel = () => {
 
       <div className="admin-content">
         <div className="admin-header-simple">
-          <h1>Perfil de Profesionala</h1>
+          <h1>Perfil de Profesional</h1>
           <p>Gestión de turnos, clientes y pagos</p>
         </div>
 

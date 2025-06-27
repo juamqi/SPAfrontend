@@ -290,8 +290,8 @@ h2 {
 .btn-agregar {
   margin-bottom: 1.5rem;
   padding: 0.75rem 1.5rem;
-  background: var(--color-secondary);
-  color: var(--color-primary);
+  background: var(--color-secondary) !important;
+  color: var(--color-primary) !important;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -304,7 +304,7 @@ h2 {
 }
 
 .btn-agregar:hover {
-  background: #c69764;
+  background: #c69764 !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(75, 56, 50, 0.15);
 }
