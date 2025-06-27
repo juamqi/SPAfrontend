@@ -297,6 +297,20 @@ const TurnosSection = () => {
                 }
 
                 alert("Turno creado correctamente");
+
+                const datosParaImprimir = {
+                    cliente_nombre: formulario.cliente_nombre,
+                    profesional_nombre: formulario.profesional_nombre,
+                    servicio: formulario.servicio,
+                    fecha: formulario.fecha,
+                    hora: formulario.hora,
+                    precio: formulario.precio,
+                    comentarios: formulario.comentarios
+                };
+
+                console.log("Datos preparados para impresión:", datosParaImprimir);
+                imprimirComprobanteTurno(datosParaImprimir);
+                
             } else {
                 // Editar turno existente
                 const id = parseInt(formulario.id, 10);
@@ -471,6 +485,114 @@ const TurnosSection = () => {
             default:
                 return '';
         }
+    };
+
+    const imprimirComprobanteTurno = (formulario) => {
+        const ventanaImpresion = window.open('', '_blank');
+        const fechaActual = new Date().toLocaleDateString('es-AR');
+        const horaActual = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+        const contenidoComprobante = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Comprobante de Turno</title>
+            <style>
+                body {
+                    font-family: 'Arial', sans-serif;
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #f8f9fa;
+                    color: #333;
+                }
+                .comprobante {
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                    overflow: hidden;
+                }
+                .header {
+                    background: linear-gradient(135deg, #4A3D3D 0%, #6B5B5B 100%);
+                    color: white;
+                    padding: 30px 25px;
+                    text-align: center;
+                }
+                .header h1 {
+                    margin: 0;
+                    font-size: 28px;
+                    font-weight: bold;
+                    letter-spacing: 1px;
+                }
+                .content {
+                    padding: 25px;
+                }
+                .seccion {
+                    margin-bottom: 25px;
+                }
+                .seccion h3 {
+                    color: #4A3D3D;
+                    font-size: 16px;
+                    margin-bottom: 12px;
+                    text-transform: uppercase;
+                }
+                .info-item {
+                    margin-bottom: 10px;
+                }
+                .info-label {
+                    font-weight: bold;
+                    color: #555;
+                }
+                .info-value {
+                    margin-left: 5px;
+                }
+                .footer {
+                    background: #f8f9fa;
+                    padding: 20px;
+                    text-align: center;
+                    color: #666;
+                    font-size: 12px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="comprobante">
+                <div class="header">
+                    <h1>Comprobante de Turno</h1>
+                    <div>Spa "Sentirse Bien"</div>
+                </div>
+
+                <div class="content">
+                    <div class="seccion">
+                        <h3>Datos del Turno</h3>
+                        <div class="info-item"><span class="info-label">Cliente:</span><span class="info-value">${formulario.cliente_nombre}</span></div>
+                        <div class="info-item"><span class="info-label">Profesional:</span><span class="info-value">${formulario.profesional_nombre}</span></div>
+                        <div class="info-item"><span class="info-label">Servicio:</span><span class="info-value">${formulario.servicio}</span></div>
+                        <div class="info-item"><span class="info-label">Fecha:</span><span class="info-value">${formulario.fecha}</span></div>
+                        <div class="info-item"><span class="info-label">Hora:</span><span class="info-value">${formulario.hora}</span></div>
+                        <div class="info-item"><span class="info-label">Precio:</span><span class="info-value">$${formulario.precio}</span></div>
+                        ${formulario.comentarios ? `<div class="info-item"><span class="info-label">Comentarios:</span><span class="info-value">${formulario.comentarios}</span></div>` : ""}
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p>Este comprobante es válido como constancia de reserva.</p>
+                    <p>Emitido el ${fechaActual} a las ${horaActual}</p>
+                    <p>Gracias por confiar en nosotros.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        `;
+
+        ventanaImpresion.document.write(contenidoComprobante);
+        ventanaImpresion.document.close();
+
+        ventanaImpresion.onload = function () {
+            setTimeout(() => {
+                ventanaImpresion.print();
+            }, 100);
+        };
     };
 
     return (
