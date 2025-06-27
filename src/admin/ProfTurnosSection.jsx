@@ -127,10 +127,10 @@ const ProfTurnosSection = () => {
 
     // Función para obtener la fecha de mañana en formato YYYY-MM-DD
     const getFechaMañana = () => {
-    const mañana = new Date();
-    mañana.setDate(mañana.getDate() + 1);
-    return mañana.toLocaleDateString('en-CA'); // YYYY-MM-DD local
-};
+        const mañana = new Date();
+        mañana.setDate(mañana.getDate() + 1);
+        return mañana.toLocaleDateString('en-CA'); // YYYY-MM-DD local
+    };
 
     // Función para obtener la fecha de hoy en formato YYYY-MM-DD
     const getFechaHoy = () => {
@@ -180,12 +180,10 @@ const ProfTurnosSection = () => {
         }
 
         // Verificar que la fecha no sea anterior a hoy
-        const fechaSeleccionada = new Date(formulario.fecha);
         const fechaHoy = new Date();
-
-        // Establecer la hora a 00:00:00 para comparar solo las fechas
         fechaHoy.setHours(0, 0, 0, 0);
-        fechaSeleccionada.setHours(0, 0, 0, 0);
+
+        const fechaSeleccionada = new Date(formulario.fecha + 'T00:00'); // Evita error por zona horaria
 
         if (fechaSeleccionada < fechaHoy) {
             throw new Error("No se puede agendar un turno en una fecha que ya pasó");
@@ -615,14 +613,14 @@ const ProfTurnosSection = () => {
                 <div className="form-group">
                     <label htmlFor="fecha">Fecha:</label>
                     <input
-    id="fecha"
-    type="date"
-    value={formulario.fecha}
-    onChange={e => setFormulario({ ...formulario, fecha: e.target.value })}
-    disabled={isLoading}
-    required
-    min={getFechaHoy()} // 🔒 Esto impide seleccionar días pasados, pero permite hoy
-/>
+                        id="fecha"
+                        type="date"
+                        value={formulario.fecha}
+                        onChange={e => setFormulario({ ...formulario, fecha: e.target.value })}
+                        disabled={isLoading}
+                        required
+                        min={getFechaHoy()} // 🔒 Esto impide seleccionar días pasados, pero permite hoy
+                    />
                 </div>
 
                 <div className="form-group">
