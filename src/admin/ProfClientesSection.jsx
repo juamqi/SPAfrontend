@@ -2,7 +2,32 @@ import React, { useEffect, useState } from "react";
 import ModalForm from "./ModalForm.jsx";
 import ClienteFilterComponent from "./ClienteFilterComponent.jsx";
 
-const ProfClientesSection = () => {
+const ProfClientesSection = ({ profesionalId }) => { // Recibir profesionalId como prop
+    // Opción 1: Obtener profesionalId del localStorage/sessionStorage
+    const getProfesionalId = () => {
+        if (profesionalId) return profesionalId;
+        
+        // Intentar obtener desde localStorage
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            const user = JSON.parse(storedUser);
+            return user.id || user.profesional_id || user.id_profesional;
+        }
+        
+        // Intentar obtener desde sessionStorage
+        const sessionUser = sessionStorage.getItem('user');
+        if (sessionUser) {
+            const user = JSON.parse(sessionUser);
+            return user.id || user.profesional_id || user.id_profesional;
+        }
+        
+        // Como última opción, intentar obtener desde alguna variable global
+        // return window.currentProfessional?.id;
+        
+        return null;
+    };
+    
+    const currentProfesionalId = getProfesionalId();
     const [clientes, setClientes] = useState([]);
     const [modo, setModo] = useState("crear");
     const [mostrarModal, setMostrarModal] = useState(false);
@@ -58,41 +83,85 @@ const ProfClientesSection = () => {
     };
 
     useEffect(() => {
-        const fetchClientes = async () => {
+        const fetchClientesDelProfesional = async () => {
             try {
                 setLoading(true);
-                const response = await fetch("https://spabackend-production-e093.up.railway.app/api/clientesAdm");
-                if (!response.ok) throw new Error("Error al obtener los clientes");
+                
+                // Si no hay profesionalId, no cargar nada
+                if (!currentProfesionalId) {
+                    setClientes([]);
+                    setClientesOriginales([]);
+                    return;
+                }
 
-                const data = await response.json();
-                const clientesConId = data.map(cliente => ({
+                // Primero obtener todos los turnos del profesional
+                const turnosResponse = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnos/profesional/${currentProfesionalId}`);
+                if (!turnosResponse.ok) throw new Error("Error al obtener los turnos del profesional");
+                
+                const turnosData = await turnosResponse.json();
+                
+                // Extraer IDs únicos de clientes que tienen turnos con este profesional
+                const clienteIdsUnicos = [...new Set(turnosData.map(turno => turno.id_cliente).filter(id => id))];
+                
+                if (clienteIdsUnicos.length === 0) {
+                    setClientes([]);
+                    setClientesOriginales([]);
+                    return;
+                }
+
+                // Obtener todos los clientes
+                const clientesResponse = await fetch("https://spabackend-production-e093.up.railway.app/api/clientesAdm");
+                if (!clientesResponse.ok) throw new Error("Error al obtener los clientes");
+
+                const clientesData = await clientesResponse.json();
+                
+                // Filtrar solo los clientes que tienen turnos con este profesional
+                const clientesDelProfesional = clientesData.filter(cliente => 
+                    clienteIdsUnicos.includes(cliente.id || cliente.id_cliente)
+                ).map(cliente => ({
                     ...cliente,
                     id: cliente.id || cliente.id_cliente
                 }));
 
                 // Guardar tanto los originales como los actuales
-                setClientes(clientesConId);
-                setClientesOriginales(clientesConId);
+                setClientes(clientesDelProfesional);
+                setClientesOriginales(clientesDelProfesional);
+                
             } catch (error) {
-                console.error("Error al cargar los clientes:", error);
+                console.error("Error al cargar los clientes del profesional:", error);
                 setError("No se pudieron cargar los clientes. Intenta nuevamente.");
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchClientes();
-    }, []);
+        fetchClientesDelProfesional();
+    }, [currentProfesionalId]); // Dependencia del profesionalId
 
-    // Función para obtener el historial de turnos del cliente
+    // Función para obtener el historial de turnos del cliente CON ESTE PROFESIONAL
     const fetchHistorialCliente = async (clienteId) => {
         try {
             setLoadingHistorial(true);
-            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnos/pro/${clienteId}`);
-            if (!response.ok) throw new Error("Error al obtener el historial");
+            
+            // Modificar la URL para obtener solo los turnos del cliente con este profesional específico
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnos/cliente/${clienteId}/profesional/${currentProfesionalId}`);
+            if (!response.ok) {
+                // Si el endpoint específico no existe, usar el general y filtrar
+                const responseGeneral = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnos/pro/${clienteId}`);
+                if (!responseGeneral.ok) throw new Error("Error al obtener el historial");
+                
+                const dataGeneral = await responseGeneral.json();
+                // Filtrar solo los turnos con este profesional
+                const turnosFiltrados = dataGeneral.filter(turno => 
+                    turno.id_profesional === currentProfesionalId || 
+                    turno.profesional_id === currentProfesionalId
+                );
+                setHistorialTurnos(turnosFiltrados);
+                return;
+            }
 
             const data = await response.json();
-            console.log('Datos del historial:', data); // Para debug
+            console.log('Datos del historial filtrado:', data); // Para debug
             setHistorialTurnos(data);
         } catch (error) {
             console.error("Error al cargar el historial:", error);
@@ -134,13 +203,31 @@ const ProfClientesSection = () => {
         }
     };
 
+    // Mostrar mensaje si no hay profesionalId
+    if (!currentProfesionalId) {
+        return (
+            <div id="clientes">
+                <h2>Clientes</h2>
+                <div className="no-profesional">
+                    <p>No se pudo identificar al profesional actual.</p>
+                    <p><small>Verifica que hayas iniciado sesión correctamente.</small></p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div id="clientes">
-            <h2>Clientes</h2>
+            <h2>Mis Clientes</h2>
+            <p className="subtitle">Clientes que han agendado turnos conmigo</p>
             {error && <div className="error-message">{error}</div>}
 
             {loading ? (
                 <div className="loading">Cargando...</div>
+            ) : clientes.length === 0 ? (
+                <div className="no-clientes">
+                    <p>Aún no tienes clientes que hayan agendado turnos contigo.</p>
+                </div>
             ) : (
                 <table className="tabla">
                     <thead>
@@ -154,7 +241,7 @@ const ProfClientesSection = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {clientes.map(p => (
+                        {clientesFiltrados.map(p => (
                             <tr
                                 key={p.id}
                                 onClick={() => setClienteSeleccionado(p)}
@@ -186,7 +273,7 @@ const ProfClientesSection = () => {
                 <div className="modal-overlay" onClick={cerrarHistorial}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3>Historial de Turnos</h3>
+                            <h3>Historial de Turnos Conmigo</h3>
                             <button className="btn-cerrar" onClick={cerrarHistorial}>×</button>
                         </div>
 
@@ -201,11 +288,11 @@ const ProfClientesSection = () => {
                                 <div className="loading">Cargando historial...</div>
                             ) : historialTurnos.length === 0 ? (
                                 <div className="no-historial">
-                                    <p>Este cliente no tiene turnos registrados.</p>
+                                    <p>Este cliente no tiene turnos registrados contigo.</p>
                                 </div>
                             ) : (
                                 <div className="historial-container">
-                                    <h5>Turnos ({historialTurnos.length})</h5>
+                                    <h5>Turnos Conmigo ({historialTurnos.length})</h5>
                                     <div className="tabla-historial-container">
                                         <table className="tabla-historial">
                                             <thead>
@@ -213,7 +300,6 @@ const ProfClientesSection = () => {
                                                     <th>Fecha</th>
                                                     <th>Hora</th>
                                                     <th>Servicio</th>
-                                                    <th>Profesional</th>
                                                     <th>Precio</th>
                                                     <th>Estado</th>
                                                 </tr>
@@ -224,7 +310,6 @@ const ProfClientesSection = () => {
                                                         <td>{formatearFecha(turno.fecha)}</td>
                                                         <td>{formatearHora(turno.hora)}</td>
                                                         <td>{turno.servicio || 'Sin servicio'}</td>
-                                                        <td>{turno.profesional || 'No asignado'}</td>
                                                         <td>{formatearPrecio(turno.precio)}</td>
                                                         <td className={getEstadoClass(turno.estado)}>
                                                             {turno.estado || 'Sin estado'}
@@ -248,6 +333,23 @@ const ProfClientesSection = () => {
             )}
 
             <style jsx>{`
+  .subtitle {
+    color: var(--color-accent);
+    font-style: italic;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+
+  .no-profesional,
+  .no-clientes {
+    text-align: center;
+    padding: 2rem;
+    background-color: rgba(75, 44, 32, 0.05);
+    border-radius: var(--border-radius);
+    color: var(--color-accent);
+    font-style: italic;
+  }
+
   .modal-overlay {
     position: fixed;
     inset: 0;

@@ -708,6 +708,8 @@ const CarritoCompleto = forwardRef(({ isOpen, onClose, idCliente, forceRefresh }
                 let texto = "=== CONFIRMACIÓN DE TURNOS ===\n\n";
                 
                 const total = servicios.reduce((sum, servicio) => sum + servicio.precio, 0);
+                const descuento = total * 0.15;
+                const totalMasDescuento = total -descuento;
                 
                 // ✅ NUEVO: Incluir datos del cliente en el email
                 texto += `👤 Cliente: ${cliente.nombre || 'Sin nombre'} ${cliente.apellido || ''}\n`;
@@ -728,6 +730,7 @@ const CarritoCompleto = forwardRef(({ isOpen, onClose, idCliente, forceRefresh }
                     texto += `   🕐 Hora: ${servicio.hora}\n`;
                     texto += `   ⏱️ Duración: ${servicio.duracion} minutos\n`;
                     texto += `   💰 Precio: $${servicio.precio.toLocaleString('es-AR')}\n`;
+                    texto += `   💰 Descuento: $${descuento.toLocaleString('es-AR')}\n`
                     texto += `   📝 Estado: ${servicio.estado}\n`;
                     if (servicio.comentarios) {
                         texto += `   💬 Comentarios: ${servicio.comentarios}\n`;
@@ -737,7 +740,7 @@ const CarritoCompleto = forwardRef(({ isOpen, onClose, idCliente, forceRefresh }
                 
                 texto += "--- RESUMEN ---\n";
                 texto += `Total de servicios: ${servicios.length}\n`;
-                texto += `Monto total: $${total.toLocaleString('es-AR')}\n\n`;
+                texto += `Monto total: $${totalMasDescuento.toLocaleString('es-AR')}\n\n`;
                 
                 if (aplicaDescuento) {
                     texto += `💸 Descuento del 15% aplicado\n\n`;
