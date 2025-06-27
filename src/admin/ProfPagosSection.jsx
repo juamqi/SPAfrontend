@@ -81,12 +81,26 @@ const ProfPagosSection = () => {
         return fecha;
     };
 
-    // Función para ajustar fecha sumando un día (para compensar zona horaria)
-    const ajustarFechaParaComparacion = (fechaString) => {
+    // Función para ajustar fecha de inicio (suma 1 día para compensar zona horaria)
+    const ajustarFechaInicio = (fechaString) => {
         if (!fechaString) return fechaString;
         
         const fecha = new Date(fechaString + 'T00:00:00');
         fecha.setDate(fecha.getDate() + 1);
+        
+        const year = fecha.getFullYear();
+        const month = String(fecha.getMonth() + 1).padStart(2, '0');
+        const day = String(fecha.getDate()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}`;
+    };
+
+    // Función para ajustar fecha fin (mantiene la fecha original)
+    const ajustarFechaFin = (fechaString) => {
+        if (!fechaString) return fechaString;
+        
+        // Para fecha fin, no sumamos días - queremos incluir hasta ese día
+        const fecha = new Date(fechaString + 'T23:59:59');
         
         const year = fecha.getFullYear();
         const month = String(fecha.getMonth() + 1).padStart(2, '0');
@@ -111,8 +125,8 @@ const ProfPagosSection = () => {
 
         // Filtro por rango de fechas con ajuste de zona horaria
         if (filtros.fechaInicio && filtros.fechaFin) {
-            const fechaInicioAjustada = ajustarFechaParaComparacion(filtros.fechaInicio);
-            const fechaFinAjustada = ajustarFechaParaComparacion(filtros.fechaFin);
+            const fechaInicioAjustada = ajustarFechaInicio(filtros.fechaInicio);
+            const fechaFinAjustada = ajustarFechaFin(filtros.fechaFin);
             
             console.log('Filtros de fecha - Original:', filtros.fechaInicio, '-', filtros.fechaFin);
             console.log('Filtros de fecha - Ajustados:', fechaInicioAjustada, '-', fechaFinAjustada);
@@ -121,12 +135,12 @@ const ProfPagosSection = () => {
                 return pago.fecha_pago >= fechaInicioAjustada && pago.fecha_pago <= fechaFinAjustada;
             });
         } else if (filtros.fechaInicio) {
-            const fechaInicioAjustada = ajustarFechaParaComparacion(filtros.fechaInicio);
+            const fechaInicioAjustada = ajustarFechaInicio(filtros.fechaInicio);
             pagosFiltradosTemp = pagosFiltradosTemp.filter(pago => {
                 return pago.fecha_pago >= fechaInicioAjustada;
             });
         } else if (filtros.fechaFin) {
-            const fechaFinAjustada = ajustarFechaParaComparacion(filtros.fechaFin);
+            const fechaFinAjustada = ajustarFechaFin(filtros.fechaFin);
             pagosFiltradosTemp = pagosFiltradosTemp.filter(pago => {
                 return pago.fecha_pago <= fechaFinAjustada;
             });
@@ -151,16 +165,26 @@ const ProfPagosSection = () => {
         setError(null);
     };
 
-    // Función para manejar cambios en los filtros
+    // Función para manejar cambios en los filtros - MEJORADA
     const handleFiltroChange = (campo, valor) => {
         console.log(`Cambiando filtro ${campo} a:`, valor);
         
         // Validación específica para fechas
         if (campo === 'fechaInicio' || campo === 'fechaFin') {
+            // Verificar que el formato sea correcto
             const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
             if (valor && !fechaRegex.test(valor)) {
                 console.error(`Formato de fecha inválido para ${campo}:`, valor);
                 return;
+            }
+            
+            // Prevenir fechas corruptas - verificar que el año sea razonable
+            if (valor) {
+                const year = parseInt(valor.substring(0, 4));
+                if (year < 2020 || year > 2030) {
+                    console.error(`Año de fecha inválido para ${campo}:`, valor, 'Año:', year);
+                    return;
+                }
             }
         }
         
