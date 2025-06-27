@@ -379,13 +379,13 @@ const ProfTurnosSection = () => {
             <body>
                 <h1>TURNOS PROGRAMADOS</h1>
                 <div class="profesional-info">Profesional: ${profesional?.nombre || 'N/A'}</div>
-                <div class="servicio-info">Servicio: ${servicioDelProfesional?.nombre || 'N/A'}</div>
                 <div class="fecha-titulo">Fecha: ${fechaFormateada}</div>
                 <table>
                     <thead>
                         <tr>
                             <th>Hora</th>
                             <th>Cliente</th>
+                            <th>Servicio</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -393,6 +393,7 @@ const ProfTurnosSection = () => {
                             <tr>
                                 <td>${turno.hora}</td>
                                 <td>${turno.cliente}</td>
+                                <td>${turno.servicio}</td>
                             </tr>
                         `).join('')}
                     </tbody>
