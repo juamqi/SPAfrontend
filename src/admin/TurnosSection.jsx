@@ -314,6 +314,7 @@ const TurnosSection = () => {
                     message: "Turno creado correctamente",
                      
                 });
+                imprimirComprobanteTurno(formulario);
             } else {
                 // Editar turno existente
                 const id = parseInt(formulario.id, 10);
@@ -507,6 +508,48 @@ const TurnosSection = () => {
             default:
                 return '';
         }
+    };
+
+    const imprimirComprobanteTurno = (formulario) => {
+        const ventanaImpresion = window.open('', '_blank');
+        const fechaActual = new Date().toLocaleDateString('es-AR');
+        const horaActual = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+        const contenidoComprobante = `
+            <html>
+            <head>
+                <title>Comprobante de Turno</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    h1 { color: #4A3D3D; }
+                    .dato { margin: 10px 0; }
+                    .dato span { font-weight: bold; }
+                </style>
+            </head>
+            <body>
+                <h1>Comprobante de Turno</h1>
+                <div class="dato"><span>Cliente:</span> ${formulario.cliente_nombre}</div>
+                <div class="dato"><span>Profesional:</span> ${formulario.profesional_nombre}</div>
+                <div class="dato"><span>Servicio:</span> ${formulario.servicio}</div>
+                <div class="dato"><span>Fecha:</span> ${formulario.fecha}</div>
+                <div class="dato"><span>Hora:</span> ${formulario.hora}</div>
+                <div class="dato"><span>Precio:</span> $${formulario.precio}</div>
+                ${formulario.comentarios ? `<div class="dato"><span>Comentarios:</span> ${formulario.comentarios}</div>` : ""}
+                <hr>
+                <div class="dato"><span>Emitido:</span> ${fechaActual} ${horaActual}</div>
+                <p>Gracias por elegir nuestro spa.</p>
+            </body>
+            </html>
+        `;
+
+        ventanaImpresion.document.write(contenidoComprobante);
+        ventanaImpresion.document.close();
+
+        ventanaImpresion.onload = function () {
+            setTimeout(() => {
+                ventanaImpresion.print();
+            }, 100);
+        };
     };
 
     return (
