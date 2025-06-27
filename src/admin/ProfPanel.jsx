@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./ProfPanel.css";
 import ProfTurnosSection from "./ProfTurnosSection.jsx";
 import ProfClientesSection from "./ProfClientesSection.jsx";
+import ProfPagosSection from "./ProfPagosSection.jsx";
 
 const ProfPanel = () => {
   const [activeSection, setActiveSection] = useState("turnos");
@@ -30,17 +31,23 @@ const ProfPanel = () => {
               CLIENTES
             </a>
           </li>
+          <li className={activeSection === "pagos" ? "active" : ""}>
+            <a href="#pagos" onClick={() => scrollToSection("pagos")}>
+              PAGOS
+            </a>
+          </li>
         </ul>
       </header>
 
       <div className="admin-content">
         <div className="admin-header-simple">
           <h1>Perfil de Profesional</h1>
-          <p>Gestión de turnos y clientes</p>
+          <p>Gestión de turnos, clientes y pagos</p>
         </div>
 
         <ProfTurnosSection />
         <ProfClientesSection />
+        <ProfPagosSection />
       </div>
     </div>
   );
