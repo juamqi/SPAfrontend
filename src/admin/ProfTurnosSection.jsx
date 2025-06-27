@@ -437,18 +437,6 @@ const ProfTurnosSection = () => {
 
             {error && <div className="error-message">{error}</div>}
 
-            {/* Mostrar información del servicio del profesional */}
-            {servicioDelProfesional && (
-                <div className="servicio-info-card" style={{
-                    background: '#f8f9fa',
-                    padding: '10px',
-                    borderRadius: '5px',
-                    marginBottom: '20px',
-                    border: '1px solid #dee2e6'
-                }}>
-                    <strong>Mi servicio:</strong> {servicioDelProfesional.nombre} - <span style={{color: '#28a745', fontWeight: 'bold'}}>${servicioDelProfesional.precio}</span>
-                </div>
-            )}
 
             <div className="turnos-header-flex">
                 <div className="btns-izquierda">
@@ -550,18 +538,6 @@ const ProfTurnosSection = () => {
                 title="Agregar Turno"
                 onSave={handleGuardar}
             >
-                {/* Mostrar información del servicio */}
-                {servicioDelProfesional && (
-                    <div className="form-group" style={{
-                        background: '#e8f5e8',
-                        padding: '10px',
-                        borderRadius: '5px',
-                        marginBottom: '15px'
-                    }}>
-                        <strong>Servicio:</strong> {servicioDelProfesional.nombre}<br/>
-                        <strong>Precio:</strong> <span style={{color: '#28a745', fontWeight: 'bold'}}>${servicioDelProfesional.precio}</span>
-                    </div>
-                )}
 
                 <div className="form-group">
                     <label htmlFor="fecha">Fecha:</label>
