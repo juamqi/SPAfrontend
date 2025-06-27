@@ -80,18 +80,13 @@ const ProfTurnosSection = () => {
 
     // Obtener SOLO los turnos del profesional logueado (solicitados o cancelados desde hoy)
     const fetchTurnos = async () => {
-        if (!profesionalId) {
-            console.log("No hay profesionalId, saliendo de fetchTurnos");
-            return;
-        }
+        if (!profesionalId) return;
         
         try {
             setIsLoading(true);
             setError(null);
             
-            console.log("ID del profesional logueado:", profesionalId, "Tipo:", typeof profesionalId);
-            
-            // Obtener todos los turnos del endpoint de turnos admin
+            // Obtener todos los turnos y filtrar por profesional y estado
             const response = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
             if (!response.ok) {
                 throw new Error("Error al obtener los turnos");
@@ -100,53 +95,18 @@ const ProfTurnosSection = () => {
             const todosTurnos = await response.json();
             console.log("Todos los turnos recibidos:", todosTurnos.length);
             
-            // Mostrar algunos ejemplos de turnos para debug
-            if (todosTurnos.length > 0) {
-                console.log("Ejemplo de turno completo:", todosTurnos[0]);
-                console.log("Profesionales en turnos:", [...new Set(todosTurnos.map(t => `ID:${t.id_profesional} Nombre:${t.profesional}`))].slice(0, 5));
-            }
-            
-            // Filtrar ÚNICAMENTE por ID del profesional (conversión estricta)
-            const turnosDelProfesional = todosTurnos.filter(turno => {
-                const turnoIdProfesional = turno.id_profesional;
-                const profesionalLogueadoId = profesionalId;
-                
-                // Probar diferentes comparaciones
-                const coincideNumerico = Number(turnoIdProfesional) === Number(profesionalLogueadoId);
-                const coincideString = String(turnoIdProfesional) === String(profesionalLogueadoId);
-                const coincideEstricto = turnoIdProfesional === profesionalLogueadoId;
-                
-                const coincide = coincideNumerico || coincideString || coincideEstricto;
-                
-                // Log para debug
-                if (coincide) {
-                    console.log(`✓ Turno ${turno.id} coincide - Turno ID profesional: ${turnoIdProfesional} (${typeof turnoIdProfesional}) vs Logueado: ${profesionalLogueadoId} (${typeof profesionalLogueadoId})`);
-                }
-                
-                return coincide;
-            });
+            // Filtrar turnos del profesional actual
+            const turnosDelProfesional = todosTurnos.filter(turno => 
+                Number(turno.id_profesional) === Number(profesionalId) ||
+                turno.profesional === profesional?.nombre
+            );
 
-            console.log(`Turnos filtrados por ID profesional ${profesionalId}:`, turnosDelProfesional.length);
-
-            if (turnosDelProfesional.length === 0) {
-                console.log("⚠️ No se encontraron turnos para este profesional. Verificar ID del profesional.");
-                setTurnos([]);
-                setTurnosFiltrados([]);
-                return;
-            }
+            console.log("Turnos del profesional:", turnosDelProfesional.length);
 
             // Filtrar solo estados permitidos: Solicitado o Cancelado
-            const turnosEstadosPermitidos = turnosDelProfesional.filter(turno => {
-                const estadoValido = turno.estado === 'Solicitado' || turno.estado === 'Cancelado';
-                
-                if (estadoValido) {
-                    console.log(`✓ Turno ${turno.id} tiene estado válido: ${turno.estado}`);
-                } else {
-                    console.log(`✗ Turno ${turno.id} estado no válido: ${turno.estado}`);
-                }
-                
-                return estadoValido;
-            });
+            const turnosEstadosPermitidos = turnosDelProfesional.filter(turno => 
+                turno.estado === 'Solicitado' || turno.estado === 'Cancelado'
+            );
 
             console.log("Turnos con estados permitidos:", turnosEstadosPermitidos.length);
 
@@ -162,21 +122,12 @@ const ProfTurnosSection = () => {
                 const fechaTurno = turno.fecha?.split('T')[0];
                 const esFechaValida = fechaTurno >= fechaHoyStr;
                 
-                if (esFechaValida) {
-                    console.log(`✓ Turno ${turno.id} fecha válida: ${fechaTurno} >= ${fechaHoyStr}`);
-                } else {
-                    console.log(`✗ Turno ${turno.id} fecha no válida: ${fechaTurno} < ${fechaHoyStr}`);
-                }
+                console.log(`Turno ID ${turno.id}: fecha=${fechaTurno}, válida=${esFechaValida}`);
                 
                 return esFechaValida;
             });
 
-            console.log("Turnos finales desde hoy en adelante:", turnosDesdehoy.length);
-
-            // Mostrar resumen de turnos finales
-            turnosDesdehoy.forEach(turno => {
-                console.log(`Turno final: ID=${turno.id}, Fecha=${turno.fecha}, Cliente=${turno.cliente}, Estado=${turno.estado}, ID_Profesional=${turno.id_profesional}`);
-            });
+            console.log("Turnos desde hoy en adelante:", turnosDesdehoy.length);
 
             // Ordenar por fecha ascendente (más próximos primero)
             turnosDesdehoy.sort((a, b) => {
