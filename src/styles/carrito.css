@@ -116,7 +116,7 @@
     position: absolute;
     left: 24px;
     right: 24px;
-    top: 130px;
+    top: 160px; 
     bottom: 160px;
     overflow-y: auto;
     text-align: left;
@@ -992,3 +992,19 @@
         line-height: 18px;
     }
 }
+
+.fecha-actualizar-btn {
+    margin-top: 4px;
+    font-size: 12px;
+    background: none;
+    border: none;
+    color: #4A3D3D;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    align-self: flex-start;
+}
+.fecha-actualizar-btn:hover {
+    text-decoration: none;
+}
+
