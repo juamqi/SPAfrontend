@@ -1,12 +1,8 @@
 import React, { useEffect, useState } from "react";
 import ModalForm from "./ModalForm.jsx";
 import ClienteFilterComponent from "./ClienteFilterComponent.jsx";
-import { useProfAuth } from '../context/ProfAuthContext'; // Importar el contexto
 
 const ProfClientesSection = () => {
-    const { profesional } = useProfAuth(); // Usar el contexto
-    const profesionalId = profesional?.id_profesional; // Obtener ID del contexto
-    
     const [clientes, setClientes] = useState([]);
     const [modo, setModo] = useState("crear");
     const [mostrarModal, setMostrarModal] = useState(false);
@@ -32,6 +28,9 @@ const ProfClientesSection = () => {
     const [mostrarHistorial, setMostrarHistorial] = useState(false);
     const [historialTurnos, setHistorialTurnos] = useState([]);
     const [loadingHistorial, setLoadingHistorial] = useState(false);
+
+    // Estado para almacenar el ID del profesional actual
+    const [profesionalId, setProfesionalId] = useState(null);
 
     const clientesFiltrados = clientes.filter(cliente =>
         `${cliente.nombre} ${cliente.apellido} ${cliente.email}`.toLowerCase().includes(filtroTexto.toLowerCase())
@@ -61,90 +60,83 @@ const ProfClientesSection = () => {
         return `$${precio}`;
     };
 
+    // Función para obtener el ID del profesional actual
+    const obtenerProfesionalId = () => {
+        // Opción 1: Si tienes el ID en localStorage
+        const profesionalData = localStorage.getItem('profesional');
+        if (profesionalData) {
+            const profesional = JSON.parse(profesionalData);
+            return profesional.id || profesional.id_profesional;
+        }
+
+        // Opción 2: Si tienes el ID en sessionStorage
+        const sessionProfesional = sessionStorage.getItem('profesional');
+        if (sessionProfesional) {
+            const profesional = JSON.parse(sessionProfesional);
+            return profesional.id || profesional.id_profesional;
+        }
+
+        // Opción 3: Si lo pasas como prop desde el componente padre
+        // return props.profesionalId;
+
+        // Si no encuentras el ID, puedes usar un valor por defecto o mostrar error
+        console.warn('No se pudo obtener el ID del profesional');
+        return null;
+    };
+
     useEffect(() => {
+        // Obtener el ID del profesional al cargar el componente
+        const idProfesional = obtenerProfesionalId();
+        setProfesionalId(idProfesional);
+    }, []);
+
+    useEffect(() => {
+        if (!profesionalId) return; // No hacer la petición si no tenemos el ID del profesional
+
         const fetchClientesDelProfesional = async () => {
             try {
                 setLoading(true);
-                setError(null);
                 
-                // Si no hay profesional del contexto, no cargar nada
-                if (!profesional?.nombre) {
-                    console.log("No hay nombre de profesional en el contexto");
-                    setClientes([]);
-                    setClientesOriginales([]);
-                    return;
-                }
-
-                console.log("Cargando clientes para profesional:", profesional.nombre);
-
-                // 1. Obtener todos los turnos del endpoint de turnos admin
-                const turnosResponse = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
+                // Primero obtenemos todos los turnos para encontrar cuáles son del profesional actual
+                const turnosResponse = await fetch("https://spabackend-production-e093.up.railway.app/api/turnos");
                 if (!turnosResponse.ok) throw new Error("Error al obtener los turnos");
                 
                 const todosTurnos = await turnosResponse.json();
-                console.log("Total de turnos obtenidos:", todosTurnos.length);
-                console.log("Ejemplo de turno:", todosTurnos[0]);
                 
-                // 2. Filtrar turnos del profesional actual por NOMBRE
-                const turnosDelProfesional = todosTurnos.filter(turno => {
-                    const coincide = turno.profesional === profesional.nombre;
-                    if (coincide) {
-                        console.log(`✓ Turno ${turno.id} del profesional - Cliente: ${turno.cliente}`);
-                    }
-                    return coincide;
-                });
-
-                console.log("Turnos del profesional encontrados:", turnosDelProfesional.length);
+                // Filtramos turnos del profesional actual
+                const turnosDelProfesional = todosTurnos.filter(turno => 
+                    (turno.profesional_id || turno.id_profesional) === profesionalId
+                );
                 
-                // 3. Extraer nombres únicos de clientes de esos turnos
-                const nombresClientesUnicos = [...new Set(
-                    turnosDelProfesional
-                        .map(turno => turno.cliente)
-                        .filter(nombre => nombre && nombre.trim() !== '')
-                )];
+                // Extraemos los IDs únicos de clientes que tienen turnos con este profesional
+                const clienteIds = [...new Set(turnosDelProfesional.map(turno => 
+                    turno.cliente_id || turno.id_cliente
+                ))];
                 
-                console.log("Nombres de clientes únicos extraídos:", nombresClientesUnicos);
-
-                if (nombresClientesUnicos.length === 0) {
-                    console.log("No se encontraron nombres de clientes en los turnos");
+                if (clienteIds.length === 0) {
                     setClientes([]);
                     setClientesOriginales([]);
                     return;
                 }
-
-                // 4. Obtener todos los clientes del endpoint de admin
+                
+                // Ahora obtenemos los datos completos de esos clientes
                 const clientesResponse = await fetch("https://spabackend-production-e093.up.railway.app/api/clientesAdm");
                 if (!clientesResponse.ok) throw new Error("Error al obtener los clientes");
-
-                const todosLosClientes = await clientesResponse.json();
-                console.log("Total de clientes en BD:", todosLosClientes.length);
                 
-                // 5. Filtrar clientes que coincidan por nombre completo
-                const clientesDelProfesional = todosLosClientes.filter(cliente => {
-                    const nombreCompleto = `${cliente.nombre} ${cliente.apellido}`.trim();
-                    const tieneturno = nombresClientesUnicos.includes(nombreCompleto);
-                    
-                    if (tieneturno) {
-                        console.log(`✓ Cliente ${cliente.id_cliente || cliente.id} (${nombreCompleto}) tiene turnos con este profesional`);
-                    }
-                    
-                    return tieneturno;
-                }).map(cliente => ({
+                const todosLosClientes = await clientesResponse.json();
+                
+                // Filtramos solo los clientes que tienen turnos con este profesional
+                const clientesDelProfesional = todosLosClientes.filter(cliente => 
+                    clienteIds.includes(cliente.id || cliente.id_cliente)
+                );
+                
+                const clientesConId = clientesDelProfesional.map(cliente => ({
                     ...cliente,
-                    id: cliente.id_cliente || cliente.id, // Normalizar el ID
-                    nombreCompleto: `${cliente.nombre} ${cliente.apellido}`.trim()
+                    id: cliente.id || cliente.id_cliente
                 }));
 
-                console.log("Clientes finales del profesional:", clientesDelProfesional.length);
-
-                // 6. Guardar los resultados
-                setClientes(clientesDelProfesional);
-                setClientesOriginales(clientesDelProfesional);
-                
-                // Debug final
-                clientesDelProfesional.forEach(cliente => {
-                    console.log(`Cliente final: ID=${cliente.id}, Nombre=${cliente.nombreCompleto}`);
-                });
+                setClientes(clientesConId);
+                setClientesOriginales(clientesConId);
                 
             } catch (error) {
                 console.error("Error al cargar los clientes del profesional:", error);
@@ -154,46 +146,28 @@ const ProfClientesSection = () => {
             }
         };
 
-        // Solo ejecutar si hay profesional en el contexto
-        if (profesional?.nombre) {
-            fetchClientesDelProfesional();
-        }
-    }, [profesional]);
+        fetchClientesDelProfesional();
+    }, [profesionalId]);
 
-    // Función para obtener el historial de turnos del cliente CON ESTE PROFESIONAL
+    // Función para obtener el historial de turnos del cliente CON el profesional actual
     const fetchHistorialCliente = async (clienteId) => {
         try {
             setLoadingHistorial(true);
             
-            console.log("Cargando historial para cliente ID:", clienteId, "profesional:", profesional.nombre);
+            // Usamos el endpoint original y filtramos en el frontend
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnos/pro/${clienteId}`);
             
-            // Obtener el cliente para saber su nombre completo
-            const clienteSeleccionadoNombre = clienteSeleccionado?.nombreCompleto || 
-                                            `${clienteSeleccionado?.nombre} ${clienteSeleccionado?.apellido}`.trim();
-            
-            console.log("Nombre completo del cliente:", clienteSeleccionadoNombre);
-            
-            // Obtener todos los turnos y filtrar por nombre del cliente y profesional
-            const response = await fetch("https://spabackend-production-e093.up.railway.app/api/turnosAdmin");
-            if (!response.ok) throw new Error("Error al obtener los turnos");
-            
-            const todosTurnos = await response.json();
-            
-            // Filtrar turnos del cliente con este profesional específico (por nombres)
-            const turnosFiltrados = todosTurnos.filter(turno => {
-                const esCliente = turno.cliente === clienteSeleccionadoNombre;
-                const esProfesional = turno.profesional === profesional.nombre;
-                
-                if (esCliente && esProfesional) {
-                    console.log(`✓ Turno encontrado: ${turno.id} - ${turno.fecha} ${turno.hora} - ${turno.estado}`);
-                }
-                
-                return esCliente && esProfesional;
-            });
+            if (!response.ok) throw new Error("Error al obtener el historial");
 
-            console.log("Turnos del cliente con este profesional:", turnosFiltrados.length);
-            setHistorialTurnos(turnosFiltrados);
+            const todosLosTurnos = await response.json();
             
+            // Filtramos solo los turnos que son con el profesional actual
+            const turnosDelProfesional = todosLosTurnos.filter(turno => 
+                (turno.profesional_id || turno.id_profesional) === profesionalId
+            );
+            
+            console.log('Datos del historial filtrado:', turnosDelProfesional);
+            setHistorialTurnos(turnosDelProfesional);
         } catch (error) {
             console.error("Error al cargar el historial:", error);
             setError("No se pudo cargar el historial del cliente.");
@@ -234,23 +208,9 @@ const ProfClientesSection = () => {
         }
     };
 
-    // Mostrar mensaje si no hay profesional en el contexto
-    if (!profesional?.id_profesional) {
-        return (
-            <div id="clientes">
-                <h2>Clientes</h2>
-                <div className="no-profesional">
-                    <p>No se pudo identificar al profesional actual.</p>
-                    <p><small>Por favor, inicia sesión nuevamente.</small></p>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div id="clientes">
             <h2>Mis Clientes</h2>
-            <p className="subtitle">Clientes que han agendado turnos conmigo</p>
             {error && <div className="error-message">{error}</div>}
 
             {loading ? (
@@ -272,7 +232,7 @@ const ProfClientesSection = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {clientesFiltrados.map(p => (
+                        {clientes.map(p => (
                             <tr
                                 key={p.id}
                                 onClick={() => setClienteSeleccionado(p)}
@@ -304,7 +264,7 @@ const ProfClientesSection = () => {
                 <div className="modal-overlay" onClick={cerrarHistorial}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3>Historial de Turnos Conmigo</h3>
+                            <h3>Historial de Turnos</h3>
                             <button className="btn-cerrar" onClick={cerrarHistorial}>×</button>
                         </div>
 
@@ -323,7 +283,7 @@ const ProfClientesSection = () => {
                                 </div>
                             ) : (
                                 <div className="historial-container">
-                                    <h5>Turnos Conmigo ({historialTurnos.length})</h5>
+                                    <h5>Turnos contigo ({historialTurnos.length})</h5>
                                     <div className="tabla-historial-container">
                                         <table className="tabla-historial">
                                             <thead>
@@ -331,6 +291,7 @@ const ProfClientesSection = () => {
                                                     <th>Fecha</th>
                                                     <th>Hora</th>
                                                     <th>Servicio</th>
+                                                    <th>Profesional</th>
                                                     <th>Precio</th>
                                                     <th>Estado</th>
                                                 </tr>
@@ -341,6 +302,7 @@ const ProfClientesSection = () => {
                                                         <td>{formatearFecha(turno.fecha)}</td>
                                                         <td>{formatearHora(turno.hora)}</td>
                                                         <td>{turno.servicio || 'Sin servicio'}</td>
+                                                        <td>{turno.profesional || 'No asignado'}</td>
                                                         <td>{formatearPrecio(turno.precio)}</td>
                                                         <td className={getEstadoClass(turno.estado)}>
                                                             {turno.estado || 'Sin estado'}
@@ -364,23 +326,6 @@ const ProfClientesSection = () => {
             )}
 
             <style jsx>{`
-  .subtitle {
-    color: var(--color-accent);
-    font-style: italic;
-    margin-bottom: 1rem;
-    font-size: 0.95rem;
-  }
-
-  .no-profesional,
-  .no-clientes {
-    text-align: center;
-    padding: 2rem;
-    background-color: rgba(75, 44, 32, 0.05);
-    border-radius: var(--border-radius);
-    color: var(--color-accent);
-    font-style: italic;
-  }
-
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -458,7 +403,7 @@ const ProfClientesSection = () => {
     color: #555;
   }
 
-  .no-historial {
+  .no-historial, .no-clientes {
     text-align: center;
     padding: 2rem;
     color: #888;
