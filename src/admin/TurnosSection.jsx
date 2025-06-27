@@ -23,7 +23,7 @@ const TurnosSection = () => {
         hora: "",
         categoria: "",
         servicio: "",
-        servicio_id: "", // Añadido para mantener el ID separado del nombre
+        servicio_id: "",
         profesional_id: "",
         profesional_nombre: "",
         cliente_id: "",
@@ -32,7 +32,38 @@ const TurnosSection = () => {
         comentarios: "",
     });
     const [categorias, setCategorias] = useState([]);
-    const horasDisponibles = Array.from({ length: 14 }, (_, i) => `${(8 + i).toString().padStart(2, '0')}:00`);
+    
+    // Función para generar horas disponibles basándose en la fecha seleccionada
+    const getHorasDisponibles = () => {
+        const horasBase = Array.from({ length: 14 }, (_, i) => `${(8 + i).toString().padStart(2, '0')}:00`);
+        
+        // Si no hay fecha seleccionada, mostrar todas las horas
+        if (!formulario.fecha) {
+            return horasBase;
+        }
+        
+        const fechaSeleccionada = new Date(formulario.fecha + 'T00:00:00');
+        const fechaHoy = new Date();
+        fechaHoy.setHours(0, 0, 0, 0);
+        
+        // Si la fecha seleccionada no es hoy, mostrar todas las horas
+        if (fechaSeleccionada.getTime() !== fechaHoy.getTime()) {
+            return horasBase;
+        }
+        
+        // Si es hoy, filtrar las horas que ya pasaron
+        const horaActual = new Date().getHours();
+        const minutosActuales = new Date().getMinutes();
+        
+        return horasBase.filter(hora => {
+            const horaNumero = parseInt(hora.split(':')[0]);
+            // Permitir la hora actual si aún no han pasado 30 minutos (dar margen)
+            // O permitir horas futuras
+            return horaNumero > horaActual || (horaNumero === horaActual && minutosActuales < 30);
+        });
+    };
+    
+    const horasDisponibles = getHorasDisponibles();
     const { showPopup } = usePopupContext();
 
     const estadosTurnos = ['Solicitado', 'Cancelado'];
@@ -72,7 +103,7 @@ const TurnosSection = () => {
             const data = await response.json();
             console.log("Turnos recibidos:", data);
             setTurnos(data);
-            setTurnosFiltrados(data); // Inicialmente, turnos filtrados = todos los turnos
+            setTurnosFiltrados(data);
         } catch (error) {
             console.error("Error al cargar los turnos:", error);
             setError("No se pudieron cargar los turnos. Intenta nuevamente.");
@@ -99,21 +130,26 @@ const TurnosSection = () => {
         fetchTurnos();
     }, []);
 
-    // Función para manejar el cambio en el filtro - ACTUALIZADA
+    // Función para manejar el cambio en el filtro
     const handleFilterChange = (filteredData) => {
         console.log("Datos filtrados recibidos:", filteredData);
         setTurnosFiltrados(filteredData);
     };
 
+    // Función para obtener la fecha de hoy en formato YYYY-MM-DD
+    const getFechaHoy = () => {
+        return new Date().toLocaleDateString('en-CA');
+    };
+
     const handleAgregar = () => {
         setModo("crear");
-        const fechaHoy = new Date().toISOString().substring(0, 10); // Formato YYYY-MM-DD
+        const fechaHoy = getFechaHoy();
         setFormulario({
             fecha: fechaHoy,
             hora: "",
             categoria: "",
             servicio: "",
-            servicio_id: "", // Añadido para mantener el ID separado
+            servicio_id: "",
             profesional_id: "",
             profesional_nombre: "",
             cliente_id: "",
@@ -121,7 +157,7 @@ const TurnosSection = () => {
             precio: "",
             comentarios: "",
         });
-        setServicioIdSeleccionado(null); // Limpiar ID de servicio seleccionado
+        setServicioIdSeleccionado(null);
         setMostrarModal(true);
     };
 
@@ -183,12 +219,9 @@ const TurnosSection = () => {
                     type: 'success',
                     title: 'Turno cancelado',
                     message: 'El turno ha sido cancelado correctamente.',
-
                 });
 
                 await fetchTurnos();
-
-                // Limpiar la selección
                 setTurnoSeleccionado(null);
             } catch (error) {
                 console.error("Error al cancelar el turno:", error);
@@ -197,7 +230,6 @@ const TurnosSection = () => {
                     type: 'error',
                     title: 'Error al cancelar',
                     message: `No se pudo cancelar el turno: ${error.message}`,
-
                 });
             } finally {
                 setIsLoading(false);
@@ -228,13 +260,11 @@ const TurnosSection = () => {
             throw new Error("El formato de fecha no es válido. Utilice YYYY-MM-DD");
         }
 
-        // NUEVA VALIDACIÓN: Verificar que la fecha no sea anterior a hoy
-        const fechaSeleccionada = new Date(formulario.fecha);
+        // Verificar que la fecha no sea anterior a hoy
         const fechaHoy = new Date();
-
-        // Establecer la hora a 00:00:00 para comparar solo las fechas
         fechaHoy.setHours(0, 0, 0, 0);
-        fechaSeleccionada.setHours(0, 0, 0, 0);
+
+        const fechaSeleccionada = new Date(formulario.fecha + 'T00:00');
 
         if (fechaSeleccionada < fechaHoy) {
             throw new Error("No se puede agendar un turno en una fecha que ya pasó");
@@ -285,7 +315,6 @@ const TurnosSection = () => {
                 estado: formulario.estado || 'Solicitado',
                 precio: parseFloat(formulario.precio) || 0,
                 comentarios: formulario.comentarios || '',
-                // Añadimos también los nombres para compatibilidad con el backend original
                 profesional: formulario.profesional_nombre,
                 cliente: formulario.cliente_nombre,
                 servicio: formulario.servicio
@@ -296,7 +325,6 @@ const TurnosSection = () => {
             let response;
 
             if (modo === "crear") {
-                // Crear nuevo turno
                 response = await fetch('https://spabackend-production-e093.up.railway.app/api/turnosAdmin', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -312,7 +340,6 @@ const TurnosSection = () => {
                     type: 'success',
                     title: "Éxito",
                     message: "Turno creado correctamente",
-
                 });
 
                 const datosParaImprimir = {
@@ -328,7 +355,6 @@ const TurnosSection = () => {
                 console.log("Datos preparados para impresión:", datosParaImprimir);
                 imprimirComprobanteTurno(datosParaImprimir);
             } else {
-                // Editar turno existente
                 const id = parseInt(formulario.id, 10);
                 if (isNaN(id)) {
                     throw new Error("ID de turno inválido");
@@ -356,14 +382,10 @@ const TurnosSection = () => {
                     type: 'success',
                     title: "Éxito",
                     message: "Turno actualizado correctamente",
-
                 });
             }
 
-            // Recargar los turnos
             await fetchTurnos();
-
-            // Cerrar el modal y limpiar la selección
             setMostrarModal(false);
             setTurnoSeleccionado(null);
 
@@ -374,7 +396,6 @@ const TurnosSection = () => {
                 type: 'error',
                 title: "Error",
                 message: `Error al guardar el turno: ${error.message}`,
-
             });
         } finally {
             setIsLoading(false);
@@ -385,8 +406,8 @@ const TurnosSection = () => {
         setFormulario({
             ...formulario,
             categoria: categoriaId,
-            servicio: "", // Resetear servicio al cambiar categoría
-            servicio_id: "", // ← Ya tienes esto, perfecto
+            servicio: "",
+            servicio_id: "",
             profesional_id: "",
             profesional_nombre: ""
         });
@@ -396,26 +417,23 @@ const TurnosSection = () => {
     const handleServicioChange = (servicioId, servicioNombre) => {
         console.log("Servicio seleccionado - ID:", servicioId, "Nombre:", servicioNombre);
 
-        // Verificamos si el servicioId es un número o una cadena que representa un número
         let idServicio = null;
 
         if (servicioId && !isNaN(parseInt(servicioId, 10))) {
             idServicio = parseInt(servicioId, 10);
 
-            // Encontrar el servicio completo para obtener el precio
             const servicioEncontrado = servicios.find(s => s.id == idServicio);
 
             if (servicioEncontrado) {
                 setServicioIdSeleccionado(idServicio);
 
-                // Actualizar el servicio y resetear profesional
                 setFormulario({
                     ...formulario,
                     servicio: servicioNombre || servicioEncontrado.nombre,
                     servicio_id: idServicio.toString(),
                     profesional_id: "",
                     profesional_nombre: "",
-                    precio: servicioEncontrado.precio // Actualizar el precio automáticamente
+                    precio: servicioEncontrado.precio
                 });
 
                 console.log("Servicio encontrado con precio:", servicioEncontrado.precio);
@@ -425,14 +443,11 @@ const TurnosSection = () => {
                 handleServicioNotFound(servicioId, servicioNombre);
             }
         } else {
-            // Si servicioId no es un número, asumimos que es el nombre del servicio
             handleServicioNotFound(servicioId, servicioNombre);
         }
     }
 
-    // Función auxiliar para manejar el caso cuando no se encuentra el servicio por ID
     const handleServicioNotFound = (servicioId, servicioNombre) => {
-        // Intentamos buscar por nombre si tenemos el nombre
         if (servicioNombre) {
             const servicioEncontrado = servicios.find(s => s.nombre === servicioNombre);
 
@@ -463,13 +478,12 @@ const TurnosSection = () => {
                 });
             }
         } else {
-            // No tenemos suficiente información para identificar el servicio
             console.log("Información insuficiente para identificar el servicio");
             setServicioIdSeleccionado(null);
 
             setFormulario({
                 ...formulario,
-                servicio: servicioId || "", // Usamos lo que tengamos como nombre
+                servicio: servicioId || "",
                 servicio_id: "",
                 profesional_id: "",
                 profesional_nombre: "",
@@ -479,7 +493,6 @@ const TurnosSection = () => {
     }
 
     const handleClienteChange = (clienteId, nombreCompleto) => {
-        // Aseguramos que el clienteId se almacena correctamente
         console.log("Cliente seleccionado - ID:", clienteId, "Nombre:", nombreCompleto);
 
         setFormulario({
@@ -499,16 +512,6 @@ const TurnosSection = () => {
         });
     }
 
-    const handleGenerarReporte = () => {
-        showPopup({
-            type: 'info',
-            title: "Generando reporte",
-            message: "Generando reporte de turnos...",
-
-        });
-    };
-
-    // Función para dar estilo al estado según su valor
     const getEstadoClass = (estado) => {
         switch (estado) {
             case 'Solicitado':
@@ -657,7 +660,6 @@ const TurnosSection = () => {
                 </div>
             </div>
 
-            {/* AGREGADO: Mostrar información de filtros activos */}
             <div className="filtros-info">
                 <p>Mostrando {turnosFiltrados.length} de {turnos.length} turnos</p>
             </div>
@@ -741,9 +743,16 @@ const TurnosSection = () => {
                         id="fecha"
                         type="date"
                         value={formulario.fecha}
-                        onChange={e => setFormulario({ ...formulario, fecha: e.target.value })}
+                        onChange={e => {
+                            setFormulario({ 
+                                ...formulario, 
+                                fecha: e.target.value,
+                                hora: "" // Limpiar la hora cuando cambie la fecha
+                            });
+                        }}
                         disabled={isLoading}
                         required
+                        min={getFechaHoy()}
                     />
                 </div>
 
@@ -753,14 +762,26 @@ const TurnosSection = () => {
                         id="hora"
                         value={formulario.hora}
                         onChange={(e) => setFormulario({ ...formulario, hora: e.target.value })}
-                        disabled={isLoading}
+                        disabled={isLoading || !formulario.fecha}
                         required
                         className="border p-2 rounded w-full mb-4">
-                        <option value="">Seleccione una hora</option>
+                        <option value="">
+                            {!formulario.fecha ? "Primero seleccione una fecha" : "Seleccione una hora"}
+                        </option>
                         {horasDisponibles.map((hora) => (
                             <option key={hora} value={hora}>{hora}</option>
                         ))}
                     </select>
+                    {formulario.fecha && horasDisponibles.length === 0 && (
+                        <p style={{color: 'red', fontSize: '12px', marginTop: '5px'}}>
+                            No hay horas disponibles para esta fecha
+                        </p>
+                    )}
+                    {formulario.fecha && new Date(formulario.fecha + 'T00:00:00').toDateString() === new Date().toDateString() && (
+                        <p style={{color: '#666', fontSize: '12px', marginTop: '5px'}}>
+                            Solo se muestran las horas disponibles para hoy
+                        </p>
+                    )}
                 </div>
 
                 <DropdownCategorias
@@ -770,11 +791,10 @@ const TurnosSection = () => {
 
                 <DropdownServicios
                     categoriaId={formulario.categoria}
-                    value={formulario.servicio_id}  // ← Solución: pasa el ID
+                    value={formulario.servicio_id}
                     onChange={(servicioId, servicioNombre) => handleServicioChange(servicioId, servicioNombre)}
                 />
 
-                {/* Implementación del DropdownProfesionalesPorServicio con debug */}
                 {formulario.servicio_id ? (
                     <>
                         <DropdownProfesionalesPorServicio
@@ -799,7 +819,6 @@ const TurnosSection = () => {
                     onChange={handleClienteChange}
                 />
 
-                {/* Campo para comentarios */}
                 <div className="form-group">
                     <label htmlFor="comentarios">Comentarios:</label>
                     <textarea
