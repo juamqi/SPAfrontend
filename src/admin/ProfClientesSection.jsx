@@ -35,6 +35,16 @@ const ProfClientesSection = () => {
     const [mostrarHistorial, setMostrarHistorial] = useState(false);
     const [historialTurnos, setHistorialTurnos] = useState([]);
     const [loadingHistorial, setLoadingHistorial] = useState(false);
+    const [editandoEstado, setEditandoEstado] = useState(null);
+    const [estadoTemporal, setEstadoTemporal] = useState("");
+    const [cambiandoEstado, setCambiandoEstado] = useState(false);
+    const [estadosDisponibles] = useState([
+        'Solicitado',
+        'Confirmado', 
+        'Cancelado',
+        'Realizado'
+    ]);
+    
 
     const clientesFiltrados = clientes.filter(cliente =>
         `${cliente.nombre} ${cliente.apellido} ${cliente.email}`.toLowerCase().includes(filtroTexto.toLowerCase())
@@ -314,14 +324,71 @@ const ProfClientesSection = () => {
         }
     };
 
+    const iniciarEdicionEstado = (turnoId, estadoActual) => {
+    setEditandoEstado(turnoId);
+    setEstadoTemporal(estadoActual || "Solicitado");
+    };
 
-    // Función para dar estilo al estado según su valor
+    const cancelarEdicionEstado = () => {
+        setEditandoEstado(null);
+        setEstadoTemporal("");
+    };
+
+    const cambiarEstadoTurno = async (turnoId) => {
+        try {
+            setCambiandoEstado(true);
+            
+            console.log(`Cambiando estado del turno ${turnoId} a ${estadoTemporal}`);
+            
+            const response = await fetch(`https://spabackend-production-e093.up.railway.app/api/turnosAdmin/cambiar-estado/${turnoId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    nuevoEstado: estadoTemporal,
+                    comentario: `Estado actualizado por profesional ${profesional.nombre}`
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+
+            const resultado = await response.json();
+            console.log('Estado cambiado:', resultado);
+
+            // Actualizar el historial para reflejar el cambio
+            setHistorialTurnos(prevHistorial => 
+                prevHistorial.map(turno => 
+                    turno.id === turnoId 
+                        ? { ...turno, estado: estadoTemporal }
+                        : turno
+                )
+            );
+
+            setEditandoEstado(null);
+            setEstadoTemporal("");
+            
+            console.log(`Estado actualizado para turno ${turnoId}`);
+            
+        } catch (error) {
+            console.error("Error al cambiar estado:", error);
+            setError("No se pudo cambiar el estado. Intenta nuevamente.");
+        } finally {
+            setCambiandoEstado(false);
+        }
+    };
+
+    // MODIFICAR ESTA FUNCIÓN getEstadoClass existente para agregar más estados
     const getEstadoClass = (estado) => {
         if (!estado) return '';
         
         switch (estado) {
             case 'Solicitado':
                 return 'estado-solicitado';
+            case 'Confirmado':
+                return 'estado-confirmado';
             case 'Cancelado':
                 return 'estado-cancelado';
             case 'Realizado':
@@ -330,6 +397,9 @@ const ProfClientesSection = () => {
                 return '';
         }
     };
+
+
+
 
     // Mostrar mensaje si no hay profesional en el contexto
     if (!profesional?.id_profesional) {
@@ -428,6 +498,7 @@ const ProfClientesSection = () => {
                                                     <th>Fecha</th>
                                                     <th>Hora</th>
                                                     <th>Servicio</th>
+                                                    <th>Estado</th>
                                                     <th>Comentario</th>
                                                 </tr>
                                             </thead>
@@ -437,49 +508,97 @@ const ProfClientesSection = () => {
                                                         <td>{formatearFecha(turno.fecha)}</td>
                                                         <td>{formatearHora(turno.hora)}</td>
                                                         <td>{turno.servicio || 'Sin servicio'}</td>
-                                                        <td className="comentario-cell">
-                                                        {editandoComentario === turno.id ? (
-                                                            <div className="comentario-edit">
-                                                                <textarea
-                                                                    value={comentarioTemporal}
-                                                                    onChange={(e) => setComentarioTemporal(e.target.value)}
-                                                                    placeholder="Escribir comentario..."
-                                                                    rows="2"
-                                                                    disabled={guardandoComentario}
-                                                                />
-                                                                <div className="comentario-actions">
-                                                                    <button 
-                                                                        className="btn-guardar-comentario"
-                                                                        onClick={() => guardarComentario(turno.id)}
-                                                                        disabled={guardandoComentario}
+                                                        <td className="estado-cell">
+                                                            {editandoEstado === turno.id ? (
+                                                                <div className="estado-edit">
+                                                                    <select
+                                                                        value={estadoTemporal}
+                                                                        onChange={(e) => setEstadoTemporal(e.target.value)}
+                                                                        disabled={cambiandoEstado}
+                                                                        className="estado-select"
                                                                     >
-                                                                        {guardandoComentario ? "..." : "✓"}
-                                                                    </button>
+                                                                        {estadosDisponibles.map(estado => (
+                                                                            <option key={estado} value={estado}>
+                                                                                {estado}
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
+                                                                    <div className="estado-actions">
+                                                                        <button 
+                                                                            className="btn-guardar-estado"
+                                                                            onClick={() => cambiarEstadoTurno(turno.id)}
+                                                                            disabled={cambiandoEstado}
+                                                                            title="Guardar estado"
+                                                                        >
+                                                                            {cambiandoEstado ? "..." : "✓"}
+                                                                        </button>
+                                                                        <button 
+                                                                            className="btn-cancelar-estado"
+                                                                            onClick={cancelarEdicionEstado}
+                                                                            disabled={cambiandoEstado}
+                                                                            title="Cancelar"
+                                                                        >
+                                                                            ✕
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="estado-display">
+                                                                    <span className={`estado-badge ${getEstadoClass(turno.estado)}`}>
+                                                                        {turno.estado || "Sin estado"}
+                                                                    </span>
                                                                     <button 
-                                                                        className="btn-cancelar-comentario"
-                                                                        onClick={cancelarEdicionComentario}
-                                                                        disabled={guardandoComentario}
+                                                                        className="btn-editar-estado"
+                                                                        onClick={() => iniciarEdicionEstado(turno.id, turno.estado)}
+                                                                        title="Cambiar estado"
                                                                     >
-                                                                        ✕
+                                                                        ⚙️
                                                                     </button>
                                                                 </div>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="comentario-display">
-                                                                <span className="comentario-texto">
-                                                                    {turno.comentarios || "Sin comentarios"}
-                                                                </span>
-                                                                <button 
-                                                                    className="btn-editar-comentario"
-                                                                    onClick={() => iniciarEdicionComentario(turno.id, turno.comentarios)}
-                                                                    title="Editar comentario"
-                                                                >
-                                                                    ✏️
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                        
+                                                            )}
+                                                        </td>
+                                                        <td className="comentario-cell">
+                                                            {editandoComentario === turno.id ? (
+                                                                <div className="comentario-edit">
+                                                                    <textarea
+                                                                        value={comentarioTemporal}
+                                                                        onChange={(e) => setComentarioTemporal(e.target.value)}
+                                                                        placeholder="Escribir comentario..."
+                                                                        rows="2"
+                                                                        disabled={guardandoComentario}
+                                                                    />
+                                                                    <div className="comentario-actions">
+                                                                        <button 
+                                                                            className="btn-guardar-comentario"
+                                                                            onClick={() => guardarComentario(turno.id)}
+                                                                            disabled={guardandoComentario}
+                                                                        >
+                                                                            {guardandoComentario ? "..." : "✓"}
+                                                                        </button>
+                                                                        <button 
+                                                                            className="btn-cancelar-comentario"
+                                                                            onClick={cancelarEdicionComentario}
+                                                                            disabled={guardandoComentario}
+                                                                        >
+                                                                            ✕
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="comentario-display">
+                                                                    <span className="comentario-texto">
+                                                                        {turno.comentarios || "Sin comentarios"}
+                                                                    </span>
+                                                                    <button 
+                                                                        className="btn-editar-comentario"
+                                                                        onClick={() => iniciarEdicionComentario(turno.id, turno.comentarios)}
+                                                                        title="Editar comentario"
+                                                                    >
+                                                                        ✏️
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>
