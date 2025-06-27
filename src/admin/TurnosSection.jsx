@@ -107,20 +107,25 @@ const TurnosSection = () => {
 
     // Función para verificar si una hora ya pasó para el día actual
     const horaYaPaso = (fecha, hora) => {
-        const fechaSeleccionada = new Date(fecha);
+        // Crear fechas usando el formato local para evitar problemas de zona horaria
+        const [año, mes, dia] = fecha.split('-').map(Number);
+        const fechaSeleccionada = new Date(año, mes - 1, dia); // mes es 0-indexado
         const fechaHoy = new Date();
+        fechaHoy.setHours(0, 0, 0, 0); // Normalizar a medianoche
         
         // Verificar si la fecha es hoy
-        const esHoy = fechaSeleccionada.toDateString() === fechaHoy.toDateString();
+        const fechaHoyNormalizada = new Date(fechaHoy.getFullYear(), fechaHoy.getMonth(), fechaHoy.getDate());
+        const esHoy = fechaSeleccionada.getTime() === fechaHoyNormalizada.getTime();
         
         if (!esHoy) {
             return false; // Si no es hoy, la hora no ha pasado
         }
         
-        // Si es hoy, comparar las horas
+        // Si es hoy, comparar las horas con la hora actual real
         const [horaSeleccionada, minutosSeleccionados] = hora.split(':').map(Number);
-        const horaActual = fechaHoy.getHours();
-        const minutosActuales = fechaHoy.getMinutes();
+        const fechaActual = new Date(); // Usar la fecha actual sin modificar
+        const horaActual = fechaActual.getHours();
+        const minutosActuales = fechaActual.getMinutes();
         
         // Convertir a minutos para comparar más fácilmente
         const minutosSeleccionadosTotal = horaSeleccionada * 60 + minutosSeleccionados;
@@ -133,11 +138,17 @@ const TurnosSection = () => {
     const getHorasDisponiblesParaFecha = (fecha) => {
         if (!fecha) return horasDisponibles;
         
-        const fechaSeleccionada = new Date(fecha);
+        // Crear fechas usando el formato local para evitar problemas de zona horaria
+        const [año, mes, dia] = fecha.split('-').map(Number);
+        const fechaSeleccionada = new Date(año, mes - 1, dia);
         const fechaHoy = new Date();
         
+        // Normalizar fechas para comparación
+        const fechaSeleccionadaNormalizada = new Date(fechaSeleccionada.getFullYear(), fechaSeleccionada.getMonth(), fechaSeleccionada.getDate());
+        const fechaHoyNormalizada = new Date(fechaHoy.getFullYear(), fechaHoy.getMonth(), fechaHoy.getDate());
+        
         // Si la fecha es hoy, filtrar las horas que ya pasaron
-        const esHoy = fechaSeleccionada.toDateString() === fechaHoy.toDateString();
+        const esHoy = fechaSeleccionadaNormalizada.getTime() === fechaHoyNormalizada.getTime();
         
         if (esHoy) {
             return horasDisponibles.filter(hora => !horaYaPaso(fecha, hora));
@@ -271,20 +282,21 @@ const TurnosSection = () => {
         }
 
         // VALIDACIÓN MEJORADA: Verificar fecha y hora
-        const fechaSeleccionada = new Date(formulario.fecha);
+        const [año, mes, dia] = formulario.fecha.split('-').map(Number);
+        const fechaSeleccionada = new Date(año, mes - 1, dia); // mes es 0-indexado
         const fechaHoy = new Date();
-
-        // Establecer la hora a 00:00:00 para comparar solo las fechas
-        fechaHoy.setHours(0, 0, 0, 0);
-        fechaSeleccionada.setHours(0, 0, 0, 0);
+        
+        // Normalizar fechas para comparación (sin problemas de zona horaria)
+        const fechaSeleccionadaNormalizada = new Date(fechaSeleccionada.getFullYear(), fechaSeleccionada.getMonth(), fechaSeleccionada.getDate());
+        const fechaHoyNormalizada = new Date(fechaHoy.getFullYear(), fechaHoy.getMonth(), fechaHoy.getDate());
 
         // Si la fecha es anterior a hoy, bloquear completamente
-        if (fechaSeleccionada < fechaHoy) {
+        if (fechaSeleccionadaNormalizada < fechaHoyNormalizada) {
             throw new Error("No se puede agendar un turno en una fecha que ya pasó");
         }
 
         // Si la fecha es hoy, validar que la hora no haya pasado
-        if (fechaSeleccionada.getTime() === fechaHoy.getTime()) {
+        if (fechaSeleccionadaNormalizada.getTime() === fechaHoyNormalizada.getTime()) {
             if (horaYaPaso(formulario.fecha, formulario.hora)) {
                 throw new Error("No se puede agendar un turno en una hora que ya pasó");
             }
